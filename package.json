@@ -11,7 +11,9 @@
     "build": "vite build",
     "lint": "oxlint",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "cek-data-pribadi": "node scripts/cek-data-pribadi.mjs --semua"
   },
   "dependencies": {
     "react": "19.3.0",

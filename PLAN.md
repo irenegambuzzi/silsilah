@@ -646,10 +646,10 @@ Semua kebijakan dites di PGlite dengan matriks lengkap: anon, bukan anggota, ang
 
 **Pertama kali**
 
-1. Bu Rina (contoh fiktif) menerima WhatsApp dari admin:
-   > Assalamu'alaikum Bu Rina, ini link pribadi untuk membuka Silsilah Keluarga. Link ini hanya bisa dipakai sekali dan berlaku 7 hari. Mohon jangan diteruskan ke orang lain.
+1. Bu Wulan (contoh fiktif) menerima WhatsApp dari admin:
+   > Assalamu'alaikum Bu Wulan, ini link pribadi untuk membuka Silsilah Keluarga. Link ini hanya bisa dipakai sekali dan berlaku 7 hari. Mohon jangan diteruskan ke orang lain.
 2. Ia mengetuk link. Muncul halaman berhuruf besar: "Link undangan pribadi. Tekan **Masuk** untuk melanjutkan." Tidak ada nama atau data sebelum tombol ditekan.
-3. Ia menekan **Masuk**. Muncul "Selamat datang, Bu Rina!" dan kartunya: "Apakah ini Anda? [Ya] [Bukan]". Kalau ia memilih "Bukan", admin langsung diberi tahu.
+3. Ia menekan **Masuk**. Muncul "Selamat datang, Bu Wulan!" dan kartunya: "Apakah ini Anda? [Ya] [Bukan]". Kalau ia memilih "Bukan", admin langsung diberi tahu.
 4. Tips singkat: memperbesar huruf, mengizinkan notifikasi, memasang di layar utama, dan cara menambah perangkat.
 5. Ia masuk ke **Cabang saya**.
 
@@ -755,7 +755,7 @@ Klien tidak bisa menulis atau mengubah riwayat. Ada dua pengecualian:
 ### 8.2 Undo per perubahan
 
 - **Anggota** hanya bisa membatalkan **perubahannya sendiri**. Membatalkan perubahan orang lain hanya untuk asisten dengan izin `batalkan_orang_lain` dan admin.
-- Undo berlaku untuk satu batch utuh. Undo ditolak kalau data sudah diubah lagi sesudahnya: "Data ini sudah diubah lagi oleh Dewi pada 14.20."
+- Undo berlaku untuk satu batch utuh. Undo ditolak kalau data sudah diubah lagi sesudahnya: "Data ini sudah diubah lagi oleh Ratna pada 14.20."
 - Undo untuk "tambah" berarti memindahkan ke tempat sampah. Undo sendiri juga tercatat, sehingga bisa dibatalkan lagi.
 - Setelah setiap simpan muncul *toast* "Tersimpan. [Batalkan]".
 
@@ -774,8 +774,8 @@ Klien tidak bisa menulis atau mengubah riwayat. Ada dua pengecualian:
 ### 8.5 Edit bersamaan dan sinkron live
 
 - Data dimuat sekali, lalu sinkron live (Realtime). Saat aplikasi aktif kembali atau internet tersambung lagi, data diambil ulang.
-- Peringatan "Data ini baru saja diubah oleh Dewi 3 menit lalu" muncul saat membuka form. Banner muncul kalau ada perubahan saat sedang mengedit.
-- Saat menyimpan, aplikasi hanya mengirim kolom yang diubah, dengan syarat `version` masih sama. Kalau berbeda, dilakukan merge per kolom: kolom yang bentrok ditampilkan "Versi Anda" berdampingan dengan "Versi Dewi" untuk dipilih.
+- Peringatan "Data ini baru saja diubah oleh Ratna 3 menit lalu" muncul saat membuka form. Banner muncul kalau ada perubahan saat sedang mengedit.
+- Saat menyimpan, aplikasi hanya mengirim kolom yang diubah, dengan syarat `version` masih sama. Kalau berbeda, dilakukan merge per kolom: kolom yang bentrok ditampilkan "Versi Anda" berdampingan dengan "Versi Ratna" untuk dipilih.
 - Tidak ada penulisan saat offline.
 
 ### 8.6 Deteksi aktivitas tidak wajar

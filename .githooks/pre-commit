@@ -1,0 +1,4 @@
+#!/bin/sh
+# Menolak commit yang memuat nama keluarga atau rahasia.
+# Diaktifkan otomatis oleh "npm install" (skrip prepare → core.hooksPath).
+exec node scripts/cek-data-pribadi.mjs --staged
