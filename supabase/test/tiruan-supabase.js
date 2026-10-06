@@ -4,7 +4,8 @@
 // database asli.
 //
 // Yang ditiru (meniru nama dan perilaku di Supabase):
-//   - role anon, authenticated, service_role (service_role melewati RLS);
+//   - role anon, authenticated, service_role (service_role melewati RLS),
+//     dan authenticator (pengguna sesi untuk semua permintaan API);
 //   - schema auth: tabel users dan sessions; fungsi auth.uid(),
 //     auth.role(), auth.jwt() yang membaca klaim JWT dari setting
 //     request.jwt.claims, persis seperti PostgREST di Supabase;
@@ -30,6 +31,10 @@ const SQL_TIRUAN = `
   create role anon nologin noinherit;
   create role authenticated nologin noinherit;
   create role service_role nologin noinherit bypassrls;
+  -- Seperti di Supabase: semua permintaan API masuk sebagai "authenticator"
+  -- (session_user), lalu berpindah ke anon/authenticated/service_role.
+  create role authenticator login noinherit;
+  grant anon, authenticated, service_role to authenticator;
 
   -- Seperti di Supabase: setiap tabel, sequence, dan fungsi BARU di schema
   -- public otomatis bisa diakses anon, authenticated, dan service_role.
@@ -171,11 +176,17 @@ export async function sebagai(db, peran, klaim, fn) {
     throw new Error(`Peran tidak dikenal: ${peran}`)
   }
   const isiKlaim = { role: peran, aal: 'aal1', ...klaim }
-  return db.transaction(async (tx) => {
-    await tx.exec(`set local role ${peran}`)
-    await tx.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify(isiKlaim)])
-    return fn(tx)
-  })
+  try {
+    return await db.transaction(async (tx) => {
+      await tx.exec(`set local session authorization authenticator; set local role ${peran}`)
+      await tx.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify(isiKlaim)])
+      return fn(tx)
+    })
+  } finally {
+    // Di PGlite "set local session authorization" tidak kembali sendiri
+    // setelah transaksi; kembalikan secara eksplisit.
+    await db.exec('set session authorization postgres; reset role')
+  }
 }
 
 // Pengguna Auth tiruan + satu sesi. Hasil: { userId, sessionId }.

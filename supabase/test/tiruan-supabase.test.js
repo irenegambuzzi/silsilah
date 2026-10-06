@@ -56,6 +56,14 @@ describe('auth: klaim JWT', () => {
     expect(r.uid).toBeNull()
     expect(r.role_db).toBe('postgres')
   })
+
+  it('permintaan API berjalan dengan session_user authenticator, lalu kembali ke postgres', async () => {
+    const [r] = await sebagai(db, 'authenticated', klaimUntuk(budi), (tx) => baris(tx, 'select session_user::text as s'))
+    expect(r.s).toBe('authenticator')
+    await expect(sebagai(db, 'anon', {}, () => { throw new Error('gagal') })).rejects.toThrow('gagal')
+    const [k] = await baris(db, `select session_user::text as s, current_user::text as c`)
+    expect(k).toEqual({ s: 'postgres', c: 'postgres' })
+  })
 })
 
 describe('RLS bekerja dengan tiruan ini', () => {
