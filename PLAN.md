@@ -570,7 +570,7 @@ Rinciannya ada di bagian 7.
 | Silsilah utama (`tree_id` null) | `current_member()` | `can_edit()`. Hapus = RPC tempat sampah (izin). Hapus permanen = RPC admin utama. |
 | Pohon keluarga asal | `can_view_origin()` | admin utama |
 | `change_log` | anggota, asisten, admin (bukan "lihat") | hanya trigger |
-| `members` | baris sendiri; daftar lengkap: izin `lihat_anggota`; nama tampilan lewat view `member_names` | admin utama (undangan: izin `buat_undangan`, lewat RPC) |
+| `members` | baris sendiri; daftar lengkap: izin `lihat_anggota`; nama tampilan lewat fungsi `member_names()` | admin utama (undangan: izin `buat_undangan`, lewat RPC) |
 | `devices` | perangkat sendiri; admin semua | RPC (dari Edge Function); cabut: pemilik perangkat atau admin |
 | `notifications` | milik sendiri | sistem; tandai dibaca: pemilik |
 | `reports` | pelapor (miliknya), izin `tindak_laporan` | anggota (buat); izin (tindak lanjut) |
