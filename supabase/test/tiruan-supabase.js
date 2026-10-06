@@ -31,6 +31,17 @@ const SQL_TIRUAN = `
   create role authenticated nologin noinherit;
   create role service_role nologin noinherit bypassrls;
 
+  -- Seperti di Supabase: setiap tabel, sequence, dan fungsi BARU di schema
+  -- public otomatis bisa diakses anon, authenticated, dan service_role.
+  -- File 001 mencabut hak otomatis ini untuk anon dan authenticated.
+  grant usage on schema public to anon, authenticated, service_role;
+  alter default privileges for role postgres in schema public
+    grant all on tables to anon, authenticated, service_role;
+  alter default privileges for role postgres in schema public
+    grant all on sequences to anon, authenticated, service_role;
+  alter default privileges for role postgres in schema public
+    grant all on functions to anon, authenticated, service_role;
+
   -- pgcrypto di schema extensions, seperti di Supabase.
   create schema extensions;
   create extension pgcrypto schema extensions;
@@ -189,3 +200,16 @@ export const klaimUntuk = ({ userId, sessionId }, aal = 'aal1') => ({
 
 // Singkatan query yang mengembalikan baris.
 export const baris = async (db, sql, params) => (await db.query(sql, params)).rows
+
+// Menjalankan satu file SQL kita dan mengembalikan baris pemeriksaan di
+// akhirnya yang TIDAK sesuai (kolom "hasil" ≠ "harus"). Kosong = semua sesuai.
+// "N atau lebih" berarti hasil ≥ N.
+export async function jalankanFileDanPeriksa(db, namaFile) {
+  const hasil = await db.exec(fs.readFileSync(path.join(FOLDER_SQL, namaFile), 'utf8'))
+  const rows = hasil.at(-1).rows
+  return rows.filter((r) => {
+    const m = /^(\S+) atau lebih$/.exec(r.harus)
+    if (m) return !(r.hasil != null && (isNaN(m[1]) ? r.hasil >= m[1] : Number(r.hasil) >= Number(m[1])))
+    return r.hasil !== r.harus
+  })
+}

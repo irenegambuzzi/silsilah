@@ -64,7 +64,13 @@ describe('RLS bekerja dengan tiruan ini', () => {
     expect(r).toEqual([{ isi: 'milik budi' }])
   })
 
-  it('anon tidak bisa membaca tabel tanpa grant', async () => {
+  it('seperti Supabase: tabel baru otomatis bisa diakses anon, hanya RLS yang menahan', async () => {
+    const r = await sebagai(db, 'anon', {}, (tx) => baris(tx, `select * from public.catatan_uji`))
+    expect(r).toEqual([])
+  })
+
+  it('anon tidak bisa membaca tabel yang hak-nya dicabut', async () => {
+    await db.exec(`revoke all on public.catatan_uji from anon`)
     await expect(sebagai(db, 'anon', {}, (tx) => baris(tx, `select * from public.catatan_uji`))).rejects.toThrow(/permission denied/)
   })
 
