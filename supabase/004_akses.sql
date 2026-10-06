@@ -377,6 +377,15 @@ begin
   if old.auth_user_id is not null and new.auth_user_id is distinct from old.auth_user_id then
     perform private.fail('AK011', 'Akun login seorang anggota tidak bisa diganti.');
   end if;
+  -- Penahanan otomatis karena aktivitas tidak wajar (006): dipasang dari
+  -- dalam trigger sistem (bukan perintah langsung dari aplikasi), hanya
+  -- MEMASANG penahanan (tidak melepas), dan hanya kolom penahanan yang
+  -- berubah. Admin utama tidak pernah ditahan.
+  if pg_trigger_depth() > 1 and not old.is_owner and new.hold_until is not null
+     and (to_jsonb(new) - array['hold_until', 'hold_reason', 'version', 'updated_at', 'updated_by'])
+       = (to_jsonb(old) - array['hold_until', 'hold_reason', 'version', 'updated_at', 'updated_by']) then
+    return new;
+  end if;
   if old.is_owner then
     if (to_jsonb(new) - boleh_owner) <> (to_jsonb(old) - boleh_owner) then
       perform private.fail('AK001', 'Admin utama tidak bisa diubah atau dicabut lewat aplikasi.');
