@@ -1,0 +1,25 @@
+# Dependensi dan hasil build
+node_modules
+dist
+dist-ssr
+*.local
+*.log
+
+# Rahasia: tidak pernah masuk repo
+.env
+.env.*
+!.env.example
+
+# DATA PRIBADI KELUARGA: backup lama, hasil migrasi, daftar nama untuk
+# pemindai, kunci rahasia. Folder ini hanya ada di komputer pemilik.
+data-pribadi/
+
+# Editor dan sistem
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.sw?
+
+# Pengaturan lokal Claude Code
+.claude/

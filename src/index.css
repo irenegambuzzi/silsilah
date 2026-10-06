@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+/* Huruf dasar besar dan kontras tinggi: banyak anggota keluarga yang
+   lebih tua membaca di HP. */
+html {
+  font-size: 18px;
+}
+
+body {
+  background: #fbf8f2;
+  color: #1c1a17;
+}
