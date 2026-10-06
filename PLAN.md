@@ -823,6 +823,8 @@ Kalau ambang terlampaui:
 | **Semua snapshot** (maks. ±54 reguler + ±10 khusus) | | **±60–70 MB** (sebagai pembanding, tahun pertama sekitar ±20 MB) |
 | `change_log` | | bertambah ±10–20 MB per tahun |
 
+**Diukur di langkah 1.12** (keluarga fiktif ±1.200 orang, 600 pernikahan, 200 anggota, tanpa kabar/kas): satu salinan ±1,7 MB mentah, **±330 KB tersimpan** setelah kompresi. Dengan ±54 salinan reguler + ±10 khusus itu sekitar ±20 MB; bertambah setelah Kabar dan Kumpul Keluarga ada.
+
 Batas database paket Free adalah 500 MB, jadi masih jauh. Admin melihat ukuran database di layar Cadangan dan mendapat peringatan di 300 MB.
 
 ### 9.2 Backup harian di repo GitHub PRIVAT `silsilah-cadangan`

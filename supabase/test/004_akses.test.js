@@ -1,9 +1,7 @@
 // Tes anggota, perangkat, undangan, dan log login. Semua orang FIKTIF.
 import { beforeAll, describe, expect, it } from 'vitest'
-import fs from 'node:fs'
-import path from 'node:path'
 import {
-  baris, buatDatabase, buatPengguna, FOLDER_SQL, jalankanFileDanPeriksa, klaimUntuk, sebagai,
+  baris, buatDatabase, buatPengguna, jalankanFileDanPeriksa, klaimUntuk, sebagai,
 } from './tiruan-supabase.js'
 import { pembantuSilsilah } from './pembantu-silsilah.js'
 
@@ -361,18 +359,6 @@ describe('tertutup lewat API (policy datang di 005)', () => {
     for (const t of ['public.members', 'public.devices', 'private.invites', 'private.device_codes', 'private.auth_events', 'private.login_ips']) {
       await expect(sebagai(db, 'anon', {}, (tx) => baris(tx, `select * from ${t}`))).rejects.toThrow(/permission denied/)
       await expect(lewatApi(owner, (tx) => baris(tx, `select * from ${t}`), 'aal2')).rejects.toThrow(/permission denied/)
-    }
-  })
-})
-
-describe('jadwal.sql', () => {
-  it('hanya memanggil fungsi yang benar-benar ada', async () => {
-    const sql = fs.readFileSync(path.join(FOLDER_SQL, 'jadwal.sql'), 'utf8')
-    const dipanggil = [...sql.matchAll(/select (private\.\w+)\(\)/g)].map((x) => x[1])
-    expect(dipanggil.length).toBeGreaterThan(0)
-    for (const f of dipanggil) {
-      const r = await h.satu(`select to_regprocedure($1) is not null as ada`, [`${f}()`])
-      expect(r.ada, f).toBe(true)
     }
   })
 })

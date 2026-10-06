@@ -6,6 +6,8 @@
 -- Waktu pg_cron memakai UTC (WIB = UTC + 7).
 --
 -- Jadwal saat ini:
+--   salinan-harian  setiap hari 19.00 UTC (02.00 WIB): salinan database
+--                   (hanya kalau ada perubahan) + merapikan salinan lama.
 --   hapus-ip-lama   setiap hari 20.15 UTC (03.15 WIB): menghapus alamat IP
 --                   login yang berumur lebih dari 30 hari.
 --
@@ -16,9 +18,14 @@
 
 create extension if not exists pg_cron with schema pg_catalog;
 
+select cron.schedule('salinan-harian', '0 19 * * *', $$select private.daily_snapshot()$$);
 select cron.schedule('hapus-ip-lama', '15 20 * * *', $$select private.purge_old_login_ips()$$);
 
 -- ── Pemeriksaan ───────────────────────────────────────────────────
-select 'Jadwal hapus-ip-lama aktif' as pemeriksaan,
-       (select count(*)::text from cron.job where jobname = 'hapus-ip-lama' and active) as hasil,
-       '1' as harus;
+select 'Jadwal salinan-harian aktif' as pemeriksaan,
+       (select count(*)::text from cron.job where jobname = 'salinan-harian' and active) as hasil,
+       '1' as harus
+union all
+select 'Jadwal hapus-ip-lama aktif',
+       (select count(*)::text from cron.job where jobname = 'hapus-ip-lama' and active),
+       '1';

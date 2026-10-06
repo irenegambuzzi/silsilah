@@ -2,7 +2,9 @@
 // ditambahkan nanti. Kalau sebuah file baru lupa RLS atau lupa mencabut
 // hak, tes ini merah.
 import { beforeAll, describe, expect, it } from 'vitest'
-import { baris, buatDatabaseLengkap, daftarMigrasi } from './tiruan-supabase.js'
+import fs from 'node:fs'
+import path from 'node:path'
+import { baris, buatDatabaseLengkap, daftarMigrasi, FOLDER_SQL } from './tiruan-supabase.js'
 
 // Fungsi yang SENGAJA boleh dijalankan anon (harus ada alasannya).
 const FUNGSI_BOLEH_ANON = []
@@ -61,5 +63,17 @@ describe('pagar keamanan untuk semua migrasi', () => {
   it('setiap file migrasi mencatat dirinya di app_migrations', async () => {
     const r = await baris(db, `select version from public.app_migrations order by version`)
     expect(r.map((x) => x.version)).toEqual(daftarMigrasi().map((f) => f.slice(0, 3)))
+  })
+})
+
+describe('jadwal.sql', () => {
+  it('hanya memanggil fungsi yang benar-benar ada setelah semua migrasi', async () => {
+    const sql = fs.readFileSync(path.join(FOLDER_SQL, 'jadwal.sql'), 'utf8')
+    const dipanggil = [...sql.matchAll(/select (private\.\w+)\(\)/g)].map((x) => x[1])
+    expect(dipanggil.length).toBeGreaterThan(0)
+    for (const f of dipanggil) {
+      const [r] = await baris(db, `select to_regprocedure($1) is not null as ada`, [`${f}()`])
+      expect(r.ada, f).toBe(true)
+    }
   })
 })
