@@ -53,6 +53,9 @@ export function bacaDaftarNama(teks) {
     .split(/\r?\n/)
     .map((baris, i) => ({ baris: i + 1, nama: baris.trim() }))
     .filter(({ nama }) => nama && !nama.startsWith('#'))
+    // Entri tanpa minimal 2 huruf (misalnya "?" atau "-" sebagai penanda
+    // "tidak diketahui" di data lama) bukan nama dan akan cocok dengan kode biasa.
+    .filter(({ nama }) => (nama.match(/\p{L}/gu) || []).length >= 2)
     .map(({ baris, nama }) => ({
       baris,
       samaran: `${nama[0]}${'*'.repeat(Math.max(nama.length - 1, 1))}`,

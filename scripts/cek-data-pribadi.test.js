@@ -14,6 +14,12 @@ describe('daftar nama', () => {
     expect(daftar.map((n) => n.baris)).toEqual([1, 2, 5])
   })
 
+  it('mengabaikan entri yang bukan nama (kurang dari 2 huruf)', () => {
+    const d = bacaDaftarNama(['?', '-', 'A.', '(?)', 'Kartolo'].join('\n'))
+    expect(d.map((n) => n.baris)).toEqual([5])
+    expect(periksaTeks('const x = a ?? b - c', d)).toEqual([])
+  })
+
   it('tidak menampilkan nama utuh di keterangan', () => {
     const t = periksaTeks('halo Kartolo', daftar)
     expect(t[0].keterangan).toContain('baris 2')

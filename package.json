@@ -21,6 +21,7 @@
     "react-router-dom": "7.18.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@tailwindcss/vite": "4.3.3",
     "@vitejs/plugin-react": "6.1.2",
     "oxlint": "1.87.0",
