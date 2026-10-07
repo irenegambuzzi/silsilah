@@ -10,8 +10,8 @@
 //   { jenis, judul, pesan, bisaCobaLagi, kode }
 // `jenis` menentukan layar: 'dipulihkan', 'belumDiperbarui', 'offline',
 // 'jaringan', 'sesiHabis', 'tanpaIzin', 'bentrok', 'sibuk', 'terlaluSering',
-// 'server', 'aturan' (kode buatan kita), 'dataDitolak', 'tidakDitemukan',
-// atau 'tidakDikenal'.
+// 'server', 'aturan' (kode buatan kita), 'duaLangkah' (verifikasi dua
+// langkah), 'dataDitolak', 'tidakDitemukan', atau 'tidakDikenal'.
 import { teks } from '../teks/id.js'
 
 const KODE_KITA = /^(AK|RP|SL|TR|UN)\d{3}$/
@@ -27,6 +27,12 @@ const SESI_HABIS = new Set([
   'refresh_token_not_found', 'refresh_token_already_used', 'invalid_jwt', 'no_authorization',
 ])
 const SEDANG_BENTROK = new Set(['40001', '40P01', 'PGRST116'])
+// Galat verifikasi dua langkah dari Supabase Auth (kode salah, dst.).
+const DUA_LANGKAH = new Set([
+  'mfa_verification_failed', 'mfa_verification_rejected', 'mfa_challenge_expired', 'insufficient_aal',
+  'mfa_factor_name_conflict', 'mfa_factor_not_found', 'too_many_enrolled_mfa_factors',
+  'mfa_totp_enroll_not_enabled', 'mfa_totp_verify_not_enabled', 'mfa_ip_address_mismatch',
+])
 const TERLALU_SERING = new Set(['over_request_rate_limit', 'over_email_send_rate_limit', 'too_many_requests'])
 
 // Kata yang hampir pasti bahasa Inggris. Dipakai untuk menolak pesan server
@@ -96,6 +102,11 @@ export function petakanGalat(galat, opsi = {}) {
     const terdaftar = Object.hasOwn(T.kode, kode)
     const dariServer = terdaftar && pesanServer && !tampaknyaInggris(pesanServer) ? pesanServer : null
     return bentuk('aturan', dariServer ?? (terdaftar ? T.kode[kode] : T.dataDitolak), false, kode)
+  }
+
+  // 3b. Verifikasi dua langkah.
+  if (kode && DUA_LANGKAH.has(kode)) {
+    return bentuk('duaLangkah', T.duaLangkah[kode], false, kode)
   }
 
   // 4. Sesi habis atau tidak login.

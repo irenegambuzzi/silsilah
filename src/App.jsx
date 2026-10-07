@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Route, Routes, Link } from 'react-router-dom'
+import KhususAdmin from './components/KhususAdmin.jsx'
 import Kerangka from './components/layout/Kerangka.jsx'
 import { modeContohAktif } from './lib/modeContoh'
 import { useSesi } from './lib/konteksSesi.js'
@@ -10,6 +11,7 @@ import { Keadaan, KeadaanMemuat } from './pages/Keadaan.jsx'
 import KotakMasuk from './pages/KotakMasuk.jsx'
 import Keluar from './pages/Keluar.jsx'
 import AksesSementara from './pages/AksesSementara.jsx'
+import DuaLangkah from './pages/DuaLangkah.jsx'
 import Masuk from './pages/Masuk.jsx'
 import Penukaran from './pages/Penukaran.jsx'
 import PerangkatSaya from './pages/PerangkatSaya.jsx'
@@ -58,6 +60,9 @@ function Tamu({ children }) {
 
 export default function App({ Router = HashRouter, klien }) {
   const lindungi = (layar) => <Terlindungi>{layar}</Terlindungi>
+  // Setiap rute /admin/… WAJIB lewat admin(): admin utama harus terverifikasi
+  // dua langkah dulu (tes aturan di App.test.jsx memastikannya).
+  const admin = (layar) => lindungi(<KhususAdmin>{layar}</KhususAdmin>)
   return (
     <Router>
       <SesiProvider {...(klien !== undefined ? { klien } : {})}>
@@ -82,8 +87,9 @@ export default function App({ Router = HashRouter, klien }) {
             <Route path="/saya/tambah-perangkat" element={lindungi(<TambahPerangkat />)} />
             <Route path="/saya/perangkat" element={lindungi(<PerangkatSaya />)} />
             <Route path="/saya/keluar" element={lindungi(<Keluar />)} />
+            <Route path="/saya/dua-langkah" element={lindungi(<DuaLangkah />)} />
             <Route path="/kotak-masuk" element={lindungi(<KotakMasuk />)} />
-            <Route path="/admin/akses-sementara" element={lindungi(<AksesSementara />)} />
+            <Route path="/admin/akses-sementara" element={admin(<AksesSementara />)} />
             <Route path="*" element={<TidakDitemukan />} />
           </Routes>
           </Suspense>

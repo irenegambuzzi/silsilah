@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Check, ShieldAlert } from 'lucide-react'
+import { Check, LockKeyhole, ShieldAlert } from 'lucide-react'
 import { Judul } from '../components/ui/Judul.jsx'
 import { Kartu } from '../components/ui/Kartu.jsx'
 import { Pesan } from '../components/ui/Pesan.jsx'
-import { Tombol } from '../components/ui/Tombol.jsx'
+import { TautanTombol, Tombol } from '../components/ui/Tombol.jsx'
 import { cabutPerangkat, daftarKotakMasuk, tandaiDibaca } from '../lib/api.js'
 import { petakanGalat } from '../lib/galat.js'
 import { useSesi } from '../lib/konteksSesi.js'
@@ -18,7 +18,10 @@ const POLA_CABUT = /^#\/admin\/perangkat\?cabut=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f
 // Kotak masuk (layar 19): pemberitahuan untuk anggota. Admin utama menerima
 // login baru, login mencurigakan, dan "Bukan saya" di sini.
 export default function KotakMasuk() {
-  const { klien } = useSesi()
+  const { klien, anggota, duaLangkah } = useSesi()
+  // Mencabut perangkat orang lain adalah fungsi admin: admin utama perlu
+  // verifikasi dua langkah dulu di perangkat ini.
+  const perluDuaLangkah = Boolean(anggota?.pemilik && duaLangkah?.level !== 'aal2')
   const [daftar, setDaftar] = useState(null)
   const [galat, setGalat] = useState(null)
   const [info, setInfo] = useState(null)
@@ -83,7 +86,10 @@ export default function KotakMasuk() {
                 <h2 className={`text-xl ${belumDibaca ? 'font-bold' : 'font-semibold'}`}>{n.title}</h2>
                 {n.body && <p className="whitespace-pre-line text-lg">{n.body}</p>}
                 <p className="text-base text-redup">{formatTanggalJam(n.created_at, teks.silsilah.bulan)}</p>
-                {perangkat && (
+                {perangkat && perluDuaLangkah && (
+                  <TautanTombol to="/saya/dua-langkah" ikon={LockKeyhole}>{T.cabutPerluDuaLangkah}</TautanTombol>
+                )}
+                {perangkat && !perluDuaLangkah && (
                   <Tombol
                     varian="bahaya"
                     disabled={sedang === n.id}

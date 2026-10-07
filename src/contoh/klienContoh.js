@@ -11,6 +11,9 @@
 //   kode AKSES234       masuk dengan akses sementara 30 menit
 //   kode PENGURUS       masuk sebagai asisten admin (kotak masuk berisi contoh
 //                       pemberitahuan, dan menu "Beri akses sementara")
+//   kode UTAMA234       masuk sebagai admin utama: layar admin terkunci sampai
+//                       verifikasi dua langkah. Authenticator di sini TIRUAN:
+//                       kode yang diterima hanya 123456.
 import { BENTUK_KODE, BENTUK_TOKEN, rapikanKode } from '../../supabase/functions/_shared/rahasia.js'
 import { bacaTersimpan, tulisTersimpan } from '../lib/penyimpanan.js'
 
@@ -32,7 +35,14 @@ const PENGURUS = {
   id: 'anggota-pengurus', auth_user_id: 'akun-pengurus', display_name: 'Pak Pengurus Contoh',
   role: 'asisten', is_owner: false, permissions: ['akses_sementara'],
 }
-const SEMUA = [ANGGOTA, PENGURUS]
+const PEMILIK = {
+  id: 'anggota-pemilik', auth_user_id: 'akun-pemilik', display_name: 'Admin Utama Contoh',
+  role: 'anggota', is_owner: true, permissions: [],
+}
+const SEMUA = [ANGGOTA, PENGURUS, PEMILIK]
+// Authenticator tiruan: hanya kode ini yang diterima. Kuncinya bukan kunci sungguhan.
+const KODE_DUA_LANGKAH_CONTOH = '123456'
+const KUNCI_TOTP_CONTOH = 'CONTOHFIKTIFBUKANKUNCI23'
 
 const contohPemberitahuan = (sekarang) => [
   { id: 1, kind: 'login_mencurigakan', title: 'Login mencurigakan: Pak Jauh Contoh', priority: 'penting',
@@ -67,6 +77,8 @@ const awal = (sekarang) => ({
     },
   ],
   notifications: contohPemberitahuan(sekarang),
+  aal: 'aal1',
+  faktor: [],
 })
 
 // jeda: tundaan tiap panggilan (ms), supaya terasa seperti server sungguhan.
@@ -82,7 +94,8 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
   const beritahu = (p) => pendengar.forEach((f) => f(p, sesiSaatIni()))
   const saya = () => SEMUA.find((a) => a.id === k.anggotaId) ?? ANGGOTA
   const sesiSaatIni = () => (k.idSesi ? { access_token: token(k.idSesi, saya().auth_user_id), user: { id: saya().auth_user_id } } : null)
-  const pengurus = () => saya().permissions.includes('akses_sementara')
+  const adminUtama = () => saya().is_owner && k.aal === 'aal2'
+  const pengurus = () => saya().permissions.includes('akses_sementara') || adminUtama()
   const tiketBaru = (isi) => { const t = `tiket-${acak(8)}`; k.tiket[t] = isi; return t }
   const perangkatIni = () => k.devices.find((d) => d.session_id === k.idSesi)
   const tunggu = (data) => new Promise((r) => setTimeout(() => r(data), jeda))
@@ -92,7 +105,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
     const sumber = () => ({
       members: SEMUA,
       devices: k.devices,
-      notifications: pengurus() ? k.notifications : [],
+      notifications: pengurus() || saya().is_owner ? k.notifications : [],
       settings: [{ temp_access_max_minutes: 1440 }],
     })[nama] ?? []
     const saringan = []
@@ -143,6 +156,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       let anggota = ANGGOTA
       if (bersih === 'ABCD2345') via = 'kode'
       else if (bersih === 'PENGURUS') { via = 'kode'; anggota = PENGURUS }
+      else if (bersih === 'UTAMA234') { via = 'kode'; anggota = PEMILIK }
       else if (bersih === 'AKSES234') { via = 'sementara'; menit = 30 }
       else if (k.kodeSementara && k.kodeSementara.teks === bersih) {
         if (Date.parse(k.kodeSementara.berakhir) <= sekarang()) return ok({ ok: false, alasan: 'kedaluwarsa' })
@@ -204,7 +218,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       if (!pengurus()) return galat('AK016', 'Anda tidak punya izin memberi akses sementara.')
       if (p_minutes < 30) return galat('AK022', 'Durasi akses sementara minimal 30 menit.')
       if (p_minutes > 1440) return galat('AK009', 'Durasi akses sementara melebihi batas yang diatur admin.')
-      if (p_member === PENGURUS.id) return galat('AK017', 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.')
+      if ((p_member === PENGURUS.id || p_member === PEMILIK.id) && !adminUtama()) return galat('AK017', 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.')
       const teks = acak(8)
       k.kodeSementara = { teks, anggotaId: p_member, menit: p_minutes, berakhir: new Date(sekarang() + 600000).toISOString() }
       return ok({ code_id: 'kode-sementara', code: `${teks.slice(0, 4)}-${teks.slice(4)}`, expires_at: k.kodeSementara.berakhir, access_minutes: p_minutes })
@@ -227,6 +241,10 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       d.revoked_at = new Date(sekarang()).toISOString()
       return ok(null)
     },
+    async record_second_factor() {
+      if (!saya().is_owner) return galat('AK002', 'Hanya admin utama yang boleh melakukan ini.')
+      return ok({ aal: k.aal, perubahan: 0 })
+    },
     async report_not_me() {
       const d = perangkatIni()
       if (d) d.revoked_at = new Date(sekarang()).toISOString()
@@ -240,6 +258,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       async getSession() { return tunggu(ok({ session: sesiSaatIni() })) },
       async verifyOtp() {
         k.idSesi = `sesi-${acak(8)}`
+        k.aal = 'aal1'
         simpan()
         beritahu('SIGNED_IN')
         return ok({ session: sesiSaatIni() })
@@ -250,6 +269,41 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
         simpan()
         beritahu('SIGNED_OUT')
         return { error: null }
+      },
+      // Verifikasi dua langkah tiruan (kode yang diterima: 123456).
+      mfa: {
+        async getAuthenticatorAssuranceLevel() {
+          const ada = (k.faktor ?? []).some((f) => f.status === 'verified')
+          return tunggu(ok({ currentLevel: k.aal ?? 'aal1', nextLevel: ada ? 'aal2' : (k.aal ?? 'aal1'), currentAuthenticationMethods: [] }))
+        },
+        async listFactors() {
+          const all = structuredClone(k.faktor ?? [])
+          return tunggu(ok({ all, totp: all.filter((f) => f.status === 'verified'), phone: [], webauthn: [] }))
+        },
+        async enroll({ friendlyName, issuer }) {
+          const id = `faktor-${acak(6)}`
+          k.faktor = [...(k.faktor ?? []), { id, friendly_name: friendlyName, factor_type: 'totp', status: 'unverified', created_at: new Date(sekarang()).toISOString() }]
+          simpan()
+          const label = encodeURIComponent(`${issuer}:${saya().display_name}`)
+          return tunggu(ok({ id, type: 'totp', friendly_name: friendlyName, totp: { secret: KUNCI_TOTP_CONTOH, uri: `otpauth://totp/${label}?secret=${KUNCI_TOTP_CONTOH}&issuer=${encodeURIComponent(issuer)}` } }))
+        },
+        async challengeAndVerify({ factorId, code }) {
+          const f = (k.faktor ?? []).find((x) => x.id === factorId)
+          if (!f) return tunggu(galat('mfa_factor_not_found', 'Factor not found', 404))
+          if (code !== KODE_DUA_LANGKAH_CONTOH) return tunggu(galat('mfa_verification_failed', 'Invalid TOTP code entered', 422))
+          f.status = 'verified'
+          k.aal = 'aal2'
+          simpan()
+          return tunggu(ok({}))
+        },
+        async unenroll({ factorId }) {
+          const f = (k.faktor ?? []).find((x) => x.id === factorId)
+          if (!f) return tunggu(galat('mfa_factor_not_found', 'Factor not found', 404))
+          if (f.status === 'verified' && k.aal !== 'aal2') return tunggu(galat('insufficient_aal', 'AAL2 required', 403))
+          k.faktor = k.faktor.filter((x) => x.id !== factorId)
+          simpan()
+          return tunggu(ok({ id: factorId }))
+        },
       },
       onAuthStateChange(f) {
         pendengar.add(f)

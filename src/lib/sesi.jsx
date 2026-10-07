@@ -15,11 +15,16 @@
 // lagi (waktu berakhir disimpan di perangkat; server juga sudah menolak
 // semua permintaan data sejak waktunya habis).
 //
+// `duaLangkah` (hanya untuk admin utama, null untuk anggota lain):
+// { level: 'aal1' | 'aal2' | null, faktor: [...] | null }. Layar admin hanya
+// dibuka kalau level 'aal2' (lihat components/KhususAdmin.jsx); server juga
+// menolak fungsi admin tanpa itu. faktor null = status belum terbaca.
+//
 // Aplikasi tidak pernah menulis data apa pun di sini, kecuali lewat fungsi
 // server untuk masuk dan keluar.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { petakanGalat } from './galat.js'
-import { bacaAnggotaSaya, bacaVersiDatabase, cekPerangkat, jalankanMasuk, keluarDariPerangkat } from './api.js'
+import { bacaAnggotaSaya, bacaVersiDatabase, cekPerangkat, jalankanMasuk, keluarDariPerangkat, statusDuaLangkah } from './api.js'
 import { Konteks } from './konteksSesi.js'
 import { bacaAksesBerakhir, hapusDataLokal, simpanAksesBerakhir } from './penyimpanan.js'
 import { klienBawaan } from './supabase.js'
@@ -29,15 +34,31 @@ const online = () => (typeof navigator === 'undefined' ? true : navigator.onLine
 // Jarak minimal antar pemeriksaan ulang ke server saat aplikasi kembali dibuka.
 const JEDA_PERIKSA_ULANG_MS = 60 * 1000
 
+// Status dua langkah admin utama; kalau tidak terbaca, layar admin tetap
+// tertutup dan layar verifikasi menawarkan "Coba lagi".
+async function bacaDuaLangkah(klien, anggota) {
+  if (!anggota?.pemilik) return null
+  try {
+    return await statusDuaLangkah(klien)
+  } catch {
+    return { level: null, faktor: null }
+  }
+}
+
 export function SesiProvider({ klien = klienBawaan, children }) {
   const [keadaan, setKeadaan] = useState({
     status: klien ? 'memuat' : 'belumDisiapkan',
     anggota: null,
+    duaLangkah: null,
     berakhir: null,
     galat: null,
     alasanKeluar: null,
   })
   const sedangKeluar = useRef(false)
+  const keadaanRef = useRef(keadaan)
+  useEffect(() => {
+    keadaanRef.current = keadaan
+  }, [keadaan])
   const terakhirPeriksa = useRef(0)
 
   // Menghapus sesi dan semua data aplikasi di perangkat ini.
@@ -50,7 +71,7 @@ export function SesiProvider({ klien = klienBawaan, children }) {
         // Sesi lokal dihapus supabase-js walaupun server tidak terjangkau.
       }
       await hapusDataLokal()
-      setKeadaan({ status: 'tamu', anggota: null, berakhir: null, galat: null, alasanKeluar: alasan })
+      setKeadaan({ status: 'tamu', anggota: null, duaLangkah: null, berakhir: null, galat: null, alasanKeluar: alasan })
       sedangKeluar.current = false
     },
     [klien]
@@ -61,7 +82,7 @@ export function SesiProvider({ klien = klienBawaan, children }) {
     try {
       const { data } = await klien.auth.getSession()
       if (!data?.session) {
-        setKeadaan((s) => ({ ...s, status: 'tamu', anggota: null, berakhir: null, galat: null }))
+        setKeadaan((s) => ({ ...s, status: 'tamu', anggota: null, duaLangkah: null, berakhir: null, galat: null }))
         return
       }
       const cek = await cekPerangkat(klien)
@@ -72,17 +93,18 @@ export function SesiProvider({ klien = klienBawaan, children }) {
 
       const versi = tafsirkanVersiDatabase(await bacaVersiDatabase(klien), { online: online() })
       if (!versi.siap) {
-        setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, galat: versi }))
+        setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, duaLangkah: null, galat: versi }))
         return
       }
       const anggota = await bacaAnggotaSaya(klien)
+      const duaLangkah = await bacaDuaLangkah(klien, anggota)
       const berakhir = cek.berakhir ?? null
       simpanAksesBerakhir(berakhir)
-      setKeadaan((s) => ({ ...s, status: 'masuk', anggota, berakhir, galat: null }))
+      setKeadaan((s) => ({ ...s, status: 'masuk', anggota, duaLangkah, berakhir, galat: null }))
     } catch (e) {
       const galat = petakanGalat(e, { online: online() })
       if (galat.jenis === 'sesiHabis') return await akhiri('sesi')
-      setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, galat }))
+      setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, duaLangkah: null, galat }))
     }
   }, [klien, akhiri])
 
@@ -127,6 +149,14 @@ export function SesiProvider({ klien = klienBawaan, children }) {
     },
     [klien, akhiri]
   )
+
+  // Dibaca ulang setelah memasukkan kode, mendaftarkan, atau menghapus authenticator.
+  const perbaruiDuaLangkah = useCallback(async () => {
+    const anggota = keadaanRef.current.anggota
+    const duaLangkah = await bacaDuaLangkah(klien, anggota)
+    setKeadaan((s) => (s.anggota === anggota ? { ...s, duaLangkah } : s))
+    return duaLangkah
+  }, [klien])
 
   const akhiriRef = useRef(akhiri)
   const muatRef = useRef(muat)
@@ -184,8 +214,8 @@ export function SesiProvider({ klien = klienBawaan, children }) {
   }, [status, berakhir, klien])
 
   const nilai = useMemo(
-    () => ({ ...keadaan, klien, masuk, keluar, akhiri, coba, muat }),
-    [keadaan, klien, masuk, keluar, akhiri, coba, muat]
+    () => ({ ...keadaan, klien, masuk, keluar, akhiri, coba, muat, perbaruiDuaLangkah }),
+    [keadaan, klien, masuk, keluar, akhiri, coba, muat, perbaruiDuaLangkah]
   )
   return <Konteks.Provider value={nilai}>{children}</Konteks.Provider>
 }

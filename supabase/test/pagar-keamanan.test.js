@@ -78,10 +78,10 @@ describe('pagar keamanan untuk semua migrasi', () => {
 })
 
 describe('jadwal.sql', () => {
-  it('menjadwalkan penghapusan data pribadi berkala (IP mentah 30 hari, percobaan 1 hari) dan ringkasan login', () => {
+  it('menjadwalkan penghapusan data pribadi berkala (IP mentah 30 hari, percobaan 1 hari), ringkasan login, dan cek authenticator admin', () => {
     const sql = fs.readFileSync(path.join(FOLDER_SQL, 'jadwal.sql'), 'utf8')
     const terjadwal = [...sql.matchAll(/^select cron\.schedule\('[\w-]+', '[^']+', \$\$select (private\.\w+)\(\)\$\$\);$/gm)].map((x) => x[1])
-    for (const f of ['private.purge_old_login_ips', 'private.purge_redeem_data', 'private.send_login_digest', 'private.daily_snapshot']) {
+    for (const f of ['private.purge_old_login_ips', 'private.purge_redeem_data', 'private.send_login_digest', 'private.daily_snapshot', 'private.check_owner_factors']) {
       expect(terjadwal, f).toContain(f)
     }
   })

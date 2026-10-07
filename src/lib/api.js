@@ -148,3 +148,65 @@ export async function hitungBelumDibaca(klien) {
   if (error) throw error
   return (data ?? []).length
 }
+
+// ── Verifikasi dua langkah (hanya admin utama) ─────────────────────
+// Fungsi admin utama hanya berlaku dengan sesi "aal2" (server menolak tanpa
+// itu). Rahasia TOTP hanya lewat di layar pendaftaran: tidak disimpan atau
+// dicatat di mana pun oleh aplikasi.
+
+const faktorTotp = (daftar) => (daftar?.all ?? daftar?.totp ?? []).filter((f) => f.factor_type === 'totp')
+
+// Hasil: { level: 'aal1' | 'aal2' | null, faktor: [{ id, nama, dibuat }] }
+// (faktor = authenticator yang sudah selesai didaftarkan).
+export async function statusDuaLangkah(klien) {
+  const [tingkat, daftar] = await Promise.all([
+    klien.auth.mfa.getAuthenticatorAssuranceLevel(),
+    klien.auth.mfa.listFactors(),
+  ])
+  if (tingkat.error) throw tingkat.error
+  if (daftar.error) throw daftar.error
+  return {
+    level: tingkat.data?.currentLevel ?? null,
+    faktor: faktorTotp(daftar.data)
+      .filter((f) => f.status === 'verified')
+      .map((f) => ({ id: f.id, nama: f.friendly_name ?? '', dibuat: f.created_at })),
+  }
+}
+
+// Mencatat di log keamanan dan memeriksa daftar authenticator. Kegagalan
+// tidak menghalangi admin: pemeriksaan terjadwal di server tetap berjalan.
+async function catatDuaLangkah(klien) {
+  try {
+    await rpc(klien, 'record_second_factor')
+  } catch {
+    // Dicoba lagi oleh jadwal cek-dua-langkah (setiap 10 menit).
+  }
+}
+
+// Mulai mendaftarkan authenticator. Pendaftaran yang dulu tidak selesai
+// dibersihkan dulu. Hasil: { id, uri, rahasia } untuk kode QR.
+export async function mulaiDaftarTotp(klien, nama, penerbit) {
+  const daftar = await klien.auth.mfa.listFactors()
+  if (daftar.error) throw daftar.error
+  for (const f of faktorTotp(daftar.data).filter((x) => x.status !== 'verified')) {
+    const { error } = await klien.auth.mfa.unenroll({ factorId: f.id })
+    if (error) throw error
+  }
+  const { data, error } = await klien.auth.mfa.enroll({ factorType: 'totp', friendlyName: nama, issuer: penerbit })
+  if (error) throw error
+  return { id: data.id, uri: data.totp.uri, rahasia: data.totp.secret }
+}
+
+// Kode 6 angka dari aplikasi authenticator. Berhasil → sesi ini "aal2".
+export async function verifikasiTotp(klien, factorId, kode) {
+  const { error } = await klien.auth.mfa.challengeAndVerify({ factorId, code: kode })
+  if (error) throw error
+  await catatDuaLangkah(klien)
+}
+
+// Menghapus authenticator (hanya bisa dari sesi "aal2").
+export async function hapusAuthenticator(klien, factorId) {
+  const { error } = await klien.auth.mfa.unenroll({ factorId })
+  if (error) throw error
+  await catatDuaLangkah(klien)
+}

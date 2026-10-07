@@ -119,6 +119,14 @@ describe('sesi dan akun', () => {
     expect(petakanGalat({ message: 'x', status: 429 }).jenis).toBe('terlaluSering')
     expect(petakanGalat({ name: 'AuthApiError', message: 'x', code: 'over_request_rate_limit', status: 429 }).bisaCobaLagi).toBe(true)
   })
+  it('verifikasi dua langkah: kode salah dan sesi belum aal2 → pesan Indonesia (bukan "tidak punya izin")', () => {
+    const salah = petakanGalat({ name: 'AuthApiError', message: 'Invalid TOTP code entered', code: 'mfa_verification_failed', status: 422 })
+    expect(salah).toMatchObject({ jenis: 'duaLangkah', kode: 'mfa_verification_failed' })
+    expect(salah.pesan).toMatch(/^Kode salah\./)
+    const aal = petakanGalat({ name: 'AuthApiError', message: 'AAL2 required', code: 'insufficient_aal', status: 403 })
+    expect(aal.jenis).toBe('duaLangkah')
+    expect(tampaknyaInggris(aal.pesan)).toBe(false)
+  })
 })
 
 describe('jaringan dan server', () => {

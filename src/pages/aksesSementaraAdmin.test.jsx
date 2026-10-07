@@ -16,8 +16,9 @@ const NAMA = [
 ]
 const jamDepan = (menit) => new Date(Date.now() + menit * 60000).toISOString()
 
-function klienPengurus({ anggota = asisten, rpc = {}, tabel = {}, batas = 1440 } = {}) {
+function klienPengurus({ anggota = asisten, rpc = {}, tabel = {}, batas = 1440, mfa } = {}) {
   const klien = klienSudahMasuk({
+    mfa,
     rpc: {
       db_version: async () => OK('999'),
       member_names: async () => OK(NAMA),
@@ -138,10 +139,14 @@ describe('layar Beri akses sementara', () => {
     expect(screen.queryByRole('img')).toBeNull()
   })
 
-  it('admin utama tanpa verifikasi dua langkah: penjelasan khusus (bukan "tidak punya izin")', async () => {
-    const klien = klienPengurus({ anggota: pemilik, rpc: { list_temp_access: async () => GALAT('AK016', 'Anda tidak punya izin memberi akses sementara.') } })
+  it('admin utama terverifikasi tetapi server tetap menolak (AK016): petunjuk verifikasi ulang, bukan "tidak punya izin"', async () => {
+    const klien = klienPengurus({
+      anggota: pemilik,
+      mfa: { level: 'aal2', faktor: [{ id: 'f-1', friendly_name: 'Utama' }] },
+      rpc: { list_temp_access: async () => GALAT('AK016', 'Anda tidak punya izin memberi akses sementara.') },
+    })
     pasang('/admin/akses-sementara', klien)
-    expect(await screen.findByText(/membutuhkan verifikasi dua langkah/)).toBeTruthy()
+    expect(await screen.findByText(/meminta verifikasi dua langkah lagi/)).toBeTruthy()
     expect(screen.queryByText('Anda tidak punya izin memberi akses sementara.')).toBeNull()
   })
 })

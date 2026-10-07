@@ -1,0 +1,28 @@
+-- DARURAT — HP atau aplikasi authenticator admin utama hilang, dan tidak
+-- ada perangkat admin lain yang masih bisa membuka "Verifikasi dua langkah".
+--
+-- Hanya pemilik akun Supabase (yang login ke dashboard dengan verifikasi dua
+-- langkahnya sendiri) yang bisa menjalankan ini, dari SQL Editor. Lewat
+-- aplikasi atau API tidak bisa.
+--
+-- Yang terjadi:
+--   1. Semua authenticator akun admin utama dihapus.
+--   2. Semua perangkat admin utama dicabut dan semua sesi loginnya diakhiri
+--      (HP yang hilang langsung tidak bisa membuka apa pun).
+--   3. Dibuat SATU link masuk baru untuk admin utama: sekali pakai, 7 hari.
+--   4. Dicatat di log keamanan, dan muncul di kotak masuk admin utama.
+-- Data keluarga TIDAK disentuh. Perangkat anggota lain tidak terpengaruh.
+--
+-- Cara pakai:
+--   1. Dashboard Supabase → SQL Editor → New query.
+--   2. Tempel seluruh isi file ini.
+--   3. Ganti KETIK-DI-SINI dengan kata PULIHKAN (huruf besar), lalu Run.
+--   4. Baris terakhir hasilnya berisi bagian akhir link (diawali "#/u/").
+--      Tempel di belakang alamat situs, misalnya https://<akun>.github.io/silsilah/
+--      lalu buka di HP baru. Jangan kirim link itu lewat chat atau email.
+--   5. Setelah masuk: menu Saya → Verifikasi dua langkah → daftarkan
+--      authenticator baru (sebaiknya langsung dua: utama dan cadangan).
+--
+-- Kalau dijalankan dua kali, link pertama otomatis dibatalkan.
+
+select * from private.emergency_reset_owner_2fa('KETIK-DI-SINI');

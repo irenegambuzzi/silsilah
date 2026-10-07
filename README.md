@@ -31,6 +31,7 @@ perintah itu, buka alamat yang tampil di Terminal):
 | kode `ABCD2345` di layar Masuk | masuk sebagai perangkat tambahan |
 | kode `AKSES234` | masuk dengan akses sementara 30 menit (spanduk hitung mundur; data dihapus saat habis) |
 | kode `PENGURUS` | masuk sebagai asisten admin: Kotak masuk berisi contoh pemberitahuan, dan menu Saya → "Beri akses sementara" (pilih "Bu Contoh", buat kode, lalu pakai kode itu di jendela lain) |
+| kode `UTAMA234` | masuk sebagai admin utama: layar admin (Saya → "Beri akses sementara") terkunci sampai verifikasi dua langkah. Authenticator di mode contoh **tiruan**: kode yang diterima hanya `123456` (kunci/QR yang tampil bukan kunci sungguhan) |
 | `/#/privasi` | halaman Privasi |
 
 ## Menyambungkan ke database
@@ -84,6 +85,49 @@ sendiri (sekali pakai, ber-hash, kedaluwarsa) dan batas percobaan di SQL 009.
 Login memakai tautan masuk (magic link) tanpa email terkirim, jadi provider
 **Email** di Authentication harus aktif, sedangkan "Allow new users to sign
 up" tetap mati.
+
+## Verifikasi dua langkah admin utama
+
+Admin utama masuk seperti anggota lain, lalu memasukkan kode 6 angka dari
+aplikasi authenticator (TOTP; misalnya aplikasi Kata Sandi di iPhone, bagian
+Kode Verifikasi). Tanpa itu, database memperlakukan admin utama sebagai
+anggota biasa (`is_owner()` di SQL 004 menuntut sesi `aal2`), dan aplikasi
+mengunci semua layar `/admin/…`. Verifikasi berlaku per perangkat, sampai
+perangkat itu keluar.
+
+- Pengaturan Supabase: Authentication → Multi-Factor → **TOTP aktif** (bawaan
+  menyala). Passkey/WebAuthn Supabase masih beta (diumumkan Mei 2026, API
+  eksperimental), jadi belum dipakai; begitu juga kode pemulihan bawaan
+  Supabase (eksperimental).
+- Daftarkan **dua** authenticator: "Utama" dan "Cadangan" (HP/tablet kedua,
+  atau kunci yang ditampilkan saat mendaftar, disalin ke kertas dan disimpan
+  bersama passphrase backup). Menu Saya → Verifikasi dua langkah.
+- Setiap authenticator yang ditambah atau dihapus dicatat dan dilaporkan ke
+  kotak masuk admin utama (pemeriksaan setiap 10 menit, `jadwal.sql`), juga
+  kalau perubahannya tidak lewat aplikasi.
+
+**Kalau HP atau aplikasi authenticator hilang**, dari yang paling ringan:
+
+1. **Masih ada authenticator cadangan**: masuk dengan kode cadangan, lalu
+   Saya → Verifikasi dua langkah → hapus authenticator yang hilang dan
+   daftarkan yang baru. Cabut HP yang hilang di Saya → Perangkat saya.
+2. **Tidak ada cadangan, tetapi masih ada perangkat admin lain yang sudah
+   terverifikasi** (misalnya laptop): lakukan hal yang sama dari perangkat itu.
+   HP yang dicabut tidak bisa membaca data atau menjalankan fungsi admin lagi.
+   Kalau sesudahnya muncul pemberitahuan "Authenticator baru" yang tidak Anda
+   kenal, langsung ke langkah 3.
+3. **Prosedur darurat** (pemilik akun Supabase, dari SQL Editor; akun Supabase
+   dilindungi verifikasi dua langkahnya sendiri): jalankan
+   `supabase/darurat/pulihkan_dua_langkah_admin.sql` setelah mengganti
+   `KETIK-DI-SINI` dengan `PULIHKAN`. Semua authenticator admin utama dihapus,
+   semua perangkat dan sesi login admin utama diakhiri (HP yang hilang
+   langsung tidak bisa membuka apa pun), dan keluar satu link masuk baru
+   (sekali pakai, 7 hari). Buka link itu di HP baru, lalu daftarkan
+   authenticator baru. Data keluarga tidak disentuh.
+
+Karena itu **verifikasi dua langkah akun Supabase dan GitHub (pengingat ⏰ B)
+adalah kunci terakhir**: siapa pun yang menguasai akun Supabase bisa
+menjalankan prosedur darurat.
 
 ## Perkiraan lokasi login
 

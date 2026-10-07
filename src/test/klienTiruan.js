@@ -20,10 +20,21 @@ export const GALAT = (kode, pesan = 'galat', status) => ({ data: null, error: { 
 //   rpc         { claim_device: async (args) => ({ data, error }), … }
 //   tabel       { members: [...], devices: [...], notifications: [...] }
 //   verifyOtp   async ({ token_hash, type }) => ({ data, error }); bawaan: membuat sesi
+//   mfa         verifikasi dua langkah: { level: 'aal1' | 'aal2', faktor: [{ id, friendly_name,
+//               status }], kodeBenar: '123456', gagal: { namaMetode: galat } }
 export function buatKlienTiruan(opsi = {}) {
   const panggilan = []
   const catat = (jenis, nama, isi) => panggilan.push({ jenis, nama, isi })
-  const keadaan = { sesi: opsi.sesi ?? null, pendengar: new Set() }
+  const keadaan = {
+    sesi: opsi.sesi ?? null,
+    pendengar: new Set(),
+    mfa: {
+      level: opsi.mfa?.level ?? 'aal1',
+      faktor: structuredClone(opsi.mfa?.faktor ?? []).map((f) => ({ factor_type: 'totp', status: 'verified', created_at: '2026-10-07T07:00:00Z', ...f })),
+      kodeBenar: opsi.mfa?.kodeBenar ?? '123456',
+      gagal: opsi.mfa?.gagal ?? {},
+    },
+  }
   const tabel = structuredClone(opsi.tabel ?? {})
 
   const beritahu = (peristiwa) => keadaan.pendengar.forEach((f) => f(peristiwa, keadaan.sesi))
@@ -76,6 +87,46 @@ export function buatKlienTiruan(opsi = {}) {
         beritahu('SIGNED_OUT')
         return { error: null }
       }),
+      // Verifikasi dua langkah (TOTP), seperti supabase.auth.mfa.
+      mfa: {
+        getAuthenticatorAssuranceLevel: vi.fn(async () => {
+          if (keadaan.mfa.gagal.getAuthenticatorAssuranceLevel) return { data: null, error: keadaan.mfa.gagal.getAuthenticatorAssuranceLevel }
+          const ada = keadaan.mfa.faktor.some((f) => f.status === 'verified')
+          return OK({ currentLevel: keadaan.mfa.level, nextLevel: ada ? 'aal2' : keadaan.mfa.level, currentAuthenticationMethods: [] })
+        }),
+        listFactors: vi.fn(async () => {
+          const all = structuredClone(keadaan.mfa.faktor)
+          return OK({ all, totp: all.filter((f) => f.status === 'verified'), phone: [], webauthn: [] })
+        }),
+        enroll: vi.fn(async (args) => {
+          catat('mfa', 'enroll', args)
+          if (keadaan.mfa.gagal.enroll) return { data: null, error: keadaan.mfa.gagal.enroll }
+          const id = `faktor-${keadaan.mfa.faktor.length + 1}`
+          keadaan.mfa.faktor.push({ id, friendly_name: args.friendlyName, factor_type: 'totp', status: 'unverified', created_at: '2026-10-07T07:00:00Z' })
+          return OK({
+            id, type: 'totp', friendly_name: args.friendlyName,
+            totp: { qr_code: 'data:image/svg+xml;utf-8,<svg/>', secret: 'KUNCITIRUANRAHASIA234567', uri: `otpauth://totp/${args.issuer}?secret=KUNCITIRUANRAHASIA234567` },
+          })
+        }),
+        challengeAndVerify: vi.fn(async (args) => {
+          catat('mfa', 'challengeAndVerify', args)
+          const f = keadaan.mfa.faktor.find((x) => x.id === args.factorId)
+          if (!f) return GALAT('mfa_factor_not_found', 'Factor not found', 404)
+          if (args.code !== keadaan.mfa.kodeBenar) return GALAT('mfa_verification_failed', 'Invalid TOTP code entered', 422)
+          f.status = 'verified'
+          keadaan.mfa.level = 'aal2'
+          beritahu('MFA_CHALLENGE_VERIFIED')
+          return OK({ access_token: 'token-aal2' })
+        }),
+        unenroll: vi.fn(async (args) => {
+          catat('mfa', 'unenroll', args)
+          const f = keadaan.mfa.faktor.find((x) => x.id === args.factorId)
+          if (!f) return GALAT('mfa_factor_not_found', 'Factor not found', 404)
+          if (f.status === 'verified' && keadaan.mfa.level !== 'aal2') return GALAT('insufficient_aal', 'AAL2 required', 403)
+          keadaan.mfa.faktor = keadaan.mfa.faktor.filter((x) => x.id !== args.factorId)
+          return OK({ id: args.factorId })
+        }),
+      },
       onAuthStateChange: vi.fn((f) => {
         keadaan.pendengar.add(f)
         return { data: { subscription: { unsubscribe: () => keadaan.pendengar.delete(f) } } }
@@ -110,7 +161,7 @@ export function klienSudahMasuk(tambahan = {}) {
   return buatKlienTiruan({
     sesi: { access_token: tokenTiruan('sesi-ini'), user: { id: 'akun-contoh' } },
     fungsi: { 'cek-perangkat': async () => OK({ ok: true, status: 'ok', berakhir: null }) },
-    rpc: { db_version: async () => OK('999') },
+    rpc: { db_version: async () => OK('999'), record_second_factor: async () => OK({ aal: 'aal2', perubahan: 0 }) },
     ...tambahan,
     tabel: { members: [anggotaContoh], devices: [], notifications: [], ...(tambahan.tabel ?? {}) },
   })

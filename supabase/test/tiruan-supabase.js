@@ -6,7 +6,7 @@
 // Yang ditiru (meniru nama dan perilaku di Supabase):
 //   - role anon, authenticated, service_role (service_role melewati RLS),
 //     dan authenticator (pengguna sesi untuk semua permintaan API);
-//   - schema auth: tabel users dan sessions; fungsi auth.uid(),
+//   - schema auth: tabel users, sessions, dan mfa_factors; fungsi auth.uid(),
 //     auth.role(), auth.jwt() yang membaca klaim JWT dari setting
 //     request.jwt.claims, persis seperti PostgREST di Supabase;
 //   - schema extensions dengan pgcrypto (di Supabase, pgcrypto ada di sana);
@@ -59,6 +59,17 @@ const SQL_TIRUAN = `
     email text unique,
     banned_until timestamptz,
     created_at timestamptz not null default now()
+  );
+  -- Authenticator (TOTP dll.). Di Supabase factor_type dan status berupa
+  -- enum; di sini teks dengan nilai yang sama.
+  create table auth.mfa_factors (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references auth.users (id) on delete cascade,
+    friendly_name text,
+    factor_type text not null default 'totp' check (factor_type in ('totp', 'phone', 'webauthn')),
+    status text not null default 'unverified' check (status in ('unverified', 'verified')),
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
   );
   create table auth.sessions (
     id uuid primary key default gen_random_uuid(),

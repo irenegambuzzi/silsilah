@@ -30,7 +30,7 @@ describe('teks/id.js', () => {
   })
 
   it('kalimat pesan berakhir dengan tanda baca', () => {
-    const pesan = daftar.filter(([j]) => /^teks\.galat\.(?!standar\.|batasan\.|kode\.)[a-zA-Z]+$/.test(j) || /^teks\.galat\.(standar|batasan|kode)\./.test(j))
+    const pesan = daftar.filter(([j]) => /^teks\.galat\.(?!standar\.|batasan\.|kode\.|duaLangkah\.)[a-zA-Z]+$/.test(j) || /^teks\.galat\.(standar|batasan|kode|duaLangkah)\./.test(j))
     const tanpaTitik = pesan.filter(([, t]) => !/[.!?"]$/.test(t))
     expect(tanpaTitik).toEqual([])
   })

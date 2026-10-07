@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
 import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router-dom'
 import App from './App'
@@ -35,5 +37,15 @@ describe('App', () => {
     const html = tampil('/masuk')
     expect(html).toContain('Aplikasi belum siap')
     expect(html).not.toMatch(/undefined|\[object/)
+  })
+
+  it('setiap rute /admin/… lewat gerbang verifikasi dua langkah (admin())', () => {
+    const isi = fs.readFileSync(path.join(import.meta.dirname, 'App.jsx'), 'utf8')
+    const rute = [...isi.matchAll(/<Route path="(\/admin[^"]*)" element=\{(\w+)\(/g)]
+    expect(rute.length).toBeGreaterThan(0)
+    expect(rute.filter((r) => r[2] !== 'admin').map((r) => r[1])).toEqual([])
+    // Tidak ada rute /admin yang ditulis dengan bentuk lain (lolos dari pola di atas).
+    expect((isi.match(/path="\/admin/g) ?? []).length).toBe(rute.length)
+    expect(isi).toContain('const admin = (layar) => lindungi(<KhususAdmin>{layar}</KhususAdmin>)')
   })
 })

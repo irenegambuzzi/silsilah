@@ -16,6 +16,8 @@
 --                   1 hari.
 --   ringkasan-login setiap jam tepat: ringkasan login untuk admin utama
 --                   (hanya kalau "ringkasan per jam" menyala dan ada login).
+--   cek-dua-langkah setiap 10 menit: authenticator admin utama yang baru
+--                   atau yang dihapus → dicatat dan admin utama diberi tahu.
 --
 -- Kalau perintah "create extension" gagal: Dashboard → Database →
 -- Extensions → cari "pg_cron" → aktifkan, lalu jalankan file ini lagi.
@@ -28,6 +30,7 @@ select cron.schedule('salinan-harian', '0 19 * * *', $$select private.daily_snap
 select cron.schedule('hapus-ip-lama', '15 20 * * *', $$select private.purge_old_login_ips()$$);
 select cron.schedule('hapus-percobaan-lama', '20 20 * * *', $$select private.purge_redeem_data()$$);
 select cron.schedule('ringkasan-login', '0 * * * *', $$select private.send_login_digest()$$);
+select cron.schedule('cek-dua-langkah', '*/10 * * * *', $$select private.check_owner_factors()$$);
 
 -- ── Pemeriksaan ───────────────────────────────────────────────────
 select 'Jadwal salinan-harian aktif' as pemeriksaan,
@@ -44,4 +47,8 @@ select 'Jadwal hapus-percobaan-lama aktif',
 union all
 select 'Jadwal ringkasan-login aktif',
        (select count(*)::text from cron.job where jobname = 'ringkasan-login' and active),
+       '1'
+union all
+select 'Jadwal cek-dua-langkah aktif',
+       (select count(*)::text from cron.job where jobname = 'cek-dua-langkah' and active),
        '1';

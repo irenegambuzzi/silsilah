@@ -1,4 +1,4 @@
-import { KeyRound, LogOut, ShieldCheck, Smartphone, Timer } from 'lucide-react'
+import { KeyRound, LockKeyhole, LogOut, ShieldCheck, Smartphone, Timer } from 'lucide-react'
 import { PilihanUkuranHuruf, SakelarKontras } from '../components/PengaturanTampilan.jsx'
 import { Judul, Subjudul } from '../components/ui/Judul.jsx'
 import { Kartu } from '../components/ui/Kartu.jsx'
@@ -10,7 +10,7 @@ import { teks } from '../teks/id.js'
 // Layar Saya / Pengaturan (layar 20).
 export default function Saya() {
   const T = teks.saya
-  const { anggota, berakhir } = useSesi()
+  const { anggota, berakhir, duaLangkah } = useSesi()
   return (
     <>
       <Judul>{T.judul}</Judul>
@@ -25,10 +25,16 @@ export default function Saya() {
         {!berakhir && <TautanTombol to="/saya/tambah-perangkat" ikon={KeyRound}>{T.tambahPerangkat}</TautanTombol>}
         <TautanTombol to="/saya/perangkat" ikon={Smartphone}>{T.perangkatSaya}</TautanTombol>
       </Kartu>
-      {bolehBeriAkses(anggota) && (
+      {(bolehBeriAkses(anggota) || anggota?.pemilik) && (
         <Kartu className="flex flex-col gap-3">
           <Subjudul>{T.admin}</Subjudul>
-          <TautanTombol to="/admin/akses-sementara" ikon={Timer}>{T.aksesSementara}</TautanTombol>
+          {anggota?.pemilik && (
+            <>
+              <p className="text-lg">{duaLangkah?.level === 'aal2' ? T.duaLangkahAktif : T.duaLangkahBelum}</p>
+              <TautanTombol to="/saya/dua-langkah" ikon={LockKeyhole}>{T.duaLangkah}</TautanTombol>
+            </>
+          )}
+          {bolehBeriAkses(anggota) && <TautanTombol to="/admin/akses-sementara" ikon={Timer}>{T.aksesSementara}</TautanTombol>}
         </Kartu>
       )}
       <Kartu className="flex flex-col gap-3">

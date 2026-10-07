@@ -686,9 +686,9 @@ Setiap bulan admin utama mendapat daftar anggota yang **tidak aktif lebih dari 1
 ### 6.5 Akun admin utama
 
 - Masuk seperti anggota lain, lalu **verifikasi dua langkah wajib**: TOTP (kode 6 angka dari aplikasi authenticator, misalnya aplikasi Kata Sandi di iPhone yang dibuka dengan Face ID).
-- **Passkey/Face ID langsung** dipakai kalau Supabase Auth sudah mendukung WebAuthn saat langkah 1.19 dikerjakan. Saat ini dukungan itu belum pasti di paket Free, jadi akan dicek dan dilaporkan.
-- Sesi admin tanpa verifikasi dua langkah (`aal1`) **tidak bisa** menjalankan fungsi admin.
-- Kode pemulihan TOTP disimpan offline.
+- **Passkey/Face ID langsung** dipakai kalau Supabase Auth sudah mendukung WebAuthn saat langkah 1.19 dikerjakan. **Dicek di langkah 1.19 (7 Oktober 2026):** passkey Supabase masih **beta** (diumumkan 28 Mei 2026, API eksperimental yang bisa berubah), jadi belum dipakai; TOTP tetap wajib. Kode pemulihan bawaan Supabase juga masih eksperimental, jadi tidak dipakai.
+- Sesi admin tanpa verifikasi dua langkah (`aal1`) **tidak bisa** menjalankan fungsi admin. Aplikasi juga mengunci semua layar `/admin/…` (gerbang `KhususAdmin`).
+- Pengganti kode pemulihan (langkah 1.19): **dua authenticator** (utama + cadangan), dan **prosedur darurat** dari SQL Editor (`supabase/darurat/`, SQL 013) yang menghapus semua authenticator, mengakhiri semua perangkat/sesi admin utama, lalu membuat satu link masuk baru. Authenticator yang ditambah/dihapus dilaporkan ke kotak masuk admin utama (jadwal setiap 10 menit).
 
 **Pengingat untuk Anda:** aktifkan juga verifikasi dua langkah untuk **akun Supabase** dan **akun GitHub** (langkah 2.1). Akun-akun itu adalah kunci utama ke seluruh data.
 
