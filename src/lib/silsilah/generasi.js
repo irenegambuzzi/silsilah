@@ -4,9 +4,11 @@
 // Pasangan yang bukan keturunan tidak punya GEN. Kalau KEDUA orang tua
 // keturunan (pernikahan antarsepupu), GEN mengikuti jalur yang paling dekat
 // ke pangkal; kedua jalur tetap dicatat di `jalur`.
-import { KATA } from './kata.js'
+import { teks } from '../../teks/id.js'
 import { orangTuaUnion, pasanganDi, urutanLahir } from './graf.js'
 import { jenisPasangan, pasanganBerurutan } from './urutan.js'
+
+const KATA = teks.silsilah
 
 // Bawaan dari settings (PLAN.md bagian 5.4). Mulai GEN.11 tanpa istilah.
 export const DAFTAR_GENERASI = [

@@ -1,7 +1,9 @@
 // Urutan: "ke-n", urutan pernikahan seseorang, dan urutan pasangan
 // ("istri ke-2", "suami ke-1").
 import { bandingkanKabur, tanggalDari } from './tanggal.js'
-import { KATA } from './kata.js'
+import { teks } from '../../teks/id.js'
+
+const KATA = teks.silsilah
 
 export const keN = (n) => `ke-${n}`
 export const teksAnakKe = (n) => `${KATA.anakKe}${n}`

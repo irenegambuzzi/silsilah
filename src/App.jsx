@@ -1,5 +1,6 @@
 import { HashRouter, Route, Routes, Link } from 'react-router-dom'
 import { modeContohAktif } from './lib/modeContoh'
+import { teks } from './teks/id'
 
 // Kerangka awal: belum ada login dan belum ada data. Halaman sengaja
 // tidak memuat nama atau data keluarga apa pun.
@@ -8,8 +9,8 @@ import { modeContohAktif } from './lib/modeContoh'
 function Beranda() {
   return (
     <>
-      <h1 className="text-3xl font-bold">Silsilah Keluarga</h1>
-      <p className="text-lg">Aplikasi ini sedang dibangun.</p>
+      <h1 className="text-3xl font-bold">{teks.aplikasi.nama}</h1>
+      <p className="text-lg">{teks.aplikasi.sedangDibangun}</p>
     </>
   )
 }
@@ -17,10 +18,10 @@ function Beranda() {
 function TidakDitemukan() {
   return (
     <>
-      <h1 className="text-3xl font-bold">Halaman tidak ditemukan</h1>
-      <p className="text-lg">Alamat yang Anda buka tidak ada di aplikasi ini.</p>
+      <h1 className="text-3xl font-bold">{teks.aplikasi.tidakDitemukanJudul}</h1>
+      <p className="text-lg">{teks.aplikasi.tidakDitemukanIsi}</p>
       <Link to="/" className="text-lg font-semibold underline">
-        Kembali ke halaman awal
+        {teks.aplikasi.kembaliKeAwal}
       </Link>
     </>
   )

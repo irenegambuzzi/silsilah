@@ -5,12 +5,14 @@
 // "Anak ke-6 · dari istri ke-1". Anak sambung dan anak angkat tampil SAMA
 // PERSIS dengan saudaranya; keterangan "Anak sambung"/"Anak angkat" hanya
 // ada di Detail.
-import { KATA } from './kata.js'
+import { teks } from '../../teks/id.js'
 import { namaTampil } from './nama.js'
 import { formatTanggal, tahunHidup, tanggalDari, teksPeristiwa } from './tanggal.js'
 import { istilahGenerasi, labelGen, teksGenerasi } from './generasi.js'
 import { jenisPasangan, pasanganBerurutan, teksAnakKe, teksPasanganKe } from './urutan.js'
 import { pasanganDi, urutanLahir } from './graf.js'
+
+const KATA = teks.silsilah
 
 const hurufBesarAwal = (teks) => teks.charAt(0).toUpperCase() + teks.slice(1)
 

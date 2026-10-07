@@ -45,10 +45,10 @@ Istilah:
 | 2.3 Matikan pendaftaran pengguna baru; daftar Users kosong | ✅ Selesai |
 | 2.5 Repo lama privat, situs 404, fork = 0 | ✅ Selesai |
 | 2.1 Verifikasi dua langkah (GitHub, Supabase, Google) | ⏳ **Ditunda.** Pengingat ⏰ B ada di Fase 1 sebelum langkah 1.30; harus selesai sebelum Fase 1 selesai. |
-| 2.4 Ganti kunci API (publishable/secret baru, matikan kunci legacy, uji `curl`) | ⏳ **Ditunda** karena gangguan teknis Supabase. Pengingat ⏰ A ada di Fase 1 sebelum langkah 1.15, setelah gangguan selesai. |
-| 2.4 langkah 4 / Security Advisor | ⏳ Dijalankan bersama penggantian kunci API |
+| 2.4 Ganti kunci API (publishable/secret baru, matikan kunci legacy, uji `curl`) | ✅ **Kunci sudah diganti (7 Oktober 2026).** Publishable key baru bernama `aplikasi_silsilah`, secret key baru bernama `server_silsilah`; kunci lama `default` (publishable dan secret) sudah dihapus; kunci versi lama (JWT-based anon/service_role) sudah dimatikan. Uji `curl` dengan kunci lama belum dikonfirmasi. |
+| 2.4 langkah 4 / Security Advisor | ⏳ Belum dikonfirmasi. Dijalankan bersama uji `curl` kunci lama, paling lambat di langkah 1.29. |
 
-Catatan: selama kunci API belum diganti, kunci anon lama masih berlaku. Kunci itu **tidak lagi bisa membuka data** karena tabel sudah dikunci dan pendaftaran dimatikan, tetapi kunci tersebut tetap harus dimatikan sebelum aplikasi baru dipakai.
+Catatan: kunci anon lama sudah dimatikan. Isi kunci (baru maupun lama) **tidak pernah** ditulis di repo; di sini hanya nama kuncinya yang dicatat.
 
 Panduan lengkap setiap langkah tetap disimpan di bawah ini sebagai rujukan.
 
@@ -1162,7 +1162,7 @@ Setiap langkah kecil, bisa dites, dan selesai dengan commit + CI hijau. **Kode b
 | 1.12 | SQL 008: `snapshots` (berdasarkan perubahan, bertingkat, khusus) + file jadwal `pg_cron` | PGlite: tanpa perubahan → tidak ada snapshot baru; perapian sesuai 30/12/12. |
 | 1.13 | Logika murni: tanggal, "ke-n", graf, GEN + istilah Jawa (GEN.11+ tanpa istilah), jalur terdekat untuk pasangan sepupu, urutan lahir lintas pernikahan per orang tua, "istri/suami ke-n", label kartu dan detail, Alm./Almh., nomor silsilah, istilah kerabat pohon keluarga asal (`kerabat.js`) | Vitest dengan keluarga fiktif, termasuk contoh 1–3/4–5/6–7/8–11, pernikahan antarsepupu, dan Pakdhe/Paklik. |
 | 1.14 | `teks/id.js` + pemetaan error + deteksi "sedang dipulihkan" dan "database belum diperbarui" | Tes: tidak ada pesan bahasa Inggris yang lolos. |
-| ⏰ | **Pengingat A untuk Anda: ganti kunci API** (bagian 2.4) setelah gangguan Supabase selesai. Ini **wajib sebelum 1.15**, karena Edge Functions dan aplikasi baru memakai publishable/secret key baru. Setelah itu: uji `curl` dengan kunci lama dan jalankan Security Advisor. | Kunci lama → error. |
+| ✅ | **Pengingat A: ganti kunci API** (bagian 2.4). **SELESAI 7 Oktober 2026:** publishable `aplikasi_silsilah`, secret `server_silsilah`, kunci lama dihapus, JWT-based dimatikan. Tersisa: uji `curl` dengan kunci lama dan Security Advisor (paling lambat di 1.29). | Kunci lama → error. |
 | 1.15 | Edge Functions `pakai-undangan`, `pakai-kode` + RPC buat undangan/kode + klaim perangkat | Unit test + uji manual di HP. Link sekali pakai, 7 hari, kode 10 menit. |
 | 1.16 | Perkiraan lokasi login dari IP: database DB-IP Lite **offline** (uji ukuran dan kelayakan di Edge Function; cadangan: tingkat negara saja), simpan kota/negara/jenis perangkat/waktu, IP mentah ≤ 30 hari, deteksi login mencurigakan, notifikasi admin (satu per satu atau ringkasan per jam; yang mencurigakan selalu langsung dengan "Cabut perangkat ini") | Tes: IP contoh → negara/kota benar; tidak ada permintaan jaringan ke layanan luar; perangkat dicabut yang mencoba lagi → notifikasi langsung. |
 | 1.17 | Layar Masuk, Undangan/Kode, Selamat datang, Tambah perangkat (QR), Perangkat saya, Keluar (hapus data lokal), **halaman Privasi** | Manual: Android, iPhone (Safari + layar utama), laptop. Halaman Privasi bisa dibuka tanpa login dan tidak memuat data. |
@@ -1272,7 +1272,7 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 1. ✅ Jalankan `supabase/000_kunci_tabel_lama.sql`. **Selesai.**
 2. ✅ Matikan "Allow new users to sign up" dan periksa Users. **Selesai.**
 3. ✅ Jadikan repo lama privat, situs 404, fork = 0. **Selesai.**
-4. ⏳ **Ganti kunci API** (bagian 2.4) setelah gangguan Supabase selesai: buat Publishable + Secret key baru, lalu **Disable JWT-based API keys**, uji `curl`, dan jalankan Security Advisor. **Paling lambat sebelum langkah 1.15** (pengingat ⏰ A).
+4. ✅ **Ganti kunci API** (bagian 2.4): **selesai 7 Oktober 2026** (kunci baru dibuat, kunci lama dan JWT-based dimatikan). Tersisa: uji `curl` dengan kunci lama dan Security Advisor, paling lambat di langkah 1.29.
 5. ⏳ **Aktifkan verifikasi dua langkah** di GitHub, Supabase, dan Google (bagian 2.1). **Paling lambat sebelum langkah 1.30** (pengingat ⏰ B).
 6. *(Kalau perlu)* Cari situs lama di Google dan ajukan penghapusan konten usang.
 
@@ -1312,7 +1312,7 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 | Risiko | Mitigasi |
 |---|---|
 | Data lama terbuka untuk umum | ✅ Teratasi: tabel dikunci, pendaftaran dimatikan, repo lama privat. |
-| **Kunci API legacy masih berlaku** sampai diganti (ditunda karena gangguan Supabase) | Saat ini tidak bisa membuka data apa pun (tabel terkunci, tidak ada tabel lain, pendaftaran mati). Wajib diganti sebelum langkah 1.15 (⏰ A). |
+| **Kunci API sudah diganti** (7 Oktober 2026); uji `curl` kunci lama dan Security Advisor belum dikonfirmasi | Kunci lama sudah dimatikan dan tabel terkunci. Uji `curl` dan Security Advisor dijalankan paling lambat di langkah 1.29. |
 | **2FA belum aktif** di GitHub/Supabase/Google | Wajib sebelum langkah 1.30 (⏰ B), yaitu sebelum data asli masuk ke struktur baru. |
 | Riwayat repo lama memuat nama dan kunci | Repo dijadikan privat, kunci legacy dimatikan, fork diperiksa, dan konten usang dihapus dari Google. |
 | Link sekali pakai "habis" di browser yang salah (browser dalam aplikasi, pratinjau link) | Link baru dipakai setelah tombol Masuk ditekan; ada deteksi browser dalam aplikasi; admin bisa membuat ulang link. |

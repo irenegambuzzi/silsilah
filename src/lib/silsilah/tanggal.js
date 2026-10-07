@@ -1,7 +1,9 @@
 // Tanggal kabur: tahun, bulan, dan hari boleh kosong dari belakang, dengan
 // tanda perkiraan (lihat PLAN.md bagian 5.3). Contoh: "12 Maret 1950",
 // "Maret 1950", "1950", "sekitar 1950".
-import { KATA } from './kata.js'
+import { teks } from '../../teks/id.js'
+
+const KATA = teks.silsilah
 
 // Mengambil {y, m, d, approx} dari baris database, misalnya awalan 'birth'
 // membaca birth_y, birth_m, birth_d, dan birth_approx.

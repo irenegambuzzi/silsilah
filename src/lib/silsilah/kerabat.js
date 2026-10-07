@@ -9,10 +9,12 @@
 // Kalau urutan lahir yang diperlukan (kakak atau adik dari orang tua) tidak
 // diketahui, ditulis "Pakdhe/Paklik". Hubungan yang tidak punya istilah baku
 // ditulis dengan jalurnya, misalnya "Anak dari Sepupu".
-import { KATA } from './kata.js'
+import { teks } from '../../teks/id.js'
 import { namaTampil } from './nama.js'
 import { tahunHidup } from './tanggal.js'
 import { orangTuaUnion, pasanganDi, urutanLahir } from './graf.js'
+
+const KATA = teks.silsilah
 
 const K = KATA.kerabat
 

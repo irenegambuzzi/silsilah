@@ -1,7 +1,9 @@
 // Nama untuk ditampilkan. "Alm." (laki-laki) atau "Almh." (perempuan)
 // ditambahkan otomatis di depan nama orang yang sudah wafat; kalau jenis
 // kelaminnya belum diketahui, "Alm./Almh.".
-import { KATA } from './kata.js'
+import { teks } from '../../teks/id.js'
+
+const KATA = teks.silsilah
 
 export function awalanAlmarhum(orang) {
   if (!orang.is_deceased) return ''
