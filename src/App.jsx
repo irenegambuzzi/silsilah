@@ -7,7 +7,9 @@ import { SesiProvider } from './lib/sesi.jsx'
 import { teks } from './teks/id'
 import Beranda from './pages/Beranda.jsx'
 import { Keadaan, KeadaanMemuat } from './pages/Keadaan.jsx'
+import KotakMasuk from './pages/KotakMasuk.jsx'
 import Keluar from './pages/Keluar.jsx'
+import AksesSementara from './pages/AksesSementara.jsx'
 import Masuk from './pages/Masuk.jsx'
 import Penukaran from './pages/Penukaran.jsx'
 import PerangkatSaya from './pages/PerangkatSaya.jsx'
@@ -80,6 +82,8 @@ export default function App({ Router = HashRouter, klien }) {
             <Route path="/saya/tambah-perangkat" element={lindungi(<TambahPerangkat />)} />
             <Route path="/saya/perangkat" element={lindungi(<PerangkatSaya />)} />
             <Route path="/saya/keluar" element={lindungi(<Keluar />)} />
+            <Route path="/kotak-masuk" element={lindungi(<KotakMasuk />)} />
+            <Route path="/admin/akses-sementara" element={lindungi(<AksesSementara />)} />
             <Route path="*" element={<TidakDitemukan />} />
           </Routes>
           </Suspense>

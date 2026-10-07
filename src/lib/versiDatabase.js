@@ -9,7 +9,7 @@ import { petakanGalat } from './galat.js'
 // Nomor file SQL terakhir yang dibutuhkan kode aplikasi ini. Naikkan setiap
 // kali menambah file SQL bernomor baru; tes memeriksa kecocokannya dengan
 // folder supabase/.
-export const VERSI_DATABASE_DIBUTUHKAN = '011'
+export const VERSI_DATABASE_DIBUTUHKAN = '012'
 
 export function versiSudahCukup(terpasang, dibutuhkan = VERSI_DATABASE_DIBUTUHKAN) {
   return /^\d{3}$/.test(String(terpasang ?? '')) && Number(terpasang) >= Number(dibutuhkan)

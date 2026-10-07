@@ -122,3 +122,29 @@ export async function tandaiDibaca(klien, id) {
   const { error } = await klien.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id)
   if (error) throw error
 }
+
+// ── Akses sementara dan kotak masuk ────────────────────────────────
+
+// Pengurus: boleh memberi akses sementara (admin utama, atau asisten dengan izinnya).
+export const bolehBeriAkses = (anggota) =>
+  Boolean(anggota && (anggota.pemilik || (anggota.peran === 'asisten' && anggota.izin.includes('akses_sementara'))))
+
+export const daftarNamaAnggota = (klien) => rpc(klien, 'member_names')
+export const buatKodeAksesSementara = (klien, memberId, menit) =>
+  rpc(klien, 'create_temp_access_code', { p_member: memberId, p_minutes: menit })
+export const daftarAksesSementara = (klien) => rpc(klien, 'list_temp_access')
+export const akhiriAksesSementara = (klien, id) => rpc(klien, 'revoke_temp_access', { p_device: id })
+
+// Batas lama akses sementara dari pengaturan admin (menit; bawaan 24 jam).
+export async function batasAksesSementara(klien) {
+  const { data, error } = await klien.from('settings').select('temp_access_max_minutes')
+  if (error) throw error
+  return data?.[0]?.temp_access_max_minutes ?? 1440
+}
+
+// Jumlah pemberitahuan yang belum dibaca (maksimal 100 dihitung).
+export async function hitungBelumDibaca(klien) {
+  const { data, error } = await klien.from('notifications').select('id').is('read_at', null).limit(100)
+  if (error) throw error
+  return (data ?? []).length
+}

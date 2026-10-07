@@ -28,3 +28,6 @@ export function sisaWaktuPanjang(ms) {
   const sisa = menit % 60
   return sisa ? `${jam} jam ${sisa} menit` : `${jam} jam`
 }
+
+// 30 → "30 menit", 90 → "90 menit", 120 → "2 jam", 1440 → "24 jam".
+export const durasiTeks = (menit) => (menit % 60 === 0 ? `${menit / 60} jam` : `${menit} menit`)

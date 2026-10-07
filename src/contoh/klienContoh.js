@@ -9,6 +9,8 @@
 //   /#/u/<43 huruf E>   link dicabut              /#/u/<43 huruf D>  gangguan server
 //   kode ABCD2345       masuk sebagai perangkat tambahan
 //   kode AKSES234       masuk dengan akses sementara 30 menit
+//   kode PENGURUS       masuk sebagai asisten admin (kotak masuk berisi contoh
+//                       pemberitahuan, dan menu "Beri akses sementara")
 import { BENTUK_KODE, BENTUK_TOKEN, rapikanKode } from '../../supabase/functions/_shared/rahasia.js'
 import { bacaTersimpan, tulisTersimpan } from '../lib/penyimpanan.js'
 
@@ -20,18 +22,43 @@ const ok = (data) => ({ data, error: null })
 const galat = (kode, pesan, status) => ({ data: null, error: { code: kode, message: pesan, status } })
 const acak = (panjang) => Array.from({ length: panjang }, () => ABJAD[Math.floor(Math.random() * ABJAD.length)]).join('')
 const b64 = (o) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-const token = (idSesi) => `${b64({ alg: 'none' })}.${b64({ session_id: idSesi, sub: 'akun-contoh' })}.contoh`
+const token = (idSesi, akun) => `${b64({ alg: 'none' })}.${b64({ session_id: idSesi, sub: akun })}.contoh`
 
 const ANGGOTA = {
   id: 'anggota-contoh', auth_user_id: 'akun-contoh', display_name: 'Bu Contoh',
   role: 'anggota', is_owner: false, permissions: [],
 }
+const PENGURUS = {
+  id: 'anggota-pengurus', auth_user_id: 'akun-pengurus', display_name: 'Pak Pengurus Contoh',
+  role: 'asisten', is_owner: false, permissions: ['akses_sementara'],
+}
+const SEMUA = [ANGGOTA, PENGURUS]
+
+const contohPemberitahuan = (sekarang) => [
+  { id: 1, kind: 'login_mencurigakan', title: 'Login mencurigakan: Pak Jauh Contoh', priority: 'penting',
+    body: 'Pak Jauh Contoh baru masuk dari negara yang tidak biasa · Laptop Windows · sekitar Nigeria · 14.05, lewat link undangan. Kalau ini bukan Pak Jauh Contoh, tekan "Cabut perangkat ini".',
+    link: '#/admin/perangkat?cabut=00000000-0000-4000-8000-000000000001', created_at: new Date(sekarang - 600000).toISOString(), read_at: null },
+  { id: 2, kind: 'login_baru', title: 'Bu Contoh baru masuk', priority: 'biasa',
+    body: 'iPhone · sekitar Kota Contoh, Indonesia · 13.40, lewat link undangan.',
+    link: '#/admin/perangkat', created_at: new Date(sekarang - 3600000).toISOString(), read_at: null },
+  { id: 3, kind: 'akses_sementara', title: 'Bu Contoh diberi akses sementara', priority: 'biasa',
+    body: 'Asisten Contoh memberi Bu Contoh akses sementara selama 1 jam. Kodenya berlaku 10 menit.',
+    link: null, created_at: new Date(sekarang - 86400000).toISOString(), read_at: new Date(sekarang - 80000000).toISOString() },
+]
 
 const awal = (sekarang) => ({
   idSesi: null,
   tiket: {},
   kode: null,
+  kodeSementara: null,
+  anggotaId: ANGGOTA.id,
   devices: [
+    {
+      id: '00000000-0000-4000-8000-000000000001', member_id: ANGGOTA.id, session_id: 'sesi-jauh', label: 'Laptop Windows · Edge',
+      device_type: 'Laptop Windows', via: 'undangan', expires_at: null, approx_city: null, approx_country: 'NG',
+      approx_country_name: 'Nigeria', created_at: new Date(sekarang - 600000).toISOString(),
+      last_seen_at: new Date(sekarang - 600000).toISOString(), revoked_at: null,
+    },
     {
       id: 'perangkat-lain', member_id: ANGGOTA.id, session_id: 'sesi-laptop', label: 'Laptop Windows · Chrome',
       device_type: 'Laptop Windows', via: 'kode', expires_at: null, approx_city: null, approx_country: 'IT',
@@ -39,7 +66,7 @@ const awal = (sekarang) => ({
       last_seen_at: new Date(sekarang - 3600000).toISOString(), revoked_at: null,
     },
   ],
-  notifications: [],
+  notifications: contohPemberitahuan(sekarang),
 })
 
 // jeda: tundaan tiap panggilan (ms), supaya terasa seperti server sungguhan.
@@ -53,21 +80,39 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
   const simpan = () => tulisTersimpan(KUNCI, JSON.stringify(k))
   const pendengar = new Set()
   const beritahu = (p) => pendengar.forEach((f) => f(p, sesiSaatIni()))
-  const sesiSaatIni = () => (k.idSesi ? { access_token: token(k.idSesi), user: { id: ANGGOTA.auth_user_id } } : null)
+  const saya = () => SEMUA.find((a) => a.id === k.anggotaId) ?? ANGGOTA
+  const sesiSaatIni = () => (k.idSesi ? { access_token: token(k.idSesi, saya().auth_user_id), user: { id: saya().auth_user_id } } : null)
+  const pengurus = () => saya().permissions.includes('akses_sementara')
+  const tiketBaru = (isi) => { const t = `tiket-${acak(8)}`; k.tiket[t] = isi; return t }
   const perangkatIni = () => k.devices.find((d) => d.session_id === k.idSesi)
   const tunggu = (data) => new Promise((r) => setTimeout(() => r(data), jeda))
 
   const tabel = (nama) => {
-    const sumber = () => ({ members: [ANGGOTA], devices: k.devices, notifications: k.notifications })[nama] ?? []
+    // Pemberitahuan contoh hanya untuk pengurus (seperti admin sungguhan).
+    const sumber = () => ({
+      members: SEMUA,
+      devices: k.devices,
+      notifications: pengurus() ? k.notifications : [],
+      settings: [{ temp_access_max_minutes: 1440 }],
+    })[nama] ?? []
     const saringan = []
+    let pembaruan = null
     const b = {
       select: () => b,
+      update: (isi) => { pembaruan = isi; return b },
       eq: (kol, nilai) => { saringan.push((r) => r[kol] === nilai); return b },
       is: (kol, nilai) => { saringan.push((r) => (r[kol] ?? null) === nilai); return b },
       order: () => b,
       limit: () => b,
-      then: (selesai, gagal) =>
-        tunggu(ok(structuredClone(sumber().filter((r) => saringan.every((f) => f(r)))))).then(selesai, gagal),
+      then: (selesai, gagal) => {
+        const cocok = sumber().filter((r) => saringan.every((f) => f(r)))
+        if (pembaruan) {
+          cocok.forEach((r) => Object.assign(r, pembaruan))
+          simpan()
+          return tunggu(ok(null)).then(selesai, gagal)
+        }
+        return tunggu(ok(structuredClone(cocok))).then(selesai, gagal)
+      },
     }
     return b
   }
@@ -87,8 +132,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       if (alasan) return ok({ ok: false, alasan })
       if (t[0] === 'D') return { data: null, error: Object.assign(new Error('x'), { name: 'FunctionsHttpError', context: { status: 500 } }) }
       if (t[0] !== 'A') return ok({ ok: false, alasan: 'tidak_dikenal' })
-      const tiket = `tiket-${acak(8)}`
-      k.tiket[tiket] = { via: 'undangan' }
+      const tiket = tiketBaru({ via: 'undangan', anggotaId: ANGGOTA.id })
       return ok({ ok: true, token_hash: 'contoh', tiket, nama: ANGGOTA.display_name, via: 'undangan', menit: null })
     },
     async 'pakai-kode'({ kode }) {
@@ -96,17 +140,24 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       if (!BENTUK_KODE.test(bersih)) return ok({ ok: false, alasan: 'format_salah' })
       let via = null
       let menit = null
+      let anggota = ANGGOTA
       if (bersih === 'ABCD2345') via = 'kode'
+      else if (bersih === 'PENGURUS') { via = 'kode'; anggota = PENGURUS }
       else if (bersih === 'AKSES234') { via = 'sementara'; menit = 30 }
-      else if (k.kode && k.kode.teks === bersih) {
+      else if (k.kodeSementara && k.kodeSementara.teks === bersih) {
+        if (Date.parse(k.kodeSementara.berakhir) <= sekarang()) return ok({ ok: false, alasan: 'kedaluwarsa' })
+        via = 'sementara'
+        menit = k.kodeSementara.menit
+        anggota = SEMUA.find((a) => a.id === k.kodeSementara.anggotaId) ?? ANGGOTA
+        k.kodeSementara = null
+      } else if (k.kode && k.kode.teks === bersih) {
         if (Date.parse(k.kode.berakhir) <= sekarang()) return ok({ ok: false, alasan: 'kedaluwarsa' })
         via = 'kode'
         k.kode = null
       }
       if (!via) return ok({ ok: false, alasan: 'salah' })
-      const tiket = `tiket-${acak(8)}`
-      k.tiket[tiket] = { via, menit }
-      return ok({ ok: true, token_hash: 'contoh', tiket, nama: ANGGOTA.display_name, via, menit })
+      const tiket = tiketBaru({ via, menit, anggotaId: anggota.id })
+      return ok({ ok: true, token_hash: 'contoh', tiket, nama: anggota.display_name, via, menit })
     },
   }
 
@@ -116,8 +167,9 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       const t = k.tiket[p_ticket]
       if (!t || !k.idSesi) return galat('AK019', 'Pendaftaran perangkat ini tidak berlaku lagi. Mintalah link atau kode baru.')
       delete k.tiket[p_ticket]
+      k.anggotaId = t.anggotaId
       const d = {
-        id: `perangkat-${acak(6)}`, member_id: ANGGOTA.id, session_id: k.idSesi,
+        id: `perangkat-${acak(6)}`, member_id: t.anggotaId, session_id: k.idSesi,
         label: 'Perangkat contoh · Browser', device_type: 'Perangkat contoh', via: t.via,
         expires_at: t.menit ? new Date(sekarang() + t.menit * 60000).toISOString() : null,
         approx_city: 'Kota Contoh', approx_country: 'ID', approx_country_name: 'Indonesia',
@@ -125,7 +177,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
         timezone: p_timezone ?? null,
       }
       k.devices.push(d)
-      return ok({ device_id: d.id, member_id: ANGGOTA.id, via: d.via, expires_at: d.expires_at })
+      return ok({ device_id: d.id, member_id: d.member_id, via: d.via, expires_at: d.expires_at })
     },
     async create_device_code() {
       const d = perangkatIni()
@@ -135,7 +187,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
     },
     async revoke_device({ p_device }) {
       const d = k.devices.find((x) => x.id === p_device)
-      if (!d || d.member_id !== ANGGOTA.id) return galat('AK024', 'Perangkat ini tidak ditemukan, atau bukan milik Anda.')
+      if (!d || (d.member_id !== saya().id && !pengurus())) return galat('AK024', 'Perangkat ini tidak ditemukan, atau bukan milik Anda.')
       d.revoked_at ??= new Date(sekarang()).toISOString()
       return ok(null)
     },
@@ -144,6 +196,36 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       const sasaran = k.devices.filter((d) => !d.revoked_at && (p_all || d.session_id === k.idSesi))
       sasaran.forEach((d) => { d.revoked_at = sekarangIso })
       return ok(sasaran.length)
+    },
+    async member_names() {
+      return ok(SEMUA.map((a) => ({ id: a.id, display_name: a.display_name, person_id: `orang-${a.id}` })))
+    },
+    async create_temp_access_code({ p_member, p_minutes }) {
+      if (!pengurus()) return galat('AK016', 'Anda tidak punya izin memberi akses sementara.')
+      if (p_minutes < 30) return galat('AK022', 'Durasi akses sementara minimal 30 menit.')
+      if (p_minutes > 1440) return galat('AK009', 'Durasi akses sementara melebihi batas yang diatur admin.')
+      if (p_member === PENGURUS.id) return galat('AK017', 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.')
+      const teks = acak(8)
+      k.kodeSementara = { teks, anggotaId: p_member, menit: p_minutes, berakhir: new Date(sekarang() + 600000).toISOString() }
+      return ok({ code_id: 'kode-sementara', code: `${teks.slice(0, 4)}-${teks.slice(4)}`, expires_at: k.kodeSementara.berakhir, access_minutes: p_minutes })
+    },
+    async list_temp_access() {
+      if (!pengurus()) return galat('AK016', 'Anda tidak punya izin memberi akses sementara.')
+      const nama = (id) => SEMUA.find((a) => a.id === id)?.display_name ?? ''
+      const aktif = k.devices
+        .filter((d) => d.via === 'sementara' && !d.revoked_at && Date.parse(d.expires_at) > sekarang())
+        .map((d) => ({ kind: 'aktif', id: d.id, member_id: d.member_id, display_name: nama(d.member_id), label: d.label, approx_city: d.approx_city, approx_country: d.approx_country, approx_country_name: d.approx_country_name, created_at: d.created_at, expires_at: d.expires_at, access_minutes: null }))
+      const menunggu = k.kodeSementara && Date.parse(k.kodeSementara.berakhir) > sekarang()
+        ? [{ kind: 'menunggu', id: 'kode-sementara', member_id: k.kodeSementara.anggotaId, display_name: nama(k.kodeSementara.anggotaId), label: null, created_at: new Date(sekarang()).toISOString(), expires_at: k.kodeSementara.berakhir, access_minutes: k.kodeSementara.menit }]
+        : []
+      return ok([...menunggu, ...aktif])
+    },
+    async revoke_temp_access({ p_device }) {
+      if (!pengurus()) return galat('AK016', 'Anda tidak punya izin memberi akses sementara.')
+      const d = k.devices.find((x) => x.id === p_device)
+      if (!d || d.via !== 'sementara' || d.revoked_at) return galat('AK026', 'Akses sementara ini sudah berakhir atau tidak ditemukan.')
+      d.revoked_at = new Date(sekarang()).toISOString()
+      return ok(null)
     },
     async report_not_me() {
       const d = perangkatIni()

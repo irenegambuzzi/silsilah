@@ -67,3 +67,51 @@ describe('mode contoh', () => {
     expect(localStorage.getItem('silsilah-contoh-keadaan')).toBeNull()
   })
 })
+
+describe('mode contoh: akses sementara dan pengurus', () => {
+  it('kode AKSES234 → spanduk hitung mundur dan tanpa "Tambah perangkat"', async () => {
+    const { aksi } = pasang('/kode/AKSES234', buatKlienContoh({ jeda: 0 }))
+    await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
+    await screen.findByText('Halo, Bu Contoh')
+    expect(screen.getByRole('timer').textContent).toMatch(/Akses sementara berakhir pukul \d\d\.\d\d\. Sisa waktu: (29|30) menit\./)
+    await aksi.click(screen.getByRole('link', { name: 'Saya' }))
+    await screen.findByRole('heading', { name: 'Saya' })
+    expect(screen.queryByRole('link', { name: 'Tambah perangkat' })).toBeNull()
+  })
+
+  it('kode PENGURUS → kotak masuk berisi contoh pemberitahuan, dan "Cabut perangkat ini" bekerja', async () => {
+    const { aksi } = pasang('/kode/PENGURUS', buatKlienContoh({ jeda: 0 }))
+    await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
+    await screen.findByText('Halo, Pak Pengurus Contoh')
+    await aksi.click(screen.getByRole('link', { name: /Kotak masuk/ }))
+    expect(await screen.findByRole('heading', { name: 'Login mencurigakan: Pak Jauh Contoh' })).toBeTruthy()
+    await aksi.click(screen.getByRole('button', { name: 'Cabut perangkat ini' }))
+    expect(await screen.findByText('Perangkat itu sudah dicabut.')).toBeTruthy()
+  })
+
+  it('pengurus membuat kode akses sementara, dan kode itu bisa dipakai di perangkat lain', async () => {
+    const klien = buatKlienContoh({ jeda: 0 })
+    const { aksi } = pasang('/kode/PENGURUS', klien)
+    await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
+    await screen.findByText('Halo, Pak Pengurus Contoh')
+    await aksi.click(screen.getByRole('link', { name: 'Saya' }))
+    await aksi.click(await screen.findByRole('link', { name: 'Beri akses sementara' }))
+    await aksi.selectOptions(await screen.findByLabelText('Untuk siapa?'), 'anggota-contoh')
+    await aksi.click(screen.getByRole('button', { name: 'Buat kode' }))
+    const kode = (await screen.findByText(/^[2-9A-HJ-NP-Z]{4}-[2-9A-HJ-NP-Z]{4}$/)).textContent
+    expect((await screen.findAllByText(/Kode belum dipakai/)).length).toBeGreaterThan(0)
+    const hasil = await klien.functions.invoke('pakai-kode', { body: { kode } })
+    expect(hasil.data).toMatchObject({ ok: true, via: 'sementara', menit: 60, nama: 'Bu Contoh' })
+  })
+
+  it('anggota biasa tidak melihat pemberitahuan pengurus maupun menu akses sementara', async () => {
+    const { aksi } = pasang('/kode/ABCD2345', buatKlienContoh({ jeda: 0 }))
+    await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
+    await screen.findByText('Halo, Bu Contoh')
+    await aksi.click(screen.getByRole('link', { name: 'Kotak masuk' }))
+    expect(await screen.findByText('Belum ada pemberitahuan.')).toBeTruthy()
+    await aksi.click(screen.getByRole('link', { name: 'Saya' }))
+    await screen.findByRole('heading', { name: 'Saya' })
+    expect(screen.queryByRole('link', { name: 'Beri akses sementara' })).toBeNull()
+  })
+})

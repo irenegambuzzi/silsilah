@@ -20,6 +20,31 @@ const masuk = (tambahan = {}) => klienSudahMasuk({
   ...tambahan,
 })
 
+const pengurus = () => klienSudahMasuk({
+  rpc: {
+    db_version: async () => OK('999'),
+    member_names: async () => OK([{ id: 'm-1', display_name: 'Bu Peminjam Contoh', person_id: 'p-1' }]),
+    list_temp_access: async () => OK([
+      { kind: 'aktif', id: 'd-1', member_id: 'm-1', display_name: 'Bu Peminjam Contoh', label: 'Laptop Windows · Chrome', expires_at: new Date(Date.now() + 3600000).toISOString(), access_minutes: null },
+      { kind: 'menunggu', id: 'k-1', member_id: 'm-1', display_name: 'Bu Peminjam Contoh', label: null, expires_at: new Date(Date.now() + 300000).toISOString(), access_minutes: 60 },
+    ]),
+  },
+  tabel: {
+    members: [{ id: 'anggota-1', auth_user_id: 'akun-contoh', display_name: 'Asisten Contoh', role: 'asisten', is_owner: false, permissions: ['akses_sementara'] }],
+    settings: [{ temp_access_max_minutes: 1440 }],
+  },
+})
+const sementara = () => klienSudahMasuk({
+  fungsi: { 'cek-perangkat': async () => OK({ ok: true, status: 'ok', berakhir: new Date(Date.now() + 240000).toISOString() }) },
+})
+const kotakMasuk = () => klienSudahMasuk({
+  rpc: { db_version: async () => OK('999') },
+  tabel: { notifications: [
+    { id: 1, kind: 'login_mencurigakan', title: 'Pemberitahuan Penting Contoh', body: 'Isi pemberitahuan contoh.', link: '#/admin/perangkat?cabut=0b7e4e10-6c3a-4c8e-9a52-3f1d2b8c7a11', priority: 'penting', created_at: '2026-10-07T07:05:00Z', read_at: null },
+    { id: 2, kind: 'login_baru', title: 'Pemberitahuan Biasa Contoh', body: null, link: null, priority: 'biasa', created_at: '2026-10-06T07:05:00Z', read_at: '2026-10-06T08:00:00Z' },
+  ] },
+})
+
 // [nama, url, klien, jangkar (teks yang harus muncul dulu)]
 const LAYAR = [
   ['Masuk', '/masuk', () => buatKlienTiruan({}), 'Silsilah Keluarga'],
@@ -32,6 +57,9 @@ const LAYAR = [
   ['Keluar', '/saya/keluar', () => masuk(), 'Keluar dari perangkat ini'],
   ['Tambah perangkat', '/saya/tambah-perangkat', () => masuk(), 'ABCD-2345'],
   ['Perangkat saya', '/saya/perangkat', () => masuk(), 'Laptop'],
+  ['Kotak masuk', '/kotak-masuk', kotakMasuk, 'Pemberitahuan Penting Contoh'],
+  ['Beri akses sementara', '/admin/akses-sementara', pengurus, 'Akses yang sedang berjalan'],
+  ['Beranda dengan akses sementara', '/', sementara, 'Segera berakhir'],
   ['Privasi', '/privasi', () => buatKlienTiruan({}), 'Privasi'],
   ['Halaman tidak ada', '/tidak-ada', () => buatKlienTiruan({}), 'Halaman tidak ditemukan'],
   ['Aplikasi belum siap', '/masuk', () => null, 'Aplikasi belum siap'],
@@ -98,7 +126,7 @@ describe('struktur umum', () => {
     const nav = screen.getByRole('navigation', { name: 'Menu utama' })
     const aktif = nav.querySelector('[aria-current="page"]')
     expect(aktif.textContent).toBe('Saya')
-    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(2)
+    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(3)
   })
   it('judul layar menerima fokus saat layar terbuka (pembaca layar langsung membacakannya)', async () => {
     pasang('/saya', masuk())

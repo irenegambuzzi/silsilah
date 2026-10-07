@@ -29,7 +29,8 @@ perintah itu, buka alamat yang tampil di Terminal):
 | `/#/u/` + 43 huruf `A` | link undangan berhasil → "Selamat datang" |
 | `/#/u/` + 43 huruf `B` / `C` / `E` / `D` | sudah dipakai / kedaluwarsa / dibatalkan / gangguan server |
 | kode `ABCD2345` di layar Masuk | masuk sebagai perangkat tambahan |
-| kode `AKSES234` | masuk dengan akses sementara 30 menit |
+| kode `AKSES234` | masuk dengan akses sementara 30 menit (spanduk hitung mundur; data dihapus saat habis) |
+| kode `PENGURUS` | masuk sebagai asisten admin: Kotak masuk berisi contoh pemberitahuan, dan menu Saya → "Beri akses sementara" (pilih "Bu Contoh", buat kode, lalu pakai kode itu di jendela lain) |
 | `/#/privasi` | halaman Privasi |
 
 ## Menyambungkan ke database

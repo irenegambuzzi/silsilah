@@ -20,12 +20,20 @@ export async function panggilFungsi(tx, nama, args = {}) {
   return r.hasil
 }
 
+// Untuk fungsi yang mengembalikan tabel (RETURNS TABLE): semua barisnya.
+export async function panggilTabel(tx, nama, args = {}) {
+  const kunci = Object.keys(args)
+  const daftar = kunci.map((k, i) => `${k} => $${i + 1}`).join(', ')
+  return baris(tx, `select * from public.${nama}(${daftar})`, kunci.map((k) => args[k]))
+}
+
 export const pembantuAkses = (db) => {
   const lewatApi = (akun, fn, aal = 'aal1') => sebagai(db, 'authenticated', klaimUntuk(akun, aal), fn)
   return {
     lewatApi,
     // RPC dari aplikasi (role authenticated, klaim JWT akun itu).
     rpc: (akun, nama, args, aal = 'aal1') => lewatApi(akun, (tx) => panggilFungsi(tx, nama, args), aal),
+    rpcTabel: (akun, nama, args, aal = 'aal1') => lewatApi(akun, (tx) => panggilTabel(tx, nama, args), aal),
     // RPC dari Edge Function (service_role).
     rpcServer: (nama, args) => sebagai(db, 'service_role', {}, (tx) => panggilFungsi(tx, nama, args)),
     siapa: async (akun) =>

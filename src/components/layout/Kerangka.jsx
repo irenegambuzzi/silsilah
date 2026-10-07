@@ -1,20 +1,24 @@
 import { useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { House, ShieldCheck, UserRound } from 'lucide-react'
+import { Bell, House, ShieldCheck, UserRound } from 'lucide-react'
 import { useSesi } from '../../lib/konteksSesi.js'
-import { teks } from '../../teks/id.js'
+import { useBelumDibaca } from '../../lib/useBelumDibaca.js'
+import { isiTeks, teks } from '../../teks/id.js'
+import { BannerAksesSementara } from '../BannerAksesSementara.jsx'
 
 const MENU = [
   { ke: '/', teks: teks.navigasi.beranda, ikon: House, akhir: true },
+  { ke: '/kotak-masuk', teks: teks.navigasi.kotakMasuk, ikon: Bell, lencana: true },
   { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound },
 ]
 
 // Bingkai halaman: tombol "langsung ke isi" untuk papan ketik, isi halaman,
 // dan (kalau sudah masuk) navigasi bawah.
 export default function Kerangka({ children, spanduk = null }) {
-  const { status } = useSesi()
+  const { status, klien, berakhir } = useSesi()
   const isi = useRef(null)
   const masuk = status === 'masuk'
+  const belumDibaca = useBelumDibaca(klien, masuk)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -26,6 +30,7 @@ export default function Kerangka({ children, spanduk = null }) {
         {teks.navigasi.lewatiKeIsi}
       </button>
       {spanduk}
+      {masuk && berakhir && <BannerAksesSementara berakhir={berakhir} />}
       <main
         id="isi"
         ref={isi}
@@ -40,7 +45,7 @@ export default function Kerangka({ children, spanduk = null }) {
           className="fixed inset-x-0 bottom-0 border-t-2 border-garis bg-kertas"
         >
           <ul className="mx-auto flex max-w-xl">
-            {MENU.map(({ ke, teks: nama, ikon: Ikon, akhir }) => (
+            {MENU.map(({ ke, teks: nama, ikon: Ikon, akhir, lencana }) => (
               <li key={ke} className="flex-1">
                 <NavLink
                   to={ke}
@@ -51,8 +56,21 @@ export default function Kerangka({ children, spanduk = null }) {
                     }`
                   }
                 >
-                  <Ikon aria-hidden="true" className="size-6" />
+                  <span className="relative">
+                    <Ikon aria-hidden="true" className="size-6" />
+                    {lencana && belumDibaca > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -right-3 -top-2 min-w-6 rounded-full border-2 border-kertas bg-bahaya px-1 text-center text-sm font-bold text-bahaya-teks"
+                      >
+                        {belumDibaca > 99 ? teks.kotakMasuk.banyak : belumDibaca}
+                      </span>
+                    )}
+                  </span>
                   {nama}
+                  {lencana && belumDibaca > 0 && (
+                    <span className="sr-only">{isiTeks(teks.kotakMasuk.jumlahBelumDibaca, { n: belumDibaca })}</span>
+                  )}
                 </NavLink>
               </li>
             ))}

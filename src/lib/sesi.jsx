@@ -8,27 +8,37 @@
 //   galat           tidak bisa memeriksa (jaringan, server dijeda, database
 //                   belum diperbarui); `galat` berisi hasil petakanGalat()
 //
+// `berakhir`: waktu (ISO) akses sementara di perangkat ini berakhir, atau
+// null untuk akses biasa. Saat waktunya habis aplikasi keluar sendiri dan
+// menghapus semua data aplikasi di perangkat. Kalau perangkat sedang mati
+// atau aplikasi sedang ditutup, penghapusan dilakukan begitu aplikasi dibuka
+// lagi (waktu berakhir disimpan di perangkat; server juga sudah menolak
+// semua permintaan data sejak waktunya habis).
+//
 // Aplikasi tidak pernah menulis data apa pun di sini, kecuali lewat fungsi
 // server untuk masuk dan keluar.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { petakanGalat } from './galat.js'
 import { bacaAnggotaSaya, bacaVersiDatabase, cekPerangkat, jalankanMasuk, keluarDariPerangkat } from './api.js'
-import { hapusDataLokal } from './penyimpanan.js'
+import { Konteks } from './konteksSesi.js'
+import { bacaAksesBerakhir, hapusDataLokal, simpanAksesBerakhir } from './penyimpanan.js'
 import { klienBawaan } from './supabase.js'
 import { tafsirkanVersiDatabase } from './versiDatabase.js'
 
-import { Konteks } from './konteksSesi.js'
-
 const online = () => (typeof navigator === 'undefined' ? true : navigator.onLine)
+// Jarak minimal antar pemeriksaan ulang ke server saat aplikasi kembali dibuka.
+const JEDA_PERIKSA_ULANG_MS = 60 * 1000
 
 export function SesiProvider({ klien = klienBawaan, children }) {
   const [keadaan, setKeadaan] = useState({
     status: klien ? 'memuat' : 'belumDisiapkan',
     anggota: null,
+    berakhir: null,
     galat: null,
     alasanKeluar: null,
   })
   const sedangKeluar = useRef(false)
+  const terakhirPeriksa = useRef(0)
 
   // Menghapus sesi dan semua data aplikasi di perangkat ini.
   const akhiri = useCallback(
@@ -40,7 +50,7 @@ export function SesiProvider({ klien = klienBawaan, children }) {
         // Sesi lokal dihapus supabase-js walaupun server tidak terjangkau.
       }
       await hapusDataLokal()
-      setKeadaan({ status: 'tamu', anggota: null, galat: null, alasanKeluar: alasan })
+      setKeadaan({ status: 'tamu', anggota: null, berakhir: null, galat: null, alasanKeluar: alasan })
       sedangKeluar.current = false
     },
     [klien]
@@ -51,10 +61,11 @@ export function SesiProvider({ klien = klienBawaan, children }) {
     try {
       const { data } = await klien.auth.getSession()
       if (!data?.session) {
-        setKeadaan((s) => ({ ...s, status: 'tamu', anggota: null, galat: null }))
+        setKeadaan((s) => ({ ...s, status: 'tamu', anggota: null, berakhir: null, galat: null }))
         return
       }
       const cek = await cekPerangkat(klien)
+      terakhirPeriksa.current = Date.now()
       if (cek.status === 'dicabut') return await akhiri('dicabut')
       if (cek.status === 'kedaluwarsa') return await akhiri('berakhir')
       if (cek.status !== 'ok') return await akhiri(null)
@@ -65,7 +76,9 @@ export function SesiProvider({ klien = klienBawaan, children }) {
         return
       }
       const anggota = await bacaAnggotaSaya(klien)
-      setKeadaan((s) => ({ ...s, status: 'masuk', anggota, galat: null }))
+      const berakhir = cek.berakhir ?? null
+      simpanAksesBerakhir(berakhir)
+      setKeadaan((s) => ({ ...s, status: 'masuk', anggota, berakhir, galat: null }))
     } catch (e) {
       const galat = petakanGalat(e, { online: online() })
       if (galat.jenis === 'sesiHabis') return await akhiri('sesi')
@@ -116,20 +129,59 @@ export function SesiProvider({ klien = klienBawaan, children }) {
   )
 
   const akhiriRef = useRef(akhiri)
+  const muatRef = useRef(muat)
   useEffect(() => {
     akhiriRef.current = akhiri
-  }, [akhiri])
+    muatRef.current = muat
+  }, [akhiri, muat])
+
+  // Saat aplikasi dibuka: kalau akses sementara yang tersimpan sudah lewat,
+  // hapus data DULU (tanpa menunggu server), baru periksa sesi.
   useEffect(() => {
     if (!klien) return undefined
+    const tersimpan = bacaAksesBerakhir()
+    const sudahLewat = tersimpan && Date.parse(tersimpan) <= Date.now()
     // Memeriksa sesi saat aplikasi dibuka; setState terjadi setelah jawaban server.
     // oxlint-disable-next-line react/set-state-in-effect
-    muat()
+    if (sudahLewat) akhiriRef.current('berakhir')
+    else muatRef.current()
     // Keluar dari tab lain, atau sesi tidak bisa diperbarui lagi.
     const { data } = klien.auth.onAuthStateChange((peristiwa) => {
       if (peristiwa === 'SIGNED_OUT' && !sedangKeluar.current) akhiriRef.current('sesi')
     })
     return () => data?.subscription?.unsubscribe()
-  }, [klien, muat])
+  }, [klien])
+
+  // Selama masuk: keluar sendiri tepat saat akses sementara habis, dan saat
+  // aplikasi kembali terlihat (pengatur waktu bisa tertunda di latar belakang)
+  // periksa waktu lokal lalu tanyakan lagi ke server (dicabut? kedaluwarsa?).
+  const { status, berakhir } = keadaan
+  useEffect(() => {
+    if (status !== 'masuk' || !klien) return undefined
+    const tujuan = berakhir ? Date.parse(berakhir) : null
+    const habis = () => tujuan != null && Date.now() >= tujuan
+    const id = tujuan == null ? null : setTimeout(() => habis() && akhiriRef.current('berakhir'), Math.max(0, tujuan - Date.now()))
+
+    const saatTampak = async () => {
+      if (document.visibilityState !== 'visible') return
+      if (habis()) return akhiriRef.current('berakhir')
+      if (Date.now() - terakhirPeriksa.current < JEDA_PERIKSA_ULANG_MS) return
+      terakhirPeriksa.current = Date.now()
+      try {
+        const cek = await cekPerangkat(klien)
+        if (cek.status === 'dicabut') await akhiriRef.current('dicabut')
+        else if (cek.status === 'kedaluwarsa') await akhiriRef.current('berakhir')
+        else if (cek.status !== 'ok') await akhiriRef.current(null)
+      } catch {
+        // Tanpa internet: tetap di tempat; waktu lokal sudah diperiksa di atas.
+      }
+    }
+    document.addEventListener('visibilitychange', saatTampak)
+    return () => {
+      if (id != null) clearTimeout(id)
+      document.removeEventListener('visibilitychange', saatTampak)
+    }
+  }, [status, berakhir, klien])
 
   const nilai = useMemo(
     () => ({ ...keadaan, klien, masuk, keluar, akhiri, coba, muat }),
