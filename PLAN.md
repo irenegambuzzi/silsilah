@@ -336,7 +336,7 @@ Tombol **"Beri akses ke semua keturunan [nama pasangan]"** menyalakan `grant_all
 - Bapak, Ibu; Mbah (kakek/nenek) dan Mbah buyut;
 - Kakak/Adik (dari urutan lahir);
 - Pakdhe/Budhe (kakak dari bapak/ibu) dan Paklik/Bulik (adik dari bapak/ibu). Pasangan mereka mengikuti jenis kelaminnya, misalnya istri Pakdhe = Budhe;
-- Keponakan, Sepupu, dan seterusnya.
+- Keponakan, Sepupu, Ipar, dan seterusnya. Ke atas dari Mbah buyut: Mbah canggah, Mbah wareng (mengikuti istilah generasi), lalu ditulis dengan jalurnya ("Orang tua dari Mbah wareng").
 
 Kalau urutan lahir tidak diketahui, aplikasi menampilkan "Pakdhe/Paklik". Hubungan yang tidak punya istilah baku ditampilkan dengan jalurnya, misalnya "Anak dari Sepupu".
 
@@ -1046,6 +1046,8 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 - **Pasangan**: "Pasangan dari [nama]", tanpa istilah generasi. Kalau bercerai, tertulis "· bercerai".
 - **Panel detail** menampilkan "Generasi ke-n" beserta istilahnya.
 - **Nomor silsilah otomatis** di tampilan Daftar (misalnya 1.6.2).
+  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Angka terakhir selalu sama dengan "Anak ke-n" di kartu. Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak bernomor.
+- **Nama di kartu** memuat gelar religius di depan dan gelar pendidikan di belakang: "Alm. KH. Nama, S.Ag.".
 
 ### 15.2 Pencarian
 
