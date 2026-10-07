@@ -991,7 +991,7 @@ Tempat semua anggota keluarga cepat mengetahui kabar penting.
 
 | # | Layar | Isi utama |
 |---|---|---|
-| 1 | **Masuk** | Tanpa data apa pun. Pilihan "Masuk dengan kode", "Masuk dengan Google", dan penjelasan singkat. |
+| 1 | **Masuk** | Tanpa data apa pun. Pilihan "Masuk dengan kode" dan penjelasan singkat. ("Masuk dengan Google" ditambahkan di Fase 2, setelah Google dikonfigurasi: tugas 23.) |
 | 2 | **Membuka undangan / kode** | Tombol Masuk, deteksi browser dalam aplikasi, dan pesan link sudah dipakai / kedaluwarsa / tidak ada internet |
 | 3 | **Selamat datang** | "Apakah ini Anda?", tips huruf, notifikasi, layar utama, dan tambah perangkat |
 | 4 | **Bagan** (silsilah utama) | Kartu seperti aplikasi lama, geser/zoom, mode fokus cabang, *breadcrumb*, "Tampilkan saya", serta "+ Anak / + Pasangan" di kartu (untuk yang bisa mengedit) |
@@ -1019,7 +1019,7 @@ Tempat semua anggota keluarga cepat mengetahui kabar penting.
 | 26 | **Admin: Cadangan** | Status backup, snapshot, pulihkan, unduh backup, ekspor seluruh data, ukuran database |
 | 27 | **Admin: Pengaturan aplikasi** | Kuota, batas akses sementara, kode perangkat, jam tenang, radius, ambang, jam pengingat |
 | 28 | **Error / Sedang dipulihkan / Belum ada data / Database belum diperbarui** | Pesan jelas berbahasa Indonesia, tanpa penulisan data |
-| 29 | **Privasi** (bisa dibuka sebelum dan sesudah login) | Bahasa sederhana: data apa yang disimpan dan berapa lama. Lokasi login hanya perkiraan kota/negara dari IP, tanpa GPS; IP mentah dihapus setelah 30 hari; database lokasi IP offline (atribusi DB-IP); kontak terenkripsi dan setiap pembukaan dicatat; lokasi kabar dihapus setelah 12 jam; alamat pertemuan dihapus 12 jam setelah acara; data offline dihapus saat keluar. Tanpa nama atau data keluarga. |
+| 29 | **Privasi** (bisa dibuka sebelum dan sesudah login; bagian kontak, lokasi kabar, dan alamat pertemuan ditambahkan bersama fiturnya di Fase 2) | Bahasa sederhana: data apa yang disimpan dan berapa lama. Lokasi login hanya perkiraan kota/negara dari IP, tanpa GPS; IP mentah dihapus setelah 30 hari; database lokasi IP offline (atribusi DB-IP); kontak terenkripsi dan setiap pembukaan dicatat; lokasi kabar dihapus setelah 12 jam; alamat pertemuan dihapus 12 jam setelah acara; data offline dihapus saat keluar. Tanpa nama atau data keluarga. |
 
 Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 

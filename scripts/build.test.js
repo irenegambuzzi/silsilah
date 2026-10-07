@@ -37,6 +37,8 @@ describe('build produksi', () => {
     const out = bangun('contoh', { VITE_MODE_CONTOH: '1' })
     const isi = semuaIsi(out)
     expect(isi).not.toContain('KELUARGA-CONTOH-FIKTIF')
+    expect(isi).not.toContain('KLIEN-CONTOH-FIKTIF')
+    expect(isi).not.toContain('Bu Contoh')
     expect(isi).not.toContain('MODE CONTOH')
   }, 60000)
 

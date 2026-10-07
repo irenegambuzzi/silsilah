@@ -17,6 +17,32 @@ Rencana lengkap: [PLAN.md](PLAN.md).
 4. `npm test` — menjalankan semua tes.
 5. `npm run lint` — memeriksa kode.
 
+## Mencoba tampilan (mode contoh)
+
+`npm run dev:contoh` menjalankan aplikasi dengan server tiruan di memori dan
+data fiktif, tanpa database. Hanya ada di build pengembangan; tes build
+memastikan tidak ikut ke produksi. Alamat yang bisa dicoba (setelah menjalankan
+perintah itu, buka alamat yang tampil di Terminal):
+
+| Alamat | Hasil |
+|---|---|
+| `/#/u/` + 43 huruf `A` | link undangan berhasil → "Selamat datang" |
+| `/#/u/` + 43 huruf `B` / `C` / `E` / `D` | sudah dipakai / kedaluwarsa / dibatalkan / gangguan server |
+| kode `ABCD2345` di layar Masuk | masuk sebagai perangkat tambahan |
+| kode `AKSES234` | masuk dengan akses sementara 30 menit |
+| `/#/privasi` | halaman Privasi |
+
+## Menyambungkan ke database
+
+Aplikasi membaca dua variabel build (isi di Settings → Secrets and variables →
+Actions → Variables di GitHub, atau di berkas `.env.local` untuk pengembangan;
+keduanya aman untuk publik, bukan rahasia):
+
+- `VITE_SUPABASE_URL`: alamat project Supabase
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: publishable key (`sb_publishable_…`)
+
+Tanpa keduanya, aplikasi menampilkan "Aplikasi belum siap".
+
 ## Aturan repo
 
 - **Tidak ada nama atau data keluarga di repo.** Data pribadi hanya di

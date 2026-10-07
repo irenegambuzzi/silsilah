@@ -1,12 +1,91 @@
 @import 'tailwindcss';
 
-/* Huruf dasar besar dan kontras tinggi: banyak anggota keluarga yang
-   lebih tua membaca di HP. */
+/* Warna sebagai token (PLAN.md 15.4: kontras minimal WCAG AA, teks utama
+   diusahakan AAA, dan ada mode kontras tinggi). Tes src/tampilan.test.js
+   menghitung rasio kontras pasangan warna di bawah ini. */
+:root {
+  --c-latar: #fbf8f2;
+  --c-kertas: #ffffff;
+  --c-teks: #1c1a17;
+  --c-redup: #4a443c;
+  --c-garis: #6f675b;
+  --c-utama: #1f5c3a;
+  --c-utama-teks: #ffffff;
+  --c-bahaya: #9b1c1c;
+  --c-bahaya-teks: #ffffff;
+  --c-info: #e6eefa;
+  --c-info-teks: #10294a;
+  --c-peringatan: #fff1c2;
+  --c-peringatan-teks: #3d2e00;
+  --c-fokus: #0b4fc4;
+}
+
+/* Kontras tinggi: hitam-putih dengan kuning sebagai penegas. */
+html[data-kontras='tinggi'] {
+  --c-latar: #000000;
+  --c-kertas: #000000;
+  --c-teks: #ffffff;
+  --c-redup: #ffffff;
+  --c-garis: #ffffff;
+  --c-utama: #ffe14d;
+  --c-utama-teks: #000000;
+  --c-bahaya: #ff8a8a;
+  --c-bahaya-teks: #000000;
+  --c-info: #000000;
+  --c-info-teks: #ffffff;
+  --c-peringatan: #000000;
+  --c-peringatan-teks: #ffe14d;
+  --c-fokus: #6fb1ff;
+}
+
+@theme inline {
+  --color-latar: var(--c-latar);
+  --color-kertas: var(--c-kertas);
+  --color-teks: var(--c-teks);
+  --color-redup: var(--c-redup);
+  --color-garis: var(--c-garis);
+  --color-utama: var(--c-utama);
+  --color-utama-teks: var(--c-utama-teks);
+  --color-bahaya: var(--c-bahaya);
+  --color-bahaya-teks: var(--c-bahaya-teks);
+  --color-info: var(--c-info);
+  --color-info-teks: var(--c-info-teks);
+  --color-peringatan: var(--c-peringatan);
+  --color-peringatan-teks: var(--c-peringatan-teks);
+  --color-fokus: var(--c-fokus);
+}
+
+/* Ukuran huruf: dasar 18px, dengan pilihan Besar dan Sangat besar. Semua
+   ukuran di aplikasi memakai rem, jadi ikut berubah. */
 html {
   font-size: 18px;
 }
+html[data-ukuran='besar'] {
+  font-size: 21px;
+}
+html[data-ukuran='sangatBesar'] {
+  font-size: 24px;
+}
 
 body {
-  background: #fbf8f2;
-  color: #1c1a17;
+  background: var(--c-latar);
+  color: var(--c-teks);
+}
+
+/* Fokus selalu terlihat (papan ketik dan pembaca layar). */
+:focus-visible {
+  outline: 4px solid var(--c-fokus);
+  outline-offset: 2px;
+}
+
+/* Menghormati pengguna yang mematikan gerakan. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

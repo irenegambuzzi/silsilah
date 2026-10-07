@@ -1,0 +1,71 @@
+import { useRef } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { House, ShieldCheck, UserRound } from 'lucide-react'
+import { useSesi } from '../../lib/konteksSesi.js'
+import { teks } from '../../teks/id.js'
+
+const MENU = [
+  { ke: '/', teks: teks.navigasi.beranda, ikon: House, akhir: true },
+  { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound },
+]
+
+// Bingkai halaman: tombol "langsung ke isi" untuk papan ketik, isi halaman,
+// dan (kalau sudah masuk) navigasi bawah.
+export default function Kerangka({ children, spanduk = null }) {
+  const { status } = useSesi()
+  const isi = useRef(null)
+  const masuk = status === 'masuk'
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <button
+        type="button"
+        className="sr-only focus:not-sr-only focus:m-2 focus:rounded-lg focus:bg-kertas focus:p-3 focus:text-lg focus:font-semibold"
+        onClick={() => isi.current?.focus()}
+      >
+        {teks.navigasi.lewatiKeIsi}
+      </button>
+      {spanduk}
+      <main
+        id="isi"
+        ref={isi}
+        tabIndex={-1}
+        className={`mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 p-5 outline-none ${masuk ? 'pb-28' : 'justify-center'}`}
+      >
+        {children}
+      </main>
+      {masuk ? (
+        <nav
+          aria-label={teks.navigasi.menu}
+          className="fixed inset-x-0 bottom-0 border-t-2 border-garis bg-kertas"
+        >
+          <ul className="mx-auto flex max-w-xl">
+            {MENU.map(({ ke, teks: nama, ikon: Ikon, akhir }) => (
+              <li key={ke} className="flex-1">
+                <NavLink
+                  to={ke}
+                  end={akhir}
+                  className={({ isActive }) =>
+                    `flex min-h-16 flex-col items-center justify-center gap-1 text-base font-semibold ${
+                      isActive ? 'underline decoration-4 underline-offset-4' : ''
+                    }`
+                  }
+                >
+                  <Ikon aria-hidden="true" className="size-6" />
+                  {nama}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : (
+        <footer className="mx-auto w-full max-w-xl p-5 text-center">
+          <Link to="/privasi" className="inline-flex min-h-12 items-center gap-2 text-lg underline">
+            <ShieldCheck aria-hidden="true" className="size-6" />
+            {teks.navigasi.privasi}
+          </Link>
+        </footer>
+      )}
+    </div>
+  )
+}

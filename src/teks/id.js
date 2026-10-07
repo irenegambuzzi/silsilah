@@ -5,6 +5,10 @@
 
 // Pengecualian: spanduk "MODE CONTOH" sengaja tidak di sini, tetapi di App.jsx dalam
 // cabang khusus pengembangan, supaya teksnya tidak ikut ke build produksi.
+// Mengisi {nama} dll. di dalam teks: isiTeks('Halo, {nama}!', { nama: 'Bu Contoh' }).
+export const isiTeks = (kalimat, nilai = {}) =>
+  kalimat.replace(/\{(\w+)\}/g, (_, k) => (nilai[k] ?? `{${k}}`))
+
 export const teks = {
   aplikasi: {
     nama: 'Silsilah Keluarga',
@@ -30,6 +34,10 @@ export const teks = {
     dipulihkan: {
       judul: 'Aplikasi sedang dipulihkan',
       isi: 'Aplikasi sedang dipulihkan. Silakan coba lagi beberapa saat lagi.',
+    },
+    belumDisiapkan: {
+      judul: 'Aplikasi belum siap',
+      isi: 'Aplikasi ini belum tersambung ke database. Hubungi admin keluarga.',
     },
     kosong: {
       judul: 'Belum ada data',
@@ -137,6 +145,7 @@ export const teks = {
       AK022: 'Durasi akses sementara minimal 30 menit.',
       AK023: 'Akun Anda sedang ditahan sementara, jadi belum bisa menambah perangkat. Hubungi admin.',
       AK024: 'Perangkat ini tidak ditemukan, atau bukan milik Anda.',
+      AK025: 'Anda belum masuk dari perangkat ini.',
       RP001: 'Anda tidak bisa mengirim laporan (hanya melihat, atau sedang ditahan).',
       RP002: 'Data yang dilaporkan tidak ditemukan.',
       RP003: 'Anda sudah mengirim banyak laporan dalam satu jam terakhir. Silakan coba lagi nanti.',
@@ -171,6 +180,204 @@ export const teks = {
       UN007: 'Hanya admin utama yang bisa membatalkan perubahan ini.',
       UN008: 'Anda tidak bisa membatalkan perubahan (hanya melihat, atau sedang ditahan).',
     },
+  },
+
+  navigasi: {
+    menu: 'Menu utama',
+    beranda: 'Beranda',
+    saya: 'Saya',
+    kotakMasuk: 'Kotak masuk',
+    lewatiKeIsi: 'Langsung ke isi halaman',
+    privasi: 'Privasi',
+  },
+
+  // Layar Masuk (PLAN.md bagian 14, layar 1). Tanpa data apa pun.
+  halamanMasuk: {
+    judul: 'Silsilah Keluarga',
+    sapaan: 'Selamat datang. Aplikasi ini khusus untuk anggota keluarga yang sudah diundang.',
+    punyaLink: 'Kalau Anda punya link undangan, ketuk saja link itu. Link dikirim oleh admin keluarga lewat WhatsApp.',
+    judulKode: 'Punya kode dari perangkat lain?',
+    labelKode: 'Kode (8 huruf dan angka)',
+    bantuanKode: 'Contoh: ABCD-2345. Kode didapat dari menu Saya, lalu Tambah perangkat, di perangkat yang sudah masuk. Kode berlaku 10 menit.',
+    tombolKode: 'Masuk dengan kode',
+    belumPunya: 'Belum punya link atau kode? Hubungi admin keluarga.',
+    bacaPrivasi: 'Baca tentang privasi',
+  },
+
+  // Layar membuka link undangan dan kode (layar 2).
+  penukaran: {
+    undangan: {
+      judul: 'Link undangan pribadi',
+      isi: 'Ini link pribadi untuk membuka Silsilah Keluarga. Tekan Masuk untuk melanjutkan.',
+      catatan: 'Link ini hanya bisa dipakai sekali. Jangan diteruskan ke orang lain.',
+    },
+    kode: {
+      judul: 'Masuk dengan kode',
+      isi: 'Kode dari perangkat lain sudah siap. Tekan Masuk untuk melanjutkan.',
+      catatan: 'Kode hanya berlaku 10 menit dan hanya bisa dipakai sekali.',
+    },
+    masuk: 'Masuk',
+    sedangMasuk: 'Sedang masuk…',
+    cobaLagi: 'Coba lagi',
+    keHalamanMasuk: 'Ke halaman masuk',
+    linkRusak: 'Link ini tidak lengkap. Pastikan Anda membuka link utuh dari admin.',
+    kodeRusak: 'Kode ini tidak lengkap. Pastikan Anda memakai kode utuh dari perangkat yang sudah masuk.',
+  },
+
+  browserDalamAplikasi: {
+    judul: 'Buka di Chrome atau Safari',
+    isi: 'Anda membuka link ini di dalam aplikasi {nama}. Supaya link tidak "tertinggal" di tempat yang salah, buka dulu di Chrome atau Safari.',
+    langkah: 'Ketuk tombol di bawah untuk menyalin link, lalu tempel di kolom alamat Chrome atau Safari. Bisa juga lewat menu titik tiga atau tombol bagikan di pojok layar, lalu pilih "Buka di browser".',
+    salin: 'Salin link',
+    disalin: 'Link sudah disalin. Sekarang buka Chrome atau Safari, lalu tempel di kolom alamat.',
+    gagalSalin: 'Link belum bisa disalin. Buka menu titik tiga atau tombol bagikan, lalu pilih "Buka di browser".',
+    tetapLanjut: 'Saya tetap ingin lanjut di sini',
+  },
+
+  // Layar Selamat datang (layar 3).
+  selamatDatang: {
+    judul: 'Selamat datang, {nama}!',
+    tanya: 'Apakah ini Anda?',
+    ya: 'Ya, ini saya',
+    bukan: 'Bukan saya',
+    yakinJudul: 'Yakin ini bukan Anda?',
+    yakinIsi: 'Akses di perangkat ini akan ditutup dan admin langsung diberi tahu, supaya bisa mengirim link yang benar.',
+    yakinYa: 'Ya, ini bukan saya',
+    yakinBatal: 'Kembali',
+    sedangMelapor: 'Sedang memproses…',
+    terimaKasihJudul: 'Terima kasih',
+    terimaKasihIsi: 'Akses di perangkat ini sudah ditutup dan admin sudah diberi tahu. Mintalah link yang benar kepada admin.',
+    tipsJudul: 'Beberapa tips',
+    ukuranHuruf: 'Ukuran huruf',
+    ukuranIsi: 'Pilih ukuran huruf yang paling nyaman dibaca. Bisa diubah kapan saja di menu Saya.',
+    layarUtama: 'Pasang di layar utama',
+    layarUtamaIsi: 'Di iPhone: ketuk tombol Bagikan di Safari, lalu pilih "Tambah ke Layar Utama". Di Android: ketuk menu titik tiga di Chrome, lalu pilih "Tambahkan ke layar utama".',
+    perangkatBaru: 'Pakai di HP atau laptop lain',
+    perangkatBaruIsi: 'Buka menu Saya, lalu pilih Tambah perangkat. Anda akan mendapat kode untuk masuk di perangkat lain, tanpa perlu meminta link baru.',
+    lanjut: 'Mulai memakai aplikasi',
+  },
+
+  beranda: {
+    judul: 'Beranda',
+    sapa: 'Halo, {nama}',
+    isi: 'Silsilah keluarga sedang disiapkan untuk ditampilkan di sini. Sementara itu, Anda bisa mengatur tampilan dan perangkat di menu Saya.',
+  },
+
+  // Layar Saya / Pengaturan (layar 20).
+  saya: {
+    judul: 'Saya',
+    tampilan: 'Tampilan',
+    ukuranHuruf: 'Ukuran huruf',
+    ukuran: { normal: 'Normal', besar: 'Besar', sangatBesar: 'Sangat besar' },
+    kontras: 'Kontras tinggi',
+    kontrasIsi: 'Warna lebih tegas supaya lebih mudah dibaca.',
+    kontrasMenyala: 'Menyala',
+    kontrasMati: 'Mati',
+    perangkat: 'Perangkat',
+    tambahPerangkat: 'Tambah perangkat',
+    perangkatSaya: 'Perangkat saya',
+    informasi: 'Informasi',
+    privasi: 'Privasi',
+    admin: 'Untuk pengurus',
+    aksesSementara: 'Beri akses sementara',
+    akun: 'Akun',
+    keluar: 'Keluar',
+  },
+
+  keluar: {
+    judul: 'Keluar',
+    isi: 'Pilih cara keluar. Data silsilah yang tersimpan di perangkat ini akan dihapus.',
+    iniSaja: 'Keluar dari perangkat ini',
+    semua: 'Keluar dari semua perangkat',
+    semuaIsi: 'Semua perangkat Anda akan keluar. Untuk masuk lagi, Anda perlu link atau kode baru.',
+    batal: 'Batal',
+    sedang: 'Sedang keluar…',
+    // Pesan di layar Masuk setelah aplikasi mengeluarkan perangkat ini.
+    alasan: {
+      keluar: 'Anda sudah keluar. Data di perangkat ini sudah dihapus.',
+      keluarGagalLain: 'Anda sudah keluar di perangkat ini dan datanya sudah dihapus. Perangkat lain belum bisa dikeluarkan sekarang. Coba lagi nanti dari menu Perangkat saya.',
+      dicabut: 'Akses perangkat ini sudah dicabut. Data di perangkat ini sudah dihapus. Hubungi admin kalau Anda merasa ini keliru.',
+      berakhir: 'Akses sementara Anda sudah berakhir. Data di perangkat ini sudah dihapus.',
+      sesi: 'Sesi Anda berakhir. Data di perangkat ini sudah dihapus. Silakan masuk lagi.',
+    },
+  },
+
+  // Layar Tambah perangkat.
+  tambahPerangkat: {
+    judul: 'Tambah perangkat',
+    isi: 'Di perangkat baru, buka aplikasi lalu pindai kode QR ini dengan kamera. Atau pilih "Masuk dengan kode" dan ketik kode di bawah.',
+    buat: 'Buat kode',
+    membuat: 'Membuat kode…',
+    qrLabel: 'Kode QR untuk menambah perangkat',
+    kodeLabel: 'Kode',
+    berlaku: 'Berlaku {waktu} lagi',
+    habis: 'Kode ini sudah tidak berlaku.',
+    buatBaru: 'Buat kode baru',
+    hanyaSekali: 'Kode hanya bisa dipakai sekali. Jangan berikan kepada orang yang tidak Anda kenal.',
+    iphone: 'Pemakai iPhone: layar utama dan Safari tidak berbagi login. Buka ikon di layar utama, pilih "Masuk dengan kode", lalu ketik kode dari sini.',
+    sementara: 'Perangkat dengan akses sementara tidak bisa menambah perangkat lain.',
+  },
+
+  // Layar Perangkat saya.
+  perangkatSaya: {
+    judul: 'Perangkat saya',
+    isi: 'Perangkat yang sedang masuk dengan nama Anda. Kalau ada yang tidak Anda kenal, atau HP Anda hilang, cabut aksesnya.',
+    iniPerangkat: 'Perangkat ini',
+    terakhirAktif: 'Terakhir aktif {waktu}',
+    masukPada: 'Masuk {waktu}',
+    lewat: {
+      undangan: 'lewat link undangan',
+      kode: 'lewat kode',
+      google: 'lewat akun Google',
+      sementara: 'akses sementara',
+    },
+    berakhirPukul: 'Berakhir pukul {jam}',
+    cabut: 'Cabut akses',
+    cabutJudul: 'Cabut akses perangkat ini?',
+    cabutIsiLain: 'Perangkat itu langsung tidak bisa membuka data lagi.',
+    cabutIsiIni: 'Ini perangkat yang sedang Anda pakai. Anda akan keluar dan data di sini dihapus.',
+    cabutYa: 'Ya, cabut',
+    batal: 'Batal',
+    kosong: 'Tidak ada perangkat yang sedang masuk.',
+    sudahDicabut: 'Akses perangkat sudah dicabut.',
+    perkiraan: 'Perkiraan lokasi',
+    lokasiTakDiketahui: 'lokasi tidak diketahui',
+    tanpaNama: 'Perangkat tanpa nama',
+  },
+
+  // Layar Privasi (layar 29): bisa dibuka sebelum dan sesudah masuk.
+  privasi: {
+    judul: 'Privasi',
+    pembuka: 'Halaman ini menjelaskan, dengan bahasa sederhana, data apa yang disimpan aplikasi ini dan berapa lama. Aplikasi ini hanya untuk keluarga dan tidak dibuka untuk umum.',
+    bagian: [
+      {
+        judul: 'Data apa yang disimpan',
+        isi: 'Data silsilah yang dicatat keluarga: nama, hubungan keluarga, tanggal dan tempat lahir atau wafat, serta catatan. Semua disimpan di database yang dikunci. Hanya anggota keluarga yang sudah diundang dan masuk dari perangkat yang terdaftar yang bisa membukanya.',
+      },
+      {
+        judul: 'Perangkat yang masuk',
+        isi: 'Setiap perangkat yang masuk dicatat: nama perangkat (misalnya "iPhone · Safari"), waktu masuk, dan terakhir aktif. Anda bisa melihat dan mencabut perangkat sendiri di menu Saya.',
+      },
+      {
+        judul: 'Perkiraan lokasi saat masuk',
+        isi: 'Saat Anda masuk, admin keluarga menerima pemberitahuan berisi perkiraan kota atau negara, jenis perangkat, dan waktu. Perkiraan ini dibaca dari alamat internet (IP) Anda, jadi sering meleset, terutama di jaringan seluler. Tidak ada GPS, dan aplikasi tidak pernah meminta izin lokasi saat masuk.',
+      },
+      {
+        judul: 'Alamat internet (IP)',
+        isi: 'Alamat internet mentah disimpan hanya untuk pemeriksaan keamanan, dan dihapus otomatis setelah 30 hari. Yang disimpan seterusnya hanya perkiraan kota atau negara, jenis perangkat, dan waktu. Alamat internet tidak dikirim ke layanan lain: perkiraan lokasi dihitung dari data yang tersimpan di server aplikasi sendiri.',
+      },
+      {
+        judul: 'Di perangkat Anda',
+        isi: 'Aplikasi menyimpan tanda masuk Anda dan pilihan tampilan di perangkat. Saat Anda keluar, saat akses sementara habis, atau saat perangkat dicabut admin, semua data aplikasi di perangkat itu dihapus. Pilihan tampilan (ukuran huruf dan kontras) tetap ada karena bukan data keluarga.',
+      },
+      {
+        judul: 'Akses sementara',
+        isi: 'Untuk meminjam laptop atau HP orang lain, Anda bisa meminta akses sementara kepada admin. Setelah waktunya habis, aplikasi keluar sendiri dan data di perangkat itu dihapus.',
+      },
+    ],
+    atribusi: 'Perkiraan lokasi dari alamat IP memakai data DB-IP (db-ip.com), lisensi CC BY 4.0.',
+    tautanAtribusi: 'Buka situs DB-IP',
+    kembali: 'Kembali',
   },
 
   // Hasil memakai link undangan atau kode perangkat (Edge Function
