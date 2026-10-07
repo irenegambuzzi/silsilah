@@ -13,3 +13,7 @@ entrypoint = "./functions/pakai-undangan/index.js"
 [functions.pakai-kode]
 verify_jwt = false
 entrypoint = "./functions/pakai-kode/index.js"
+
+[functions.cek-perangkat]
+verify_jwt = false
+entrypoint = "./functions/cek-perangkat/index.js"

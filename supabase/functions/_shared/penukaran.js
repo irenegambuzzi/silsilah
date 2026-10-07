@@ -11,8 +11,11 @@
 // Kalau langkah 2–3 gagal (gangguan server), link/kode BELUM terpakai dan
 // bisa dicoba lagi. token_hash hanya dikembalikan kalau langkah 4 berhasil.
 //
-// `layanan`: { rpc(nama, args) → { data, error }, auth } dengan `auth`
-// berbentuk supabase.auth.admin (getUserById, createUser, generateLink).
+// `layanan`: { rpc(nama, args) → { data, error }, auth, cariLokasi? } dengan
+// `auth` berbentuk supabase.auth.admin (getUserById, createUser,
+// generateLink) dan cariLokasi(ip) → { approx_country, approx_city } dari
+// data di memori (sumber-lokasi.js). Lokasi yang gagal dicari tidak
+// menghalangi login.
 
 import { BENTUK_KODE, BENTUK_TOKEN, rapikanKode, sha256Hex } from './rahasia.js'
 import { kenaliPerangkat } from './perangkat.js'
@@ -81,7 +84,7 @@ async function siapkanAkun(cek, konteks, layanan) {
 }
 
 // jenis: 'undangan' | 'kode'. rahasia: token dari link, atau kode ketikan.
-// konteks: { ip, userAgent, domainEmail, lokasi? } (lokasi: langkah 1.16).
+// konteks: { ip, userAgent, domainEmail }.
 // Hasil: { ok: true, token_hash, tiket, nama, via, menit } atau
 //        { ok: false, alasan }. Gangguan layanan → melempar GalatLayanan.
 export async function tukar(jenis, rahasia, konteks, layanan) {
@@ -97,7 +100,13 @@ export async function tukar(jenis, rahasia, konteks, layanan) {
 
   const tokenHash = await siapkanAkun(cek, konteks, layanan)
 
-  const info = { ...kenaliPerangkat(konteks.userAgent), ...(konteks.lokasi ?? {}) }
+  let lokasi = {}
+  try {
+    lokasi = (await layanan.cariLokasi?.(konteks.ip)) ?? {}
+  } catch {
+    lokasi = {}
+  }
+  const info = { ...kenaliPerangkat(konteks.userAgent), ...lokasi }
   const hasil = await panggil(layanan, 'edge_complete_redemption', { ...args, p_info: info })
   if (hasil.status !== 'ok') return tolak(hasil.status)
 

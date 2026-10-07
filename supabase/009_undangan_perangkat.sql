@@ -60,6 +60,7 @@ create table if not exists private.device_claims (
   label text check (length(label) <= 100),
   approx_city text check (length(approx_city) <= 100),
   approx_country text check (approx_country ~ '^[A-Z]{2}$'),
+  approx_country_name text check (length(approx_country_name) <= 100),
   created_at timestamptz not null default now(),
   expires_at timestamptz not null default (now() + interval '10 minutes'),
   used_at timestamptz,
@@ -67,6 +68,11 @@ create table if not exists private.device_claims (
   constraint device_claims_minutes_match_via check ((via = 'sementara') = (access_minutes is not null))
 );
 create index if not exists device_claims_member_idx on private.device_claims (member_id);
+
+-- Nama negara perkiraan dalam bahasa Indonesia ("Arab Saudi"), dibuat Edge
+-- Function dari kodenya. Daftar nama negara sengaja tidak disimpan di repo.
+alter table public.devices add column if not exists approx_country_name text
+  check (length(approx_country_name) <= 100);
 
 -- ── Percobaan yang salah (untuk batas percobaan) ──────────────────
 create table if not exists private.redeem_attempts (
@@ -595,7 +601,7 @@ grant execute on function public.edge_attach_auth_user(uuid, uuid) to service_ro
 -- Langkah 3 Edge Function: memakai link/kode (sekali saja, dikunci supaya
 -- dua orang yang menekan "Masuk" bersamaan tidak sama-sama berhasil) dan
 -- memberi tiket klaim perangkat.
--- p_info: { device_type, label, approx_city, approx_country } (perkiraan).
+-- p_info: { device_type, label, approx_city, approx_country, approx_country_name } (perkiraan).
 -- Hasil: { status: 'ok', ticket, member_id, display_name, via, access_minutes }
 --        atau { status: alasan } seperti edge_check_redemption.
 create or replace function public.edge_complete_redemption(
@@ -669,10 +675,12 @@ begin
   end if;
 
   insert into private.device_claims (ticket_hash, member_id, via, access_minutes, invite_id, code_id, event_id,
-                                     device_type, label, approx_city, approx_country)
+                                     device_type, label, approx_city, approx_country, approx_country_name)
   select private.sha256_hex(tiket), mid, via, menit,
          case p_kind when 'undangan' then rid end, case p_kind when 'kode' then rid end, ev,
-         e.device_type, nullif(left(btrim(coalesce(p_info ->> 'label', '')), 100), ''), e.approx_city, e.approx_country
+         e.device_type, nullif(left(btrim(coalesce(p_info ->> 'label', '')), 100), ''), e.approx_city, e.approx_country,
+         case when e.approx_country is not null
+              then nullif(left(btrim(coalesce(p_info ->> 'approx_country_name', '')), 100), '') end
   from private.auth_events e where e.id = ev;
 
   return jsonb_build_object('status', 'ok', 'ticket', tiket, 'member_id', mid, 'display_name', m.display_name,
@@ -725,10 +733,10 @@ begin
   end if;
 
   insert into public.devices (member_id, session_id, via, expires_at, label, device_type,
-                              approx_city, approx_country, timezone, last_seen_at)
+                              approx_city, approx_country, approx_country_name, timezone, last_seen_at)
   values (m.id, sesi, t.via,
           case when t.via = 'sementara' then now() + make_interval(mins => t.access_minutes) end,
-          t.label, t.device_type, t.approx_city, t.approx_country, zona, now())
+          t.label, t.device_type, t.approx_city, t.approx_country, t.approx_country_name, zona, now())
   returning * into d;
 
   update private.device_claims set used_at = now(), used_device_id = d.id where id = t.id;
@@ -778,7 +786,8 @@ with
   fungsi_edge as (
     select p.oid, p.proname as nama
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.proname like 'edge\_%'
+    where n.nspname = 'public'
+      and p.proname in ('edge_check_redemption', 'edge_attach_auth_user', 'edge_complete_redemption')
   )
 select 'Tabel baru (dari 2) dengan RLS' as pemeriksaan,
        (select count(*)::text from tabel where rls) as hasil,

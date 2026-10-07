@@ -3,6 +3,7 @@
 // isi server. Hanya memakai Request/Response standar (ada di Deno dan Node).
 
 import { GalatLayanan, tukar } from './penukaran.js'
+import { cekPerangkat } from './cek-perangkat.js'
 
 const BATAS_ISI = 2000
 
@@ -66,10 +67,33 @@ export function buatPenangan(jenis, ambilLayanan, opsi = {}) {
       }
       return json(await tukar(jenis, rahasia, konteks, ambilLayanan()), 200, cors)
     } catch (galat) {
-      // Hanya nama langkah dan kodenya; tidak pernah token, kode, atau pesan server.
-      const dikenal = galat instanceof GalatLayanan
-      opsi.catat?.({ langkah: dikenal ? galat.message : (galat?.name ?? null), kode: dikenal ? galat.kode : null })
-      return json({ ok: false, alasan: 'server' }, 500, cors)
+      return galatServer(galat, opsi, cors)
+    }
+  }
+}
+
+// Hanya nama langkah dan kodenya yang dicatat; tidak pernah token, kode,
+// atau pesan server.
+function galatServer(galat, opsi, cors) {
+  const dikenal = galat instanceof GalatLayanan
+  opsi.catat?.({ langkah: dikenal ? galat.message : (galat?.name ?? null), kode: dikenal ? galat.kode : null })
+  return json({ ok: false, alasan: 'server' }, 500, cors)
+}
+
+// Edge Function cek-perangkat: POST dengan header Authorization: Bearer
+// <token login perangkat ini>. Isi permintaan tidak dipakai.
+export function buatPenanganCekPerangkat(ambilLayanan, opsi = {}) {
+  return async (req) => {
+    const cors = headerCors(req, opsi.asal)
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors })
+    if (req.method !== 'POST') return json({ ok: false, alasan: 'permintaan_salah' }, 405, cors)
+    const token = /^Bearer\s+(\S{1,4000})$/.exec(req.headers.get('authorization') ?? '')?.[1] ?? null
+    try {
+      const konteks = { ip: ambilIp(req.headers), userAgent: req.headers.get('user-agent') ?? '' }
+      const hasil = await cekPerangkat(token, konteks, ambilLayanan())
+      return json(hasil, hasil.ok ? 200 : 401, cors)
+    } catch (galat) {
+      return galatServer(galat, opsi, cors)
     }
   }
 }

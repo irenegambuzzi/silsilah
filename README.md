@@ -25,8 +25,10 @@ Rencana lengkap: [PLAN.md](PLAN.md).
 
 ## Edge Functions
 
-`supabase/functions/pakai-undangan` (link undangan) dan
-`supabase/functions/pakai-kode` (kode tambah perangkat / akses sementara).
+`supabase/functions/pakai-undangan` (link undangan),
+`supabase/functions/pakai-kode` (kode tambah perangkat / akses sementara), dan
+`supabase/functions/cek-perangkat` (dipanggil setiap aplikasi dibuka: terakhir
+aktif, dan laporan ke admin kalau perangkat yang sudah dicabut dibuka lagi).
 Logikanya ada di `supabase/functions/_shared/` dan dites di Node bersama
 database tes (`npm test`). Database tetap diatur lewat file SQL bernomor di
 SQL Editor, bukan lewat CLI.
@@ -45,11 +47,29 @@ Deploy (Supabase CLI, tanpa Docker), dari folder repo:
 ```
 supabase functions deploy pakai-undangan --use-api --no-verify-jwt --project-ref <ref>
 supabase functions deploy pakai-kode --use-api --no-verify-jwt --project-ref <ref>
+supabase functions deploy cek-perangkat --use-api --no-verify-jwt --project-ref <ref>
 ```
 
 `--no-verify-jwt` disengaja (juga tertulis di `supabase/config.toml`): yang
-memanggil kedua fungsi ini belum login. Keamanannya dari token/kode itu
+memanggil `pakai-undangan` dan `pakai-kode` belum login, dan `cek-perangkat`
+memeriksa token login sendiri (`getClaims`). Keamanannya dari token/kode itu
 sendiri (sekali pakai, ber-hash, kedaluwarsa) dan batas percobaan di SQL 009.
 Login memakai tautan masuk (magic link) tanpa email terkirim, jadi provider
 **Email** di Authentication harus aktif, sedangkan "Allow new users to sign
 up" tetap mati.
+
+## Perkiraan lokasi login
+
+Edge Function memperkirakan kota/negara dari alamat IP **di memori**, memakai
+file `lokasi-ip.bin.gz` di Storage privat (bucket `lokasi-ip`). Alamat IP tidak
+dikirim ke layanan lain, dan tidak ada GPS atau koordinat.
+
+- Data: DB-IP "IP to City Lite" (db-ip.com, lisensi CC BY 4.0; atribusi di
+  halaman Privasi). Kota untuk **Indonesia dan Italia**, negara saja untuk
+  negara lain: ±6,9 MB (±2,6 MB terkompresi). Kota untuk semua negara ±76 MB,
+  melebihi batas file Storage paket gratis (50 MB) dan terlalu berat untuk
+  Edge Function.
+- Membuat file (dipakai workflow bulanan, langkah 1.28):
+  `npm run lokasi-ip:buat -- dbip-city-lite-2026-10.csv.gz lokasi-ip.bin.gz --tanggal 2026-10`
+- Selama file belum diunggah, login tetap jalan dengan "lokasi tidak diketahui".
+

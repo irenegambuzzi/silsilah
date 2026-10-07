@@ -9,6 +9,11 @@
 //                          misalnya https://<akun>.github.io (kosong = semua)
 //   DOMAIN_EMAIL_SINTETIS  domain email akun login (bawaan silsilah.invalid;
 //                          tidak ada email yang dikirim)
+//
+// Semua permintaan jaringan di sini hanya ke project Supabase ini sendiri
+// (database, Auth, Storage). Alamat IP anggota tidak dikirim ke mana pun.
+
+import { BERKAS_LOKASI, BUCKET_LOKASI, buatPencariLokasi } from './sumber-lokasi.js'
 
 export function ambilKunciServer(env) {
   const kunci = env.get('KUNCI_SERVER')
@@ -21,6 +26,27 @@ export function ambilKunciServer(env) {
   }
 }
 
+// Layanan dari klien supabase-js (dipisah supaya bisa dites dengan tiruan).
+export function layananDariKlien(supabase) {
+  return {
+    rpc: (nama, args) => supabase.rpc(nama, args),
+    auth: supabase.auth.admin,
+    // File data lokasi dari Storage privat project ini, dimuat sekali.
+    cariLokasi: buatPencariLokasi(async () => {
+      const { data, error } = await supabase.storage.from(BUCKET_LOKASI).download(BERKAS_LOKASI)
+      if (error || !data) throw new Error('data lokasi tidak ada')
+      return new Uint8Array(await data.arrayBuffer())
+    }),
+    // Token login yang sah → { userId, sessionId }, atau null.
+    async verifikasiToken(token) {
+      const { data, error } = await supabase.auth.getClaims(token)
+      const k = data?.claims
+      if (error || typeof k?.sub !== 'string' || typeof k?.session_id !== 'string') return null
+      return { userId: k.sub, sessionId: k.session_id }
+    },
+  }
+}
+
 // createClient dari @supabase/supabase-js (diberikan oleh index.js).
 export function buatAmbilLayanan(createClient, env) {
   let layanan = null
@@ -29,10 +55,9 @@ export function buatAmbilLayanan(createClient, env) {
     const url = env.get('SUPABASE_URL')
     const kunci = ambilKunciServer(env)
     if (!url || !kunci) throw new Error('pengaturan')
-    const supabase = createClient(url, kunci, {
+    layanan = layananDariKlien(createClient(url, kunci, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    })
-    layanan = { rpc: (nama, args) => supabase.rpc(nama, args), auth: supabase.auth.admin }
+    }))
     return layanan
   }
 }

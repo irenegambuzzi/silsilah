@@ -1,0 +1,9 @@
+0.0.0.0,0.255.255.255,ZZ,ZZ,,,0,0
+192.0.2.0,192.0.2.127,AS,ID,"Jawa Tengah","Kota Contoh A",-7.0123,110.4567
+192.0.2.128,192.0.2.255,AS,ID,"Jawa Barat","Kota ""Contoh"", B",-6.9123,107.6123
+198.51.100.0,198.51.100.255,EU,IT,Lombardia,"Kota Contoh C",45.4123,9.1123
+203.0.113.0,203.0.113.127,AF,NG,Lagos,"Kota Contoh D",6.4123,3.4123
+203.0.113.128,203.0.113.255,AF,NG,Lagos,"Kota Contoh E",6.4123,3.4123
+2001:db8::,2001:db8:0:ffff:ffff:ffff:ffff:ffff,AS,ID,"Jawa Timur","Kota Contoh F",-7.2123,112.7123
+2001:db8:1::,2001:db8:1:0:7fff:ffff:ffff:ffff,EU,IT,Lazio,"Kota Contoh G",41.9123,12.5123
+2001:db8:1:0:8000::,2001:db8:1:ffff:ffff:ffff:ffff:ffff,EU,IT,Lazio,"Kota Contoh H",41.9123,12.5123

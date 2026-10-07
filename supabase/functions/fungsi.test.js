@@ -10,8 +10,8 @@ const fungsi = fs.readdirSync(dir).filter((f) => !f.startsWith('_') && fs.statSy
 const config = fs.readFileSync(path.join(dir, '..', 'config.toml'), 'utf8')
 
 describe('Edge Functions', () => {
-  it('ada pakai-undangan dan pakai-kode', () => {
-    expect(fungsi.sort()).toEqual(['pakai-kode', 'pakai-undangan'])
+  it('ada pakai-undangan, pakai-kode, dan cek-perangkat', () => {
+    expect(fungsi.sort()).toEqual(['cek-perangkat', 'pakai-kode', 'pakai-undangan'])
   })
 
   it.each(fungsi)('%s: verify_jwt mati dan entrypoint index.js di config.toml', (f) => {
@@ -33,7 +33,16 @@ describe('Edge Functions', () => {
     for (const f of fs.readdirSync(bersama).filter((x) => x.endsWith('.js') && !x.endsWith('.test.js'))) {
       const isi = fs.readFileSync(path.join(bersama, f), 'utf8')
       for (const [, i] of isi.matchAll(/from '([^']+)'/g)) expect(i, `${f}: ${i}`).toMatch(/^\.\/[\w-]+\.js$/)
-      expect(isi, f).not.toMatch(/process\.|require\(|Buffer\b/)
+      expect(isi, f).not.toMatch(/\bprocess\.|\brequire\(|\bBuffer\b/)
+    }
+  })
+
+  it('kode bersama tidak memanggil jaringan sendiri (IP tidak pernah dikirim ke layanan luar)', () => {
+    const bersama = path.join(dir, '_shared')
+    for (const f of fs.readdirSync(bersama).filter((x) => x.endsWith('.js') && !x.endsWith('.test.js'))) {
+      // Tanpa komentar: yang diperiksa hanya kode.
+      const kode = fs.readFileSync(path.join(bersama, f), 'utf8').split('\n').filter((b) => !b.trim().startsWith('//')).join('\n')
+      expect(kode, f).not.toMatch(/\bfetch\s*\(|https?:\/\/|XMLHttpRequest|WebSocket|Deno\.connect/)
     }
   })
 })

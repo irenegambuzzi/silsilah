@@ -136,6 +136,7 @@ export const teks = {
       AK021: 'Anda belum masuk. Silakan masuk dulu.',
       AK022: 'Durasi akses sementara minimal 30 menit.',
       AK023: 'Akun Anda sedang ditahan sementara, jadi belum bisa menambah perangkat. Hubungi admin.',
+      AK024: 'Perangkat ini tidak ditemukan, atau bukan milik Anda.',
       RP001: 'Anda tidak bisa mengirim laporan (hanya melihat, atau sedang ditahan).',
       RP002: 'Data yang dilaporkan tidak ditemukan.',
       RP003: 'Anda sudah mengirim banyak laporan dalam satu jam terakhir. Silakan coba lagi nanti.',
@@ -191,6 +192,14 @@ export const teks = {
       dimatikan: 'Fitur tambah perangkat sedang dimatikan oleh admin.',
       terlalu_sering: 'Terlalu banyak percobaan kode yang salah. Tunggu 15 menit, lalu coba lagi.',
     },
+  },
+
+  // Perkiraan lokasi login (Edge Function, data DB-IP Lite). Atribusi wajib
+  // ditampilkan di halaman Privasi (lisensi CC BY 4.0).
+  lokasi: {
+    sekitar: 'sekitar',
+    tidakDiketahui: 'lokasi tidak diketahui',
+    atribusi: 'Perkiraan lokasi dari alamat IP memakai data DB-IP (db-ip.com), lisensi CC BY 4.0.',
   },
 
   // Label silsilah: kartu, detail, dan istilah kerabat (src/lib/silsilah/).

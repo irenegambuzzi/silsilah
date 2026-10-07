@@ -14,6 +14,8 @@
 --                   catatan percobaan link/kode yang salah (berisi alamat
 --                   IP) dan tiket klaim perangkat yang berumur lebih dari
 --                   1 hari.
+--   ringkasan-login setiap jam tepat: ringkasan login untuk admin utama
+--                   (hanya kalau "ringkasan per jam" menyala dan ada login).
 --
 -- Kalau perintah "create extension" gagal: Dashboard → Database →
 -- Extensions → cari "pg_cron" → aktifkan, lalu jalankan file ini lagi.
@@ -25,6 +27,7 @@ create extension if not exists pg_cron with schema pg_catalog;
 select cron.schedule('salinan-harian', '0 19 * * *', $$select private.daily_snapshot()$$);
 select cron.schedule('hapus-ip-lama', '15 20 * * *', $$select private.purge_old_login_ips()$$);
 select cron.schedule('hapus-percobaan-lama', '20 20 * * *', $$select private.purge_redeem_data()$$);
+select cron.schedule('ringkasan-login', '0 * * * *', $$select private.send_login_digest()$$);
 
 -- ── Pemeriksaan ───────────────────────────────────────────────────
 select 'Jadwal salinan-harian aktif' as pemeriksaan,
@@ -37,4 +40,8 @@ select 'Jadwal hapus-ip-lama aktif',
 union all
 select 'Jadwal hapus-percobaan-lama aktif',
        (select count(*)::text from cron.job where jobname = 'hapus-percobaan-lama' and active),
+       '1'
+union all
+select 'Jadwal ringkasan-login aktif',
+       (select count(*)::text from cron.job where jobname = 'ringkasan-login' and active),
        '1';

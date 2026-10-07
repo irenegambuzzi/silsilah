@@ -412,7 +412,7 @@ Trigger menolak setiap perubahan pada baris admin utama, dan menolak `role = 'as
 | `expires_at` | null = selamanya |
 | `timezone` | |
 | `device_type` | misalnya "iPhone", "Android", "Laptop Windows" |
-| `approx_city`, `approx_country` | perkiraan dari IP saat login; **tanpa GPS/koordinat** |
+| `approx_city`, `approx_country`, `approx_country_name` | perkiraan dari IP saat login (nama negara bahasa Indonesia dari Edge Function); **tanpa GPS/koordinat** |
 | `created_at`, `last_seen_at`, `revoked_*` | |
 
 **`private.auth_events`**: log lengkap. Hanya admin utama.
@@ -631,7 +631,7 @@ Semua kebijakan dites di PGlite dengan matriks lengkap: anon, bukan anggota, ang
    - Lokasi dicari di **database lokasi IP offline: DB-IP "IP to City Lite"** (gratis, lisensi CC BY 4.0, atribusi ditampilkan di halaman Privasi). **IP tidak dikirim ke pihak ketiga.**
      - Supaya muat di Edge Function, data tingkat kota hanya diambil untuk negara-negara dalam daftar negara biasa. Negara lain cukup tingkat negara.
      - Data diperbarui otomatis sebulan sekali oleh workflow di repo privat dan disimpan di Storage privat.
-     - Kelayakannya diuji di langkah 1.16. Kalau ternyata terlalu besar, cadangannya adalah tingkat negara saja; kota ditambahkan kemudian.
+     - **Hasil uji langkah 1.16 (7 Oktober 2026):** kota untuk semua negara ±76 MB, melebihi batas file Storage paket gratis (50 MB) dan terlalu berat untuk Edge Function. Sesuai keputusan pemilik: **kota untuk Indonesia dan Italia, negara untuk negara lain** (±6,9 MB, ±2,6 MB terkompresi; dimuat ±60 ms, ±54 MB memori). Data IPv6 dicatat per blok /64.
    - **IP mentah disimpan maksimal 30 hari** di `private.login_ips` lalu dihapus otomatis. Yang disimpan seterusnya hanya kota, negara, jenis perangkat, dan waktu.
    - Semua ini dijelaskan di halaman **Privasi** aplikasi (bahasa Indonesia).
    - Catatan jujur: perkiraan kota dari IP sering meleset, terutama di jaringan seluler Indonesia (bisa selalu tampil "Jakarta"). Karena itu label selalu ditulis "sekitar …".
@@ -1176,7 +1176,7 @@ Setiap langkah kecil, bisa dites, dan selesai dengan commit + CI hijau. **Kode b
 | 1.25 | Admin: Anggota & Undangan (aturan dewasa + centang "sudah dewasa"), izin asisten (centang), perangkat, cabut, log login | Manual. |
 | 1.26 | Pohon keluarga asal: editor admin, istilah dari sudut pandang pasangan khusus, layar akses + tombol "Beri akses ke semua keturunan …" | PGlite + manual: yang tidak diberi akses tidak melihat apa pun. |
 | 1.27 | Skrip migrasi `ubah` + `verifikasi` (struktur, tanggal/tempat lahir-wafat, bio → catatan) | Tes data fiktif, termasuk tanggal teks yang aneh; laporan dari CSV asli (lokal). |
-| 1.28 | Repo privat `silsilah-cadangan`: workflow backup (hanya jika berubah, age+passphrase, Releases, retensi, uji pulih) + workflow bulanan pembaruan database lokasi IP | Workflow hijau; Anda berhasil membuka satu file dengan `age -d`. |
+| 1.28 | Repo privat `silsilah-cadangan`: workflow backup (hanya jika berubah, age+passphrase, Releases, retensi, uji pulih) + workflow bulanan pembaruan database lokasi IP (unduh CSV DB-IP City Lite → `npm run lokasi-ip:buat` → unggah `lokasi-ip.bin.gz` ke bucket privat `lokasi-ip`; kota ID+IT, negara untuk lainnya) | Workflow hijau; Anda berhasil membuka satu file dengan `age -d`. |
 | 1.29 | Jalankan SQL 001–009 (dan seterusnya) di cloud, deploy Edge Functions, lalu `jadwal.sql` (pg_cron), cek hasil, Security Advisor, uji `curl` tanpa login → ditolak; uji dengan data fiktif, lalu reset | Semua lulus. |
 | ⏰ | **Pengingat B untuk Anda: aktifkan verifikasi dua langkah** di GitHub, Supabase, dan Google (bagian 2.1). Ini **wajib sebelum 1.30**, karena setelah itu akun-akun ini menjaga data asli. | Anda konfirmasi ketiganya aktif. |
 | 1.30 | Bootstrap admin utama (SQL dari saya) + TOTP | Anda masuk sebagai admin dengan `aal2`. |
@@ -1290,7 +1290,7 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 13. Supabase → Authentication → URL Configuration: Site URL = alamat Pages; Redirect URLs = alamat Pages + `http://localhost:5173`.
 14. Supabase → Authentication: aktifkan **manual linking**, dan pastikan MFA TOTP aktif.
 15. Jalankan file SQL 001–009 (dan file bernomor berikutnya yang sudah ada saat itu) satu per satu (langkah 1.29) di SQL Editor, lalu `jadwal.sql` (tugas otomatis pg_cron; kalau gagal, aktifkan dulu ekstensi pg_cron di Dashboard → Database → Extensions), dan kirimkan hasil pemeriksaannya ke saya.
-16. *Deploy* Edge Functions `pakai-undangan` dan `pakai-kode` (perintah ada di README, dijalankan oleh Anda). Sebelumnya isi Edge Functions → Secrets: `KUNCI_SERVER` (secret key `server_silsilah`; tempel langsung di dashboard, jangan ke chat) dan `ASAL_APLIKASI` (alamat Pages). Pastikan provider **Email** di Authentication aktif (dipakai untuk tautan masuk tanpa email terkirim), sementara "Allow new users to sign up" tetap mati.
+16. *Deploy* Edge Functions `pakai-undangan`, `pakai-kode`, dan `cek-perangkat` (perintah ada di README, dijalankan oleh Anda). Sebelumnya isi Edge Functions → Secrets: `KUNCI_SERVER` (secret key `server_silsilah`; tempel langsung di dashboard, jangan ke chat) dan `ASAL_APLIKASI` (alamat Pages). Pastikan provider **Email** di Authentication aktif (dipakai untuk tautan masuk tanpa email terkirim), sementara "Allow new users to sign up" tetap mati.
 17. Jalankan SQL **bootstrap admin utama**, ketuk link pertama Anda, lalu daftarkan TOTP (dan passkey kalau tersedia).
 18. Repo `silsilah-cadangan` → Secrets: `SUPABASE_DB_URL` (connection string **Session pooler** dari Connect → berisi password database) dan `BACKUP_PASSPHRASE`.
 19. Letakkan CSV backup di `data-pribadi/lama/` dan secret key Supabase di `data-pribadi/.env`.
