@@ -1177,7 +1177,7 @@ Setiap langkah kecil, bisa dites, dan selesai dengan commit + CI hijau. **Kode b
 | 1.26 | Pohon keluarga asal: editor admin, istilah dari sudut pandang pasangan khusus, layar akses + tombol "Beri akses ke semua keturunan …" | PGlite + manual: yang tidak diberi akses tidak melihat apa pun. |
 | 1.27 | Skrip migrasi `ubah` + `verifikasi` (struktur, tanggal/tempat lahir-wafat, bio → catatan) | Tes data fiktif, termasuk tanggal teks yang aneh; laporan dari CSV asli (lokal). |
 | 1.28 | Repo privat `silsilah-cadangan`: workflow backup (hanya jika berubah, age+passphrase, Releases, retensi, uji pulih) + workflow bulanan pembaruan database lokasi IP | Workflow hijau; Anda berhasil membuka satu file dengan `age -d`. |
-| 1.29 | Jalankan SQL 001–008 di cloud, lalu `jadwal.sql` (pg_cron), cek hasil, Security Advisor, uji `curl` tanpa login → ditolak; uji dengan data fiktif, lalu reset | Semua lulus. |
+| 1.29 | Jalankan SQL 001–009 (dan seterusnya) di cloud, deploy Edge Functions, lalu `jadwal.sql` (pg_cron), cek hasil, Security Advisor, uji `curl` tanpa login → ditolak; uji dengan data fiktif, lalu reset | Semua lulus. |
 | ⏰ | **Pengingat B untuk Anda: aktifkan verifikasi dua langkah** di GitHub, Supabase, dan Google (bagian 2.1). Ini **wajib sebelum 1.30**, karena setelah itu akun-akun ini menjaga data asli. | Anda konfirmasi ketiganya aktif. |
 | 1.30 | Bootstrap admin utama (SQL dari saya) + TOTP | Anda masuk sebagai admin dengan `aal2`. |
 | 1.31 | Migrasi ke cloud + verifikasi + pangkal + pohon keluarga asal A/B | Verifikasi 100% cocok. |
@@ -1289,8 +1289,8 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 12. Repo `silsilah` → Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_BASE_PATH` = `/silsilah/`.
 13. Supabase → Authentication → URL Configuration: Site URL = alamat Pages; Redirect URLs = alamat Pages + `http://localhost:5173`.
 14. Supabase → Authentication: aktifkan **manual linking**, dan pastikan MFA TOTP aktif.
-15. Jalankan file SQL 001–008 satu per satu (langkah 1.29) di SQL Editor, lalu `jadwal.sql` (tugas otomatis pg_cron; kalau gagal, aktifkan dulu ekstensi pg_cron di Dashboard → Database → Extensions), dan kirimkan hasil pemeriksaannya ke saya.
-16. *Deploy* Edge Functions (perintah dari saya, dijalankan oleh Anda).
+15. Jalankan file SQL 001–009 (dan file bernomor berikutnya yang sudah ada saat itu) satu per satu (langkah 1.29) di SQL Editor, lalu `jadwal.sql` (tugas otomatis pg_cron; kalau gagal, aktifkan dulu ekstensi pg_cron di Dashboard → Database → Extensions), dan kirimkan hasil pemeriksaannya ke saya.
+16. *Deploy* Edge Functions `pakai-undangan` dan `pakai-kode` (perintah ada di README, dijalankan oleh Anda). Sebelumnya isi Edge Functions → Secrets: `KUNCI_SERVER` (secret key `server_silsilah`; tempel langsung di dashboard, jangan ke chat) dan `ASAL_APLIKASI` (alamat Pages). Pastikan provider **Email** di Authentication aktif (dipakai untuk tautan masuk tanpa email terkirim), sementara "Allow new users to sign up" tetap mati.
 17. Jalankan SQL **bootstrap admin utama**, ketuk link pertama Anda, lalu daftarkan TOTP (dan passkey kalau tersedia).
 18. Repo `silsilah-cadangan` → Secrets: `SUPABASE_DB_URL` (connection string **Session pooler** dari Connect → berisi password database) dan `BACKUP_PASSPHRASE`.
 19. Letakkan CSV backup di `data-pribadi/lama/` dan secret key Supabase di `data-pribadi/.env`.

@@ -1,0 +1,15 @@
+# Pengaturan Supabase CLI, hanya untuk Edge Functions. Database TIDAK
+# dikelola CLI: file SQL bernomor tetap dijalankan manual di SQL Editor.
+#
+# verify_jwt = false: pemanggil kedua fungsi ini belum login (justru sedang
+# masuk). Keamanannya dari token/kode itu sendiri dan batas percobaan.
+
+project_id = "silsilah"
+
+[functions.pakai-undangan]
+verify_jwt = false
+entrypoint = "./functions/pakai-undangan/index.js"
+
+[functions.pakai-kode]
+verify_jwt = false
+entrypoint = "./functions/pakai-kode/index.js"

@@ -46,6 +46,17 @@ describe('pagar keamanan untuk semua migrasi', () => {
     expect(r.map((x) => x.nama).filter((n) => !FUNGSI_BOLEH_ANON.includes(n))).toEqual([])
   })
 
+  it('fungsi khusus Edge Function (edge_*) tidak bisa dijalankan pengguna yang login', async () => {
+    const r = await baris(db, `
+      select p.proname as nama,
+             has_function_privilege('authenticated', p.oid, 'execute') as authenticated,
+             has_function_privilege('service_role', p.oid, 'execute') as server
+      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname like 'edge\\_%'`)
+    expect(r.length).toBeGreaterThan(0)
+    expect(r.filter((x) => x.authenticated || !x.server).map((x) => x.nama)).toEqual([])
+  })
+
   it('schema private tidak bisa dipakai anon maupun authenticated', async () => {
     const [r] = await baris(db, `select has_schema_privilege('anon', 'private', 'usage') as a,
                                         has_schema_privilege('authenticated', 'private', 'usage') as b`)

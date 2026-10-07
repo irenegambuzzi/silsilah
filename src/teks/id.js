@@ -125,6 +125,17 @@ export const teks = {
       AK010: 'Orang ini tercatat sudah wafat.',
       AK011: 'Akun login seorang anggota tidak bisa diganti.',
       AK012: 'Akses anggota ini sudah dicabut. Admin utama perlu mengaktifkannya dulu.',
+      AK013: 'Fitur tambah perangkat sedang dimatikan oleh admin.',
+      AK014: 'Perangkat dengan akses sementara tidak bisa menambah perangkat lain.',
+      AK015: 'Anda tidak punya izin membuat link undangan.',
+      AK016: 'Anda tidak punya izin memberi akses sementara.',
+      AK017: 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.',
+      AK018: 'Peran untuk undangan hanya "hanya melihat" atau "anggota". Peran anggota yang sudah terdaftar diubah di daftar anggota.',
+      AK019: 'Pendaftaran perangkat ini tidak berlaku lagi. Mintalah link atau kode baru.',
+      AK020: 'Sesi ini sudah terdaftar sebagai perangkat lain. Keluar dulu, lalu masuk lagi.',
+      AK021: 'Anda belum masuk. Silakan masuk dulu.',
+      AK022: 'Durasi akses sementara minimal 30 menit.',
+      AK023: 'Akun Anda sedang ditahan sementara, jadi belum bisa menambah perangkat. Hubungi admin.',
       RP001: 'Anda tidak bisa mengirim laporan (hanya melihat, atau sedang ditahan).',
       RP002: 'Data yang dilaporkan tidak ditemukan.',
       RP003: 'Anda sudah mengirim banyak laporan dalam satu jam terakhir. Silakan coba lagi nanti.',
@@ -158,6 +169,27 @@ export const teks = {
       UN006: 'Anda hanya bisa membatalkan perubahan Anda sendiri.',
       UN007: 'Hanya admin utama yang bisa membatalkan perubahan ini.',
       UN008: 'Anda tidak bisa membatalkan perubahan (hanya melihat, atau sedang ditahan).',
+    },
+  },
+
+  // Hasil memakai link undangan atau kode perangkat (Edge Function
+  // pakai-undangan dan pakai-kode; lihat src/lib/masuk.js).
+  masuk: {
+    undangan: {
+      tidak_dikenal: 'Link ini tidak dikenali. Pastikan Anda membuka link lengkap dari admin, atau mintalah link baru.',
+      sudah_dipakai: 'Link ini sudah dipakai. Kalau Anda belum pernah masuk, hubungi admin keluarga.',
+      kedaluwarsa: 'Link ini sudah kedaluwarsa. Mintalah link baru kepada admin.',
+      dicabut: 'Link ini sudah dibatalkan. Mintalah link baru kepada admin.',
+      terlalu_sering: 'Terlalu banyak percobaan yang salah. Tunggu 15 menit, lalu coba lagi.',
+    },
+    kode: {
+      format_salah: 'Kode terdiri dari 8 huruf dan angka, misalnya ABCD-2345. Periksa lagi kodenya.',
+      salah: 'Kode salah. Periksa lagi kodenya, lalu coba lagi.',
+      sudah_dipakai: 'Kode ini sudah dipakai. Buat atau mintalah kode baru.',
+      kedaluwarsa: 'Kode ini sudah tidak berlaku (lebih dari 10 menit). Buat atau mintalah kode baru.',
+      dicabut: 'Kode ini sudah dibatalkan. Buat atau mintalah kode baru.',
+      dimatikan: 'Fitur tambah perangkat sedang dimatikan oleh admin.',
+      terlalu_sering: 'Terlalu banyak percobaan kode yang salah. Tunggu 15 menit, lalu coba lagi.',
     },
   },
 
