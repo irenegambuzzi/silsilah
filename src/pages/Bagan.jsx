@@ -5,14 +5,15 @@ import { GambarBagan } from '../components/bagan/GambarBagan.jsx'
 import { Legenda } from '../components/bagan/Legenda.jsx'
 import { GerbangData } from '../components/GerbangData.jsx'
 import { Judul } from '../components/ui/Judul.jsx'
-import { Tombol, TautanTombol } from '../components/ui/Tombol.jsx'
-import { Avatar } from '../components/Avatar.jsx'
+import { Tombol } from '../components/ui/Tombol.jsx'
+import { KeteranganOrang } from '../components/orang/KeteranganOrang.jsx'
 import { useDataSilsilah } from '../lib/data/konteksData.js'
 import { susunBagan } from '../lib/bagan/susun.js'
 import { tataBagan } from '../lib/bagan/tata.js'
 import { warnaKartu } from '../lib/bagan/warna.js'
 import { useGeserZoom } from '../lib/bagan/useGeserZoom.js'
 import { polos } from '../lib/silsilah/daftar.js'
+import { labelDetail } from '../lib/silsilah/kartu.js'
 import { useSilsilah } from '../lib/silsilah/useSilsilah.js'
 import { formatJam } from '../lib/waktu.js'
 import { isiTeks, teks } from '../teks/id.js'
@@ -151,16 +152,17 @@ function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup }) {
   )
 }
 
-// Panel keterangan di sisi kanan (di HP: lembar dari bawah).
-function PanelOrang({ kartu, bisaFokus, saatFokus, saatTutup }) {
+// Panel keterangan di sisi kanan (di HP: lembar dari bawah), berisi
+// keterangan lengkap dalam format aplikasi lama.
+function PanelOrang({ d, bisaFokus, saatFokus, saatPilih, saatTutup }) {
   const judul = useRef(null)
   useEffect(() => {
     judul.current?.focus({ preventScroll: true })
-  }, [kartu.id])
+  }, [d.id])
   return (
     <section
       aria-label={T.panel}
-      className="absolute inset-x-0 bottom-0 z-30 flex max-h-[80%] flex-col gap-4 overflow-y-auto rounded-t-2xl border border-tepi bg-kertas p-6 shadow-lembut md:inset-y-0 md:left-auto md:right-0 md:max-h-none md:w-[26rem] md:rounded-none md:border-y-0 md:border-r-0"
+      className="absolute inset-x-0 bottom-0 z-30 max-h-[80%] overflow-y-auto rounded-t-2xl border border-tepi bg-kertas p-6 pt-8 shadow-lembut md:inset-y-0 md:left-auto md:right-0 md:max-h-none md:w-[26rem] md:rounded-none md:border-y-0 md:border-r-0"
     >
       <button
         type="button"
@@ -170,20 +172,22 @@ function PanelOrang({ kartu, bisaFokus, saatFokus, saatTutup }) {
       >
         <X aria-hidden="true" className="size-7" />
       </button>
-      <Avatar sex={kartu.sex} />
-      <h2 ref={judul} tabIndex={-1} className="text-center font-judul text-2xl font-bold uppercase leading-tight outline-none">
-        {kartu.nama}
-      </h2>
-      <div className="flex flex-col gap-2">
-        <TautanTombol to={`/orang/${encodeURIComponent(kartu.id)}`} varian="utama">
-          {T.bukaKeterangan}
-        </TautanTombol>
-        {bisaFokus && (
-          <Tombol varian="sekunder" ikon={Network} onClick={saatFokus}>
-            {T.fokusCabang}
-          </Tombol>
-        )}
-      </div>
+      <KeteranganOrang
+        d={d}
+        saatPilih={saatPilih}
+        judul={
+          <h2 ref={judul} tabIndex={-1} className="font-judul text-2xl font-bold uppercase leading-tight outline-none">
+            {d.nama}
+          </h2>
+        }
+        aksi={
+          bisaFokus && (
+            <Tombol varian="sekunder" ikon={Network} onClick={saatFokus}>
+              {T.fokusCabang}
+            </Tombol>
+          )
+        }
+      />
     </section>
   )
 }
@@ -289,7 +293,8 @@ function IsiBagan() {
       <Legenda bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} warnaAda={new Set(kartu.map(warnaKartu))} />
       {kartuTerpilih && (
         <PanelOrang
-          kartu={kartuTerpilih}
+          d={labelDetail(silsilah, kartuTerpilih.id)}
+          saatPilih={lompat}
           bisaFokus={Boolean(cabang) && cabang !== fokusId}
           saatFokus={() => {
             setTerpilih(null)

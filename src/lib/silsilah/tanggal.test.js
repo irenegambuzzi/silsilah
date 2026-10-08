@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bandingkanKabur, formatTanggal, tahunHidup, tanggalDari, teksPeristiwa } from './tanggal.js'
+import { bandingkanKabur, formatTanggal, tahunHidup, tanggalDari, teksPeristiwa, teksWaktu } from './tanggal.js'
 
 describe('formatTanggal', () => {
   it('menulis tanggal lengkap, bulan-tahun, dan tahun saja', () => {
@@ -60,10 +60,20 @@ describe('tahunHidup', () => {
 })
 
 describe('teksPeristiwa', () => {
-  it('menggabungkan tanggal dan tempat', () => {
+  it('menggabungkan tempat dan tanggal: "Kota, 12 Maret 1950"', () => {
     const orang = { birth_y: 1950, birth_m: 3, birth_d: 12, birth_place: 'Kota Contoh' }
-    expect(teksPeristiwa(orang, 'birth')).toBe('12 Maret 1950 di Kota Contoh')
-    expect(teksPeristiwa({ birth_place: 'Kota Contoh' }, 'birth')).toBe('di Kota Contoh')
+    expect(teksPeristiwa(orang, 'birth')).toBe('Kota Contoh, 12 Maret 1950')
+    expect(teksPeristiwa({ birth_place: 'Kota Contoh' }, 'birth')).toBe('Kota Contoh')
+    expect(teksPeristiwa({ birth_y: 1950, birth_approx: true }, 'birth')).toBe('sekitar 1950')
     expect(teksPeristiwa({}, 'death')).toBe('')
+  })
+
+  it('waktu untuk kalimat: "tahun 1974", "sekitar tahun 1974", "pada 2 Juni 1974"', () => {
+    expect(teksWaktu({ y: 1974 })).toBe('tahun 1974')
+    expect(teksWaktu({ y: 1974, approx: true })).toBe('sekitar tahun 1974')
+    expect(teksWaktu({ y: 1974, m: 6 })).toBe('pada Juni 1974')
+    expect(teksWaktu({ y: 1974, m: 6, d: 2 })).toBe('pada 2 Juni 1974')
+    expect(teksWaktu({ y: 1974, m: 6, approx: true })).toBe('sekitar Juni 1974')
+    expect(teksWaktu({ y: null })).toBe('')
   })
 })

@@ -44,53 +44,70 @@ describe('Daftar', () => {
   })
 })
 
-describe('Detail orang', () => {
-  it('dibuka dari Daftar dan menampilkan keterangan serta pernikahan dengan anak', async () => {
+describe('Keterangan orang (halaman sendiri)', () => {
+  const bagian = (judul) => screen.getByRole('heading', { name: judul, level: 2 }).closest('section')
+
+  it('dibuka dari Daftar: avatar, nama, "Anak · Generasi ke-1", INFORMASI ANGGOTA, anak', async () => {
     const { aksi } = pasang('/daftar', klienKeluarga())
     await aksi.click(await screen.findByRole('link', { name: /^Bima/ }))
     expect(await screen.findByRole('heading', { name: 'Bima', level: 1 })).toBeTruthy()
-    expect(screen.getByText('Generasi ke-1 (Anak)')).toBeTruthy()
-    // 4 pernikahan; yang ke-3 adalah pernikahan ulang dengan istri ke-1
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
-      'Pernikahan ke-1', 'Pernikahan ke-2', 'Pernikahan ke-3', 'Pernikahan ke-4',
+    expect(screen.getByText('Anak · Generasi ke-1')).toBeTruthy()
+    const info = bagian('Informasi Anggota')
+    expect(info.textContent).toContain('Jenis kelamin: Laki-laki')
+    expect(info.textContent).toContain('Orang tua: Alm. Raksa & Almh. Selara')
+    // pasangan: daftar "Istri ke-n", menikah lagi dengan istri ke-1 tetap satu baris
+    expect(within(info).getAllByRole('listitem').map((li) => li.textContent.split('Menikah')[0])).toEqual([
+      'Istri ke-1: Eka (bercerai)', 'Istri ke-2: Fitri (bercerai)', 'Istri ke-3: Gita',
     ])
-    expect(screen.getAllByText(/istri ke-1/).length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByRole('link', { name: 'Oka' })).toBeTruthy()
-  })
-
-  it('pernikahan antarsepupu: kedua jalur tampil, yang terdekat lebih dulu', async () => {
-    pasang('/orang/hasna', klienKeluarga())
-    expect(await screen.findByRole('heading', { name: 'Hasna', level: 1 })).toBeTruthy()
-    expect(screen.getByText(/Kedua orang tua adalah keturunan pangkal/)).toBeTruthy()
-    const jalur = screen.getAllByRole('listitem').filter((li) => /Jalur/.test(li.textContent))
-    expect(jalur.map((li) => li.textContent)).toEqual([
-      expect.stringContaining('Jalur terdekat ke pangkal'),
-      expect.stringContaining('Jalur lain'),
+    expect(info.textContent).toContain('menikah lagi tahun 1982')
+    expect(within(bagian('Anak')).getAllByRole('link').map((a) => a.textContent)).toEqual([
+      'Tamran', 'Ika', 'Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
     ])
-    expect(within(jalur[0]).getByRole('link', { name: 'Rangga' })).toBeTruthy()
-    expect(jalur[0].textContent).toContain('Lewat jalur ini: GEN.3')
-    expect(within(jalur[1]).getByRole('link', { name: 'Gendis' })).toBeTruthy()
-    expect(jalur[1].textContent).toContain('Lewat jalur ini: GEN.4')
+    expect(screen.queryByText(/Pernikahan ke-/)).toBeNull()
   })
 
-  it('sepupu sama dekat: jalur kedua ditandai "sama dekat"', async () => {
-    pasang('/orang/nirvo', klienKeluarga())
-    await screen.findByRole('heading', { name: 'Nirvo', level: 1 })
-    expect(screen.getByText('Jalur terdekat ke pangkal')).toBeTruthy()
-    expect(screen.getByText('Jalur lain (sama dekat)')).toBeTruthy()
+  it('satu pernikahan: tanpa "ke-1" dan tanpa kata ganda', async () => {
+    pasang('/orang/cahya', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Cahya', level: 1 })
+    const info = bagian('Informasi Anggota')
+    expect(info.textContent).toContain('Pasangan: UmarMenikah tahun 1974')
+    expect(document.body.textContent).not.toMatch(/(Istri|Suami|Pasangan|Pernikahan) ke-1|Menikah · Menikah/)
   })
 
-  it('orang tua yang bukan keturunan tampil sebagai "Orang tua lain"', async () => {
+  it('anak sambung: kata lembut hanya di keterangan anak itu', async () => {
     pasang('/orang/vino', klienKeluarga())
     await screen.findByRole('heading', { name: 'Vino', level: 1 })
-    expect(screen.getByText('Orang tua lain')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Umar' }).closest('li').textContent).toContain('Anak sambung')
+    expect(bagian('Informasi Anggota').textContent).toContain('Anak sambung Cahya')
   })
 
-  it('pasangan yang bukan keturunan menampilkan "Pasangan dari …"', async () => {
+  it('di keterangan orang tua anak sambung/angkat, daftar anak hanya berisi nama', async () => {
+    pasang('/orang/lorvan', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Lorvan', level: 1 })
+    expect(within(bagian('Anak')).getByRole('link', { name: 'Yoga' })).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/\bsambung\b|\bangkat\b/i)
+  })
+
+  it('pernikahan antarsepupu: orang tua satu baris, "Anak ke-n" untuk masing-masing, tanpa kalimat teknis', async () => {
+    pasang('/orang/hasna', klienKeluarga())
+    expect(await screen.findByRole('heading', { name: 'Hasna', level: 1 })).toBeTruthy()
+    const info = bagian('Informasi Anggota')
+    expect(info.textContent).toContain('Orang tua: Rangga & Gendis')
+    expect(info.textContent).toContain('Anak ke-1 dari Rangga')
+    expect(info.textContent).toContain('Anak ke-1 dari Gendis')
+    expect(within(info).getByRole('link', { name: 'Rangga' })).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/Kedua orang tua adalah keturunan|Jalur terdekat|Lewat jalur ini/)
+  })
+
+  it('pasangan yang bukan keturunan: "Pasangan dari …" di bawah nama', async () => {
     pasang('/orang/umar', klienKeluarga())
     await screen.findByRole('heading', { name: 'Umar', level: 1 })
-    expect(screen.getByText(/Pasangan dari Cahya/)).toBeTruthy()
+    expect(screen.getByText('Pasangan dari Cahya')).toBeTruthy()
+  })
+
+  it('tanpa pasangan: "Tidak ada"', async () => {
+    pasang('/orang/oka', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Oka', level: 1 })
+    expect(bagian('Informasi Anggota').textContent).toContain('Pasangan: Tidak ada')
   })
 
   it('orang yang tidak ada atau dari pohon keluarga asal → keterangan, bukan galat', async () => {

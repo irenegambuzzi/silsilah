@@ -56,7 +56,7 @@ const LAYAR = [
   ['Beranda', '/', () => masuk(), 'Beranda'],
   ['Bagan', '/bagan', klienKeluarga, 'Hasna'],
   ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
-  ['Detail orang', '/orang/hasna', klienKeluarga, 'Jalur terdekat'],
+  ['Detail orang', '/orang/hasna', klienKeluarga, 'Informasi Anggota'],
   ['Detail orang tidak ada', '/orang/tidak-ada', klienKeluarga, 'tidak ditemukan'],
   ['Saya', '/saya', () => masuk(), 'Tampilan'],
   ['Keluar', '/saya/keluar', () => masuk(), 'Keluar dari perangkat ini'],

@@ -19,10 +19,11 @@ export const DAFTAR_GENERASI = [
 export const labelGen = (gen) => `GEN.${gen}`
 export const istilahGenerasi = (gen, daftar = DAFTAR_GENERASI) => daftar[gen] ?? null
 
-// "Generasi ke-3 (Buyut)", atau "Generasi ke-12" kalau tidak ada istilahnya.
+// "Buyut · Generasi ke-3" (istilah Jawa dulu), atau "Generasi ke-12" kalau
+// tidak ada istilahnya.
 export function teksGenerasi(gen, daftar = DAFTAR_GENERASI) {
   const istilah = istilahGenerasi(gen, daftar)
-  return `${KATA.generasiKe}${gen}${istilah ? ` (${istilah})` : ''}`
+  return [istilah, `${KATA.generasiKe}${gen}`].filter(Boolean).join(' · ')
 }
 
 // Mengembalikan:

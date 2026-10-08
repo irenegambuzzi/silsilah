@@ -178,60 +178,95 @@ describe('kartu pasangan', () => {
   })
 })
 
-describe('detail orang', () => {
-  it('generasi, nomor, dan tanggal', () => {
-    const d = labelDetail(s, 'raksa')
-    expect(d).toMatchObject({ nama: 'Alm. Raksa', generasi: 'Generasi ke-0 (Pangkal)', nomor: '1' })
-    expect(labelDetail(s, 'tamran')).toMatchObject({ generasi: 'Generasi ke-2 (Putu)', nomor: '1.1.1' })
+describe('keterangan orang (panel, format aplikasi lama)', () => {
+  it('subjudul: istilah Jawa dulu, lalu generasi; pangkal; pasangan', () => {
+    expect(labelDetail(s, 'tamran').subjudul).toBe('Putu · Generasi ke-2')
+    expect(labelDetail(s, 'bima').subjudul).toBe('Anak · Generasi ke-1')
+    expect(labelDetail(s, 'raksa').subjudul).toBe('Pangkal')
+    expect(labelDetail(s, 'eka').subjudul).toBe('Pasangan dari Bima · bercerai')
+    expect(labelDetail(s, 'tamran').subjudul).not.toMatch(/\(/)
   })
 
-  it('anak sambung dan anak angkat hanya tertulis di detail', () => {
-    expect(labelDetail(s, 'vino').jalur[0].jenis).toBe('Anak sambung')
-    expect(labelDetail(s, 'yoga').jalur[0].jenis).toBe('Anak angkat')
-    expect(labelDetail(s, 'wati').jalur[0].jenis).toBeNull()
+  it('jenis kelamin, nomor silsilah', () => {
+    expect(labelDetail(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenisKelamin: 'Laki-laki', nomor: '1' })
+    expect(labelDetail(s, 'cahya').jenisKelamin).toBe('Perempuan')
   })
 
-  it('pernikahan antarsepupu: kedua jalur dengan "Anak ke-n" masing-masing', () => {
+  it('orang tua dalam SATU baris: kedua orang tua, tanpa "orang tua lain"', () => {
+    expect(labelDetail(s, 'tamran').orangTua).toEqual([
+      { unionId: 'u1', orang: [{ id: 'bima', nama: 'Bima' }, { id: 'eka', nama: 'Eka' }], jenis: null },
+    ])
+    expect(labelDetail(s, 'raksa').orangTua).toEqual([])
+  })
+
+  it('urutan lahir: "Anak ke-n · dari istri ke-n"', () => {
+    expect(labelDetail(s, 'mega').urutan).toEqual(['Anak ke-6 · dari istri ke-1'])
+    expect(labelDetail(s, 'wati').urutan).toEqual(['Anak ke-2'])
+  })
+
+  it('anak pasangan pangkal: satu baris urutan, bukan dua jalur', () => {
+    expect(labelDetail(s, 'bima')).toMatchObject({ urutan: ['Anak ke-1'], lewat: null })
+    expect(labelDetail(s, 'lorvan').urutan).toEqual(['Anak ke-3'])
+  })
+
+  it('anak sambung/angkat: kata lembut HANYA di keterangan anak itu sendiri', () => {
+    expect(labelDetail(s, 'vino').orangTua[0].jenis).toBe('Anak sambung Cahya')
+    expect(labelDetail(s, 'yoga').orangTua[0].jenis).toBe('Anak angkat')
+    expect(labelDetail(s, 'wati').orangTua[0].jenis).toBeNull()
+    // Di keterangan orang tuanya, daftar anak hanya berisi nama.
+    expect(labelDetail(s, 'cahya').anak).toEqual([{ id: 'vino', nama: 'Vino' }, { id: 'wati', nama: 'Wati' }])
+    expect(JSON.stringify(labelDetail(s, 'cahya'))).not.toMatch(/sambung|angkat/i)
+    expect(JSON.stringify(labelDetail(s, 'lorvan'))).not.toMatch(/sambung|angkat/i)
+  })
+
+  it('antarsepupu: orang tua satu baris, "Anak ke-n" untuk masing-masing, satu baris singkat kalau GEN berbeda', () => {
     const d = labelDetail(s, 'hasna')
-    expect(d.jalur).toEqual([
-      { orangTuaId: 'rangga', orangTua: 'Rangga', gen: 3, terdekat: true, keterangan: 'Anak ke-1', jenis: null },
-      { orangTuaId: 'gendis', orangTua: 'Gendis', gen: 4, terdekat: false, keterangan: 'Anak ke-1', jenis: null },
-    ])
-    expect(d.generasi).toBe('Generasi ke-3 (Buyut)')
+    expect(d.orangTua[0].orang.map((o) => o.nama)).toEqual(['Rangga', 'Gendis'])
+    expect(d.urutan).toEqual(['Anak ke-1 dari Rangga', 'Anak ke-1 dari Gendis'])
+    expect(d.subjudul).toBe('Buyut · Generasi ke-3')
+    expect(d.lewat).toBe('Lewat Gendis: Canggah · Generasi ke-4')
+    // GEN sama: tidak perlu baris tambahan.
+    expect(labelDetail(s, 'nirvo').lewat).toBeNull()
   })
 
-  it('pernikahan berurutan dengan anak per pernikahan', () => {
-    const d = labelDetail(s, 'bima')
-    expect(d.pernikahan.map((p) => [p.ke, p.pasangan, p.pasanganKe, p.status])).toEqual([
-      [1, 'Eka', 'istri ke-1', 'Bercerai'],
-      [2, 'Fitri', 'istri ke-2', 'Bercerai'],
-      [3, 'Eka', 'istri ke-1', 'Bercerai'],
-      [4, 'Gita', 'istri ke-3', 'Menikah'],
-    ])
-    expect(d.pernikahan.map((p) => p.anak.map((a) => a.anakKe))).toEqual([
-      [1, 2, 3],
-      [4, 5],
-      [6, 7],
-      [8, 9, 10, 11],
-    ])
-    expect(d.pernikahan[0]).toMatchObject({ menikah: '1970', berakhir: '1976' })
+  it('satu pernikahan: tanpa "ke-1", tanpa kata ganda; "Menikah tahun 1974"', () => {
+    const d = labelDetail(s, 'cahya')
+    expect(d.pasangan).toEqual([{ id: 'umar', nama: 'Umar', ke: null, cerai: false, waktu: 'Menikah tahun 1974' }])
+    expect(JSON.stringify(d.pasangan)).not.toMatch(/ke-1|Menikah · Menikah/)
   })
 
-  it('pernikahan dengan satu pasangan tidak diberi "istri ke-n"', () => {
-    expect(labelDetail(s, 'cahya').pernikahan[0].pasanganKe).toBeNull()
-  })
-
-  it('anak sambung/angkat ditandai di daftar anak per pernikahan', () => {
-    expect(labelDetail(s, 'cahya').pernikahan[0].anak.map((a) => [a.nama, a.jenis])).toEqual([
-      ['Vino', 'Anak sambung'],
-      ['Wati', null],
+  it('lebih dari satu pernikahan: "Istri ke-n", bercerai, dan menikah lagi dengan orang yang sama', () => {
+    expect(labelDetail(s, 'bima').pasangan).toEqual([
+      { id: 'eka', nama: 'Eka', ke: 'Istri ke-1', cerai: true, waktu: 'Menikah tahun 1970, bercerai tahun 1976; menikah lagi tahun 1982, bercerai tahun 1986' },
+      { id: 'fitri', nama: 'Fitri', ke: 'Istri ke-2', cerai: true, waktu: 'Menikah tahun 1977, bercerai tahun 1981' },
+      { id: 'gita', nama: 'Gita', ke: 'Istri ke-3', cerai: false, waktu: 'Menikah tahun 1987' },
     ])
   })
 
-  it('pasangan: keterangan dan pernikahannya', () => {
-    const d = labelDetail(s, 'eka')
-    expect(d.generasi).toBeNull()
-    expect(d.keteranganPasangan).toBe('Pasangan dari Bima · bercerai')
-    expect(d.pernikahan.map((p) => p.pasangan)).toEqual(['Bima', 'Bima'])
+  it('tanpa pasangan: daftar kosong (layar menulis "Tidak ada")', () => {
+    expect(labelDetail(s, 'oka').pasangan).toEqual([])
+  })
+
+  it('anak dari semua pernikahan, urut lahir', () => {
+    expect(labelDetail(s, 'bima').anak.map((a) => a.nama)).toEqual([
+      'Tamran', 'Ika', 'Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
+    ])
+    expect(labelDetail(s, 'eka').anak.map((a) => a.nama)).toEqual(['Tamran', 'Ika', 'Tirwan', 'Mega', 'Nanda'])
+  })
+
+  it('riwayat hidup: "tempat, tanggal"', () => {
+    const d = bangunKeluargaFiktif()
+    Object.assign(d.people.find((p) => p.id === 'bima'), { birth_place: 'Kota Contoh', birth_m: 3, birth_d: 12 })
+    expect(labelDetail(susunSilsilah(d), 'bima').lahir).toBe('Kota Contoh, 12 Maret 1945')
+    expect(labelDetail(s, 'raksa')).toMatchObject({ lahir: '1920', wafat: '1990' })
+  })
+
+  it('tanggal menikah lengkap atau perkiraan', () => {
+    const d = bangunKeluargaFiktif()
+    Object.assign(d.unions.find((u) => u.id === 'u5'), { marriage_m: 6, marriage_d: 2 })
+    Object.assign(d.unions.find((u) => u.id === 'u6'), { marriage_approx: true })
+    const t = susunSilsilah(d)
+    expect(labelDetail(t, 'cahya').pasangan[0].waktu).toBe('Menikah pada 2 Juni 1974')
+    expect(labelDetail(t, 'lorvan').pasangan[0].waktu).toBe('Menikah sekitar tahun 1975')
   })
 })

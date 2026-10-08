@@ -198,9 +198,9 @@ describe('Bagan: bilah atas dan legenda', () => {
     await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'ga{Enter}')
     // "ga" cocok dengan beberapa nama (Mega, Rangga, Yoga)
     const panel = screen.getByRole('region', { name: 'Orang terpilih' })
-    const pertama = within(panel).getByRole('heading').textContent
+    const pertama = within(panel).getByRole('heading', { level: 2 }).textContent
     await aksi.click(screen.getByRole('button', { name: 'Cari nama' }))
-    const kedua = within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading').textContent
+    const kedua = within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { level: 2 }).textContent
     expect(kedua).not.toBe(pertama)
     expect(screen.getByText(/^2 dari \d+: /)).toBeTruthy()
   })
@@ -225,23 +225,27 @@ describe('Bagan: bilah atas dan legenda', () => {
 })
 
 describe('Bagan: ketuk kartu dan fokus cabang', () => {
-  it('ketuk kartu → panel dengan keterangan lengkap; ketuk lagi menutup', async () => {
+  it('ketuk kartu → panel keterangan (format aplikasi lama); tombol Tutup menutup', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('cahya'))
     const panel = screen.getByRole('region', { name: 'Orang terpilih' })
-    expect(within(panel).getByRole('heading', { name: 'Cahya' })).toBeTruthy()
-    expect(within(panel).getByRole('link', { name: 'Buka keterangan lengkap' }).getAttribute('href')).toBe('/orang/cahya')
+    expect(within(panel).getByRole('heading', { name: 'Cahya', level: 2 })).toBeTruthy()
+    expect(within(panel).getByText('Anak · Generasi ke-1')).toBeTruthy()
+    expect(within(panel).getByRole('heading', { name: 'Informasi Anggota' })).toBeTruthy()
+    expect(within(panel).getByRole('heading', { name: 'Riwayat Hidup' })).toBeTruthy()
+    expect(panel.textContent).toContain('Menikah tahun 1974')
     await aksi.click(within(panel).getByRole('button', { name: 'Tutup' }))
     expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
   })
 
-  it('"Buka keterangan lengkap" membuka Detail orang itu', async () => {
+  it('di panel, nama orang tua/pasangan/anak bisa diketuk: kartunya terpilih', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('cahya'))
-    await aksi.click(screen.getByRole('link', { name: 'Buka keterangan lengkap' }))
-    expect(await screen.findByRole('heading', { name: 'Cahya', level: 1 })).toBeTruthy()
+    await aksi.click(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('button', { name: 'Wati' }))
+    expect(k('wati').getAttribute('aria-pressed')).toBe('true')
+    expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Wati', level: 2 })).toBeTruthy()
   })
 
   it('fokus cabang: hanya orang itu dan keturunannya; "Tampilkan semua" mengembalikan', async () => {

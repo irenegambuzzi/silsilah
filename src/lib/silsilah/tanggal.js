@@ -49,9 +49,17 @@ export function tahunHidup(orang) {
   return `${lahir ?? '?'}–${wafat ?? '?'}`
 }
 
-// "12 Maret 1950 di Kota" (tempat boleh kosong, begitu juga tanggalnya).
+// "Kota, 12 Maret 1950" (tempat, tanggal; keduanya boleh kosong).
 export function teksPeristiwa(orang, awalan) {
   const tanggal = formatTanggal(tanggalDari(orang, awalan))
   const tempat = orang[`${awalan}_place`]
-  return [tanggal, tempat ? `${KATA.lahirDi} ${tempat}` : ''].filter(Boolean).join(' ')
+  return [tempat, tanggal].filter(Boolean).join(', ')
+}
+
+// Untuk kalimat: "tahun 1974", "sekitar tahun 1974", "pada Maret 1974",
+// "pada 12 Maret 1974", "sekitar Maret 1974". Kosong kalau tidak diketahui.
+export function teksWaktu(t) {
+  if (!t || t.y == null) return ''
+  if (t.m == null) return `${t.approx ? `${KATA.sekitar} ` : ''}${KATA.tahun} ${t.y}`
+  return t.approx ? formatTanggal(t) : `${KATA.pada} ${formatTanggal(t)}`
 }

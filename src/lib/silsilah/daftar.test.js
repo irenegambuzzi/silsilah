@@ -62,23 +62,17 @@ describe('cariDaftar', () => {
 })
 
 describe('labelDetail: orang tua', () => {
-  it('orang tua yang bukan keturunan (menantu) tetap tampil sebagai orang tua lain', () => {
-    const d = labelDetail(s, 'tamran')
-    expect(d.jalur.map((j) => j.orangTua)).toEqual(['Bima'])
-    expect(d.orangTuaLain.map((o) => o.nama)).toEqual(['Eka'])
+  const nama = (d) => d.orangTua.map((o) => o.orang.map((x) => x.nama).join(' & '))
+  it('kedua orang tua dalam satu baris, juga yang bukan keturunan', () => {
+    expect(nama(labelDetail(s, 'tamran'))).toEqual(['Bima & Eka'])
   })
-  it('anak sambung: orang tua yang bukan keturunan membawa jenis hubungannya', () => {
-    const d = labelDetail(s, 'vino')
-    expect(d.orangTuaLain).toEqual([{ id: 'umar', nama: 'Umar', jenis: 'Anak sambung' }])
-  })
-  it('pernikahan antarsepupu: kedua orang tua ada di jalur, tidak ada orang tua lain', () => {
-    const d = labelDetail(s, 'nirvo')
-    expect(d.jalur.map((j) => j.orangTua).sort()).toEqual(['Tamran', 'Wati'])
-    expect(d.orangTuaLain).toEqual([])
-    const hasna = labelDetail(s, 'hasna')
-    expect(hasna.jalur.map((j) => [j.orangTua, j.gen, j.terdekat])).toEqual([
-      ['Rangga', 3, true],
-      ['Gendis', 4, false],
+  it('anak sambung: keterangan lembut menyebut orang tua sambungnya', () => {
+    expect(labelDetail(s, 'vino').orangTua).toEqual([
+      { unionId: 'u5', orang: [{ id: 'cahya', nama: 'Cahya' }, { id: 'umar', nama: 'Umar' }], jenis: 'Anak sambung Cahya' },
     ])
+  })
+  it('pernikahan antarsepupu: kedua orang tua dalam satu baris', () => {
+    expect(nama(labelDetail(s, 'nirvo'))).toEqual(['Tamran & Wati'])
+    expect(nama(labelDetail(s, 'hasna'))).toEqual(['Rangga & Gendis'])
   })
 })

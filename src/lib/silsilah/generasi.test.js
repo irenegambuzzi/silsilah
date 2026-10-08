@@ -25,11 +25,12 @@ describe('istilah generasi', () => {
     expect(labelGen(12)).toBe('GEN.12')
   })
 
-  it('teks detail: "Generasi ke-3 (Buyut)" dan tanpa kurung mulai GEN.11', () => {
-    expect(teksGenerasi(3)).toBe('Generasi ke-3 (Buyut)')
-    expect(teksGenerasi(10)).toBe('Generasi ke-10 (Galih asem)')
+  it('teks keterangan: istilah Jawa dulu, "Buyut · Generasi ke-3"; mulai GEN.11 tanpa istilah', () => {
+    expect(teksGenerasi(3)).toBe('Buyut · Generasi ke-3')
+    expect(teksGenerasi(10)).toBe('Galih asem · Generasi ke-10')
     expect(teksGenerasi(11)).toBe('Generasi ke-11')
-    expect(teksGenerasi(2, ['A', 'B', 'C'])).toBe('Generasi ke-2 (C)')
+    expect(teksGenerasi(2, ['A', 'B', 'C'])).toBe('C · Generasi ke-2')
+    expect(teksGenerasi(2)).not.toMatch(/\(/)
   })
 })
 
