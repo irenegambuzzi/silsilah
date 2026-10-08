@@ -54,6 +54,7 @@ const LAYAR = [
   ['Kode dari QR', '/kode/ABCD2345', () => buatKlienTiruan({}), 'Masuk dengan kode'],
   ['Selamat datang', '/selamat-datang', () => masuk(), 'Apakah ini Anda?'],
   ['Beranda', '/', () => masuk(), 'Beranda'],
+  ['Bagan', '/bagan', klienKeluarga, 'Hasna'],
   ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
   ['Detail orang', '/orang/hasna', klienKeluarga, 'Jalur terdekat'],
   ['Detail orang tidak ada', '/orang/tidak-ada', klienKeluarga, 'tidak ditemukan'],
@@ -130,7 +131,7 @@ describe('struktur umum', () => {
     const nav = screen.getByRole('navigation', { name: 'Menu utama' })
     const aktif = nav.querySelector('[aria-current="page"]')
     expect(aktif.textContent).toBe('Saya')
-    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(4)
+    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(5)
   })
   it('judul layar menerima fokus saat layar terbuka (pembaca layar langsung membacakannya)', async () => {
     pasang('/saya', masuk())

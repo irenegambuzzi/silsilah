@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Network } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { GerbangData } from '../components/GerbangData.jsx'
 import { Judul, Subjudul } from '../components/ui/Judul.jsx'
@@ -151,6 +151,9 @@ function IsiOrang() {
       </Kartu>
       <OrangTua d={d} />
       <Pernikahan d={d} />
+      <TautanTombol to={`/bagan?pilih=${encodeURIComponent(id)}`} varian="utama" ikon={Network}>
+        {teks.bagan.lihatDiBagan}
+      </TautanTombol>
       <TautanTombol to="/daftar" ikon={ArrowLeft}>
         {T.kembaliKeDaftar}
       </TautanTombol>

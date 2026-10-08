@@ -89,3 +89,64 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Bagan silsilah: kartu dengan garis penghubung. Garis memakai warna garis
+   tema, jadi ikut kontras tinggi. Ukuran memakai rem, jadi ikut pengaturan
+   ukuran huruf. */
+.bagan-anak {
+  --bagan-garis: 2px solid var(--c-garis);
+  --bagan-jarak: 1.5rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding-top: var(--bagan-jarak);
+}
+/* garis turun dari pasangan ke garis datar anak-anaknya */
+.bagan-anak::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: var(--bagan-jarak);
+  border-left: var(--bagan-garis);
+}
+.bagan-anak > li {
+  position: relative;
+  padding: var(--bagan-jarak) 0.5rem 0;
+}
+.bagan-anak > li::before,
+.bagan-anak > li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: var(--bagan-jarak);
+  border-top: var(--bagan-garis);
+}
+.bagan-anak > li::before {
+  right: 50%;
+}
+.bagan-anak > li::after {
+  left: 50%;
+  border-left: var(--bagan-garis);
+}
+.bagan-anak > li:only-child {
+  padding-top: 0;
+}
+.bagan-anak > li:only-child::before,
+.bagan-anak > li:only-child::after {
+  display: none;
+}
+.bagan-anak > li:first-child::before,
+.bagan-anak > li:last-child::after {
+  border-top: 0;
+}
+.bagan-anak > li:last-child::before {
+  border-right: var(--bagan-garis);
+}
+.bagan-anak > li:first-child::after {
+  border-top-left-radius: 0.5rem;
+}
+.bagan-anak > li:last-child::before {
+  border-top-right-radius: 0.5rem;
+}

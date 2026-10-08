@@ -1,4 +1,4 @@
-import { List } from 'lucide-react'
+import { List, Network } from 'lucide-react'
 import { GerbangData } from '../components/GerbangData.jsx'
 import { TautanTombol } from '../components/ui/Tombol.jsx'
 import { Judul } from '../components/ui/Judul.jsx'
@@ -23,7 +23,10 @@ export default function Beranda() {
         <RingkasanSilsilah />
       </GerbangData>
       <p className="text-xl">{teks.beranda.isi}</p>
-      <TautanTombol to="/daftar" varian="utama" ikon={List}>
+      <TautanTombol to="/bagan" varian="utama" ikon={Network}>
+        {teks.beranda.lihatBagan}
+      </TautanTombol>
+      <TautanTombol to="/daftar" varian="sekunder" ikon={List}>
         {teks.beranda.lihatDaftar}
       </TautanTombol>
     </>

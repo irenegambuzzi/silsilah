@@ -206,6 +206,7 @@ export const teks = {
     saya: 'Saya',
     kotakMasuk: 'Kotak masuk',
     daftar: 'Daftar',
+    bagan: 'Bagan',
     lewatiKeIsi: 'Langsung ke isi halaman',
     privasi: 'Privasi',
   },
@@ -280,8 +281,33 @@ export const teks = {
     judul: 'Beranda',
     sapa: 'Halo, {nama}',
     ringkasan: 'Data silsilah sudah termuat: {n} orang di silsilah utama.',
-    isi: 'Buka Daftar untuk mencari seseorang dan melihat keterangannya. Tampilan dan perangkat bisa Anda atur di menu Saya.',
+    isi: 'Buka Bagan untuk melihat kartu keluarga dengan garis penghubung, atau Daftar untuk mencari seseorang. Tampilan dan perangkat bisa Anda atur di menu Saya.',
     lihatDaftar: 'Lihat daftar orang',
+    lihatBagan: 'Lihat bagan keluarga',
+  },
+
+  // Bagan silsilah (langkah 1.22).
+  bagan: {
+    judul: 'Bagan',
+    caraPakai: 'Cara memakai bagan',
+    petunjuk:
+      'Geser dengan satu jari. Perbesar atau perkecil dengan dua jari atau tombol di atas bagan. Ketuk kartu untuk melihat pilihannya.',
+    bingkai: 'Bagan silsilah. Gunakan tombol panah untuk menggeser, tanda + dan − untuk memperbesar dan memperkecil, angka 0 untuk memuat semuanya di layar.',
+    perbesar: 'Perbesar',
+    perkecil: 'Perkecil',
+    pas: 'Pas di layar',
+    tanpaPangkal: 'Pangkal silsilah belum ditentukan, jadi bagan belum bisa disusun. Hubungi admin.',
+    anakDi: 'Anak mereka ada di bawah {nama}',
+    fokusJudul: 'Menampilkan satu cabang: {nama}',
+    tampilkanSemua: 'Tampilkan semua',
+    naikKe: 'Naik ke {nama}',
+    panel: 'Orang terpilih',
+    bukaKeterangan: 'Buka keterangan lengkap',
+    fokusCabang: 'Fokus pada cabang ini',
+    tutup: 'Tutup',
+    lihatDiBagan: 'Lihat di bagan',
+    lihatBagan: 'Lihat bagan',
+    tanpaCabang: 'Orang ini tidak punya cabang untuk difokuskan.',
   },
 
   // Layar Daftar dan Detail orang (langkah 1.21).

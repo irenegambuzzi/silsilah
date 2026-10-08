@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import { Bell, House, List, ShieldCheck, UserRound } from 'lucide-react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Bell, House, List, Network, ShieldCheck, UserRound } from 'lucide-react'
 import { useSesi } from '../../lib/konteksSesi.js'
 import { useBelumDibaca } from '../../lib/useBelumDibaca.js'
 import { isiTeks, teks } from '../../teks/id.js'
@@ -9,6 +9,7 @@ import { SpandukData } from '../SpandukData.jsx'
 
 const MENU = [
   { ke: '/', teks: teks.navigasi.beranda, ikon: House, akhir: true },
+  { ke: '/bagan', teks: teks.navigasi.bagan, ikon: Network },
   { ke: '/daftar', teks: teks.navigasi.daftar, ikon: List },
   { ke: '/kotak-masuk', teks: teks.navigasi.kotakMasuk, ikon: Bell, lencana: true },
   { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound },
@@ -19,6 +20,7 @@ const MENU = [
 export default function Kerangka({ children, spanduk = null }) {
   const { status, klien, berakhir } = useSesi()
   const isi = useRef(null)
+  const lebar = useLocation().pathname === '/bagan' ? 'max-w-6xl' : 'max-w-xl'
   const masuk = status === 'masuk' || status === 'offline'
   const belumDibaca = useBelumDibaca(klien, status === 'masuk')
 
@@ -38,7 +40,7 @@ export default function Kerangka({ children, spanduk = null }) {
         id="isi"
         ref={isi}
         tabIndex={-1}
-        className={`mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 p-5 outline-none ${masuk ? 'pb-28' : 'justify-center'}`}
+        className={`mx-auto flex w-full ${lebar} flex-1 flex-col gap-5 p-5 outline-none ${masuk ? 'pb-28' : 'justify-center'}`}
       >
         {children}
       </main>

@@ -1146,7 +1146,7 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 3 | 1.17 + 1.18 | Sonnet 5.5 · high | – (selesai) |
 | ✅ 4 | 1.19 | Opus 5.5 · high | – (selesai) |
 | ✅ 5 | 1.20 | Opus 5.5 · high | – (selesai) |
-| 6 | 1.21 + 1.22 | Sonnet 5.5 · high | opsional: lihat lewat mode contoh |
+| ✅ 6 | 1.21 + 1.22 | Sonnet 5.5 · high | – (selesai; opsional: lihat lewat mode contoh) |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
 | 9 | 1.26 | Sonnet 5.5 · high | – |
