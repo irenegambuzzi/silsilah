@@ -1133,6 +1133,31 @@ Satu objek JSON bersarang berisi `id`, `name`, `gender`, `relation` (teks manual
 
 Setiap langkah kecil, bisa dites, dan selesai dengan commit + CI hijau. **Kode baru dimulai setelah Anda bilang "mulai".**
 
+### Kelompok kerja (satu chat per kelompok)
+
+Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saja**, lalu berhenti dan melapor; kelompok berikutnya baru dimulai setelah Anda bilang "lanjut". Kolom terakhir adalah tugas manual Anda sebelum kelompok berikutnya.
+
+| Kelompok | Langkah | Model · effort | Tugas manual Anda sesudahnya |
+|---|---|---|---|
+| ✅ 1 | 1.15 | Opus 5.5 · xhigh | – (selesai) |
+| ✅ 2 | 1.16 | Opus 5.5 · high | – (selesai) |
+| ✅ 3 | 1.17 + 1.18 | Sonnet 5.5 · high | – (selesai) |
+| ✅ 4 | 1.19 | Opus 5.5 · high | – (selesai) |
+| 5 | 1.20 | Opus 5.5 · high | – |
+| 6 | 1.21 + 1.22 | Sonnet 5.5 · high | opsional: lihat lewat mode contoh |
+| 7 | 1.23 | Opus 5.5 · high | – |
+| 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
+| 9 | 1.26 | Sonnet 5.5 · high | – |
+| 10 | 1.27 (tanpa CSV asli) | Opus 5.5 · xhigh | letakkan CSV di `data-pribadi/lama/` |
+| 11 | 1.27 (laporan CSV asli) + 1.28 | Opus 5.5 · high | paket tugas manual (CLI + login, age + passphrase, authenticator, Variables GitHub, URL Configuration, manual linking + MFA TOTP, secrets repo cadangan) |
+| 12 | 1.29 | Sonnet 5.5 · high | jalankan SQL satu per satu, deploy functions, uji manual di HP/laptop |
+| 13 | perbaikan hasil uji manual | Sonnet 5.5 · high | ⏰ B: verifikasi dua langkah GitHub/Supabase/Google |
+| 14 | 1.30 | Opus 5.5 · high | jalankan SQL bootstrap, daftarkan DUA authenticator |
+| 15 | 1.31 | Opus 5.5 · xhigh | secret key di `data-pribadi/.env`, tinjau laporan migrasi |
+| – | 1.32 | manual | pilot 3–5 anggota |
+
+Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Supabase pada langkah 1.29** (kelompok 12).
+
 ### Langkah Darurat
 
 - ✅ Selesai: kunci tabel lama, matikan pendaftaran, repo lama privat.
