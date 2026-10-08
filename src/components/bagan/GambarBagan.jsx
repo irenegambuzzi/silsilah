@@ -9,7 +9,7 @@ const jalur = (titik) => titik.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).j
 // Satu keturunan dengan pernikahan dan anak-anaknya. Kartu diletakkan
 // menurut tata letak (posisi absolut), tetapi urutan di halaman tetap
 // berupa daftar bersarang, supaya pembaca layar membacanya sebagai silsilah.
-function Simpul({ simpul, tata, terpilih, saatKetuk }) {
+function Simpul({ simpul, tata, terpilih, saatKetuk, saatLompat }) {
   const letak = (kunci) => tata.letak.get(kunci)
   return (
     <li>
@@ -23,6 +23,7 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
         const kunci = `${simpul.id}:${i}`
         const lLabel = letak(`l:${kunci}`)
         const lKartu = letak(`p:${kunci}`)
+        const lCatatan = letak(`c:${kunci}`)
         return (
           <div key={kunci}>
             <span className="sr-only">
@@ -37,7 +38,7 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
                 {k.label}
               </span>
             )}
-            {k.kartu && lKartu && (
+            {k.kartu && lKartu && !k.keturunan && (
               <KartuOrang
                 kartu={k.kartu}
                 letak={lKartu}
@@ -45,6 +46,28 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
                 saatKetuk={saatKetuk}
                 aria-label={k.label ? `${k.label}: ${k.kartu.nama}` : undefined}
               />
+            )}
+            {k.kartu && lKartu && k.keturunan && (
+              <KartuOrang
+                kartu={k.kartu}
+                letak={lKartu}
+                rujukan={{
+                  label: T.cabangLain,
+                  aria: `${k.label ? `${k.label}: ` : ''}${isiTeks(T.rujukan, { nama: k.kartu.nama })}`,
+                }}
+                saatKetuk={saatLompat}
+              />
+            )}
+            {k.anakDi && lCatatan && (
+              <button
+                type="button"
+                data-catatan={k.anakDi.id}
+                onClick={() => saatLompat(k.anakDi.id)}
+                className="bagan-catatan absolute min-h-12"
+                style={{ left: rem(lCatatan.x), top: rem(lCatatan.y), width: rem(UKURAN.lebarCatatan), height: rem(UKURAN.tinggiCatatan) }}
+              >
+                {isiTeks(T.anakDiCabang, { nama: k.anakDi.nama })}
+              </button>
             )}
             {!k.kartu && lKartu && (
               <div data-warna="x" className="kartu-orang absolute cursor-default" style={{ left: rem(lKartu.x), top: rem(lKartu.y) }}>
@@ -55,7 +78,7 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
             {k.anak.length > 0 && (
               <ul aria-label={k.kartu ? isiTeks(T.anakBerdua, { nama: simpul.kartu.nama, pasangan: k.kartu.nama }) : isiTeks(T.anakDari, { nama: simpul.kartu.nama })}>
                 {k.anak.map((a) => (
-                  <Simpul key={a.id} simpul={a} tata={tata} terpilih={terpilih} saatKetuk={saatKetuk} />
+                  <Simpul key={a.id} simpul={a} tata={tata} terpilih={terpilih} saatKetuk={saatKetuk} saatLompat={saatLompat} />
                 ))}
               </ul>
             )}
@@ -67,7 +90,8 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
 }
 
 // Seluruh bagan: garis (SVG) di belakang, ikon hati, lalu kartu.
-export function GambarBagan({ akar, tata, terpilih, saatKetuk }) {
+// saatLompat(id): ke kartu utama seseorang (dari kartu rujukan atau catatan).
+export function GambarBagan({ akar, tata, terpilih, saatKetuk, saatLompat }) {
   return (
     <div className="relative" style={{ width: rem(tata.lebar), height: rem(tata.tinggi) }}>
       <svg
@@ -98,7 +122,7 @@ export function GambarBagan({ akar, tata, terpilih, saatKetuk }) {
         </span>
       ))}
       <ul>
-        <Simpul simpul={akar} tata={tata} terpilih={terpilih} saatKetuk={saatKetuk} />
+        <Simpul simpul={akar} tata={tata} terpilih={terpilih} saatKetuk={saatKetuk} saatLompat={saatLompat} />
       </ul>
     </div>
   )

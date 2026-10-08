@@ -446,3 +446,19 @@ html[data-kontras='tinggi'] [data-warna$='-wafat'] {
   width: 1.6rem;
   border-top: 2px dashed var(--c-hati);
 }
+
+/* Pernikahan antarsepupu: catatan kecil di bawah hati, "Anak mereka ada di
+   cabang …" (bisa diketuk). */
+.bagan-catatan {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--c-emas-teks);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -80,6 +80,7 @@ describe('Bagan: isi kartu', () => {
     expect(document.querySelectorAll('[data-orang="nirvo"]')).toHaveLength(1)
   })
 
+
   it('pohon keluarga asal tidak muncul di bagan', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
@@ -118,6 +119,61 @@ describe('Bagan: isi kartu', () => {
     for (const p of document.querySelectorAll('path[data-putus]')) expect(p.getAttribute('data-garis')).toBe('nikah')
     // pembaca layar tetap mendengar status perceraian
     expect(screen.getAllByText('Pasangan Bima (bercerai)')).toHaveLength(2)
+  })
+})
+
+describe('Bagan: pernikahan antarsepupu', () => {
+  const rujukan = (id) => [...document.querySelectorAll(`[data-rujukan="${id}"]`)]
+
+  it('pasangan yang juga keturunan tampil sebagai kartu rujukan berwarna keturunan, dihubungkan hati', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    // Rangga (GEN.2) ♥ Gendis (GEN.3), juga Tamran ♥ Wati: masing-masing satu kartu utama dan satu rujukan.
+    for (const id of ['gendis', 'rangga', 'tamran', 'wati']) {
+      expect(document.querySelectorAll(`[data-orang="${id}"]`), id).toHaveLength(1)
+      expect(rujukan(id), id).toHaveLength(1)
+    }
+    const gendis = rujukan('gendis')[0]
+    expect(gendis.dataset.warna).toBe('keturunan-p')
+    expect(gendis.textContent).toContain('Dari cabang lain')
+    expect(gendis.textContent).not.toContain('GEN')
+    expect(gendis.getAttribute('aria-label')).toBe('Gendis, keturunan dari cabang lain. Ketuk untuk ke kartu utamanya.')
+    expect(document.querySelector('[data-hati="h:rangga:0"]')).toBeTruthy()
+  })
+
+  it('anak mereka tampil sekali, dengan garis dari hati pasangan itu; di cabang lain ada catatan', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(document.querySelectorAll('path[data-garis="anak"]').length).toBeGreaterThan(10)
+    expect(screen.getByRole('list', { name: 'Anak Rangga dan Gendis' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Anak mereka ada di cabang Rangga' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Anak mereka ada di cabang Tamran' })).toBeTruthy()
+    expect(screen.queryByRole('list', { name: 'Anak Gendis dan Rangga' })).toBeNull()
+  })
+
+  it('mengetuk kartu rujukan melompat ke kartu utamanya (terpilih, panel terbuka)', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(rujukan('gendis')[0])
+    expect(k('gendis').getAttribute('aria-pressed')).toBe('true')
+    const panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(within(panel).getByRole('heading', { name: 'Gendis' })).toBeTruthy()
+  })
+
+  it('mengetuk catatan "Anak mereka ada di cabang …" memilih orang tua di cabang itu', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Tamran' }))
+    expect(k('tamran').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('dari cabang yang difokuskan: kartu utama di luar cabang → seluruh bagan ditampilkan lagi', async () => {
+    const { aksi } = pasang('/bagan?fokus=kelvan', klienKeluarga())
+    expect(await screen.findByText('Menampilkan satu cabang: Kelvan')).toBeTruthy()
+    expect(k('rangga')).toBeNull()
+    await aksi.click(rujukan('rangga')[0])
+    expect(screen.queryByText(/Menampilkan satu cabang/)).toBeNull()
+    expect(k('rangga').getAttribute('aria-pressed')).toBe('true')
   })
 })
 

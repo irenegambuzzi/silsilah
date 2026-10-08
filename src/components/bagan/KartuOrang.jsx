@@ -7,15 +7,18 @@ const SIMBOL = { L: '♂', P: '♀' }
 // baris), dan satu label kecil kapital di bawahnya. GEN di pojok kartu.
 // Warnanya menurut warnaKartu (keturunan/pasangan, jenis kelamin, pangkal,
 // wafat). Gaya: .kartu-orang di index.css. Letak (rem) dari tata letak bagan.
-export function KartuOrang({ kartu, letak, terpilih = false, saatKetuk, ...sisa }) {
+//
+// Kartu RUJUKAN (pernikahan antarsepupu): pasangan yang juga keturunan dan
+// punya kartu utama di cabangnya sendiri. Warnanya tetap warna keturunan,
+// labelnya "Dari cabang lain", dan mengetuknya melompat ke kartu utamanya.
+export function KartuOrang({ kartu, letak, terpilih = false, rujukan = null, saatKetuk, ...sisa }) {
   return (
     <button
       type="button"
-      data-orang={kartu.id}
+      {...(rujukan ? { 'data-rujukan': kartu.id, 'aria-label': rujukan.aria } : { 'data-orang': kartu.id, 'aria-pressed': terpilih })}
       data-warna={warnaKartu(kartu)}
       data-sex={kartu.sex ?? 'x'}
       data-wafat={kartu.wafat || undefined}
-      aria-pressed={terpilih}
       onClick={() => saatKetuk(kartu.id)}
       className="kartu-orang absolute"
       style={{ left: `${letak.x}rem`, top: `${letak.y}rem` }}
@@ -24,9 +27,19 @@ export function KartuOrang({ kartu, letak, terpilih = false, saatKetuk, ...sisa 
       <span aria-hidden="true" className="kartu-simbol">
         {SIMBOL[kartu.sex] ?? '?'}
       </span>
-      {kartu.pojok && <span className="kartu-gen">{kartu.pojok}</span>}
+      {rujukan ? (
+        <span aria-hidden="true" className="kartu-gen">
+          ↗
+        </span>
+      ) : (
+        kartu.pojok && <span className="kartu-gen">{kartu.pojok}</span>
+      )}
       <span className="kartu-nama">{kartu.nama}</span>
-      {kartu.label && <span className="kartu-label">{kartu.label}</span>}
+      {rujukan ? (
+        <span className="kartu-label">{rujukan.label}</span>
+      ) : (
+        kartu.label && <span className="kartu-label">{kartu.label}</span>
+      )}
     </button>
   )
 }

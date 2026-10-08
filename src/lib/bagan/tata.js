@@ -32,7 +32,7 @@ export const UKURAN = {
   jarakKelompok: 2,
   busKipas: 1, // dari dasar kartu keturunan ke garis datar ke para pasangan
   lebarCatatan: 10,
-  tinggiCatatan: 2.5,
+  tinggiCatatan: 3,
 }
 const U = UKURAN
 

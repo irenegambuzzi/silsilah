@@ -96,12 +96,17 @@ export function useGeserZoom({ kunci, pusat = null }) {
       },
       geser: (dx, dy) => setPandang((p) => jaga(geser(p, dx, dy))),
       // Melompat ke kartu seseorang (pencarian, kartu rujukan): kartu itu di
-      // tengah bingkai, diperbesar sampai tulisannya terbaca.
-      pusatkanKe: (id) => {
+      // tengah bagian bingkai yang tidak tertutup panel (`tertutup`: piksel
+      // di kanan dan di bawah), diperbesar sampai tulisannya terbaca.
+      pusatkanKe: (id, tertutup = {}) => {
         const u = ukuran()
         const kartu = kartuDi(isi.current, id)
         if (!u || !kartu) return
-        setPandang((p) => jaga(pusatkan({ ...p, k: Math.max(p.k, SKALA_TERBACA) }, letakDiIsi(kartu, isi.current), u.bingkai)))
+        const terlihat = {
+          lebar: Math.max(u.bingkai.lebar - (tertutup.kanan ?? 0), u.bingkai.lebar / 3),
+          tinggi: Math.max(u.bingkai.tinggi - (tertutup.bawah ?? 0), u.bingkai.tinggi / 3),
+        }
+        setPandang((p) => jaga(pusatkan({ ...p, k: Math.max(p.k, SKALA_TERBACA) }, letakDiIsi(kartu, isi.current), terlihat)))
       },
     }),
     [jaga, ukuran, zoomTengah]

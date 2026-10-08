@@ -24,6 +24,16 @@ const TOMBOL_KECIL =
 const TOMBOL_BULAT =
   'absolute z-20 flex size-12 items-center justify-center rounded-full border border-tepi bg-kertas text-emas-teks shadow-lembut hover:border-emas'
 
+// Bagian bingkai yang tertutup panel keterangan saat panel terbuka: di
+// layar lebar panel di kanan (lebarnya diukur dari `pengukur`, 26rem), di HP
+// lembar dari bawah (± separuh tinggi layar).
+function bagianTertutupPanel(pengukur) {
+  if (typeof window === 'undefined' || !window.matchMedia) return {}
+  return window.matchMedia('(min-width: 768px)').matches
+    ? { kanan: pengukur?.offsetWidth ?? 0 }
+    : { bawah: window.innerHeight * 0.45 }
+}
+
 // Status kecil di bawah judul: apakah data yang tampil sudah yang terbaru.
 function StatusData() {
   const { sumber, waktu, live } = useDataSilsilah()
@@ -41,13 +51,15 @@ function StatusData() {
   )
 }
 
-// Semua kartu yang tampil, dalam urutan bagan (untuk pencarian).
+// Semua kartu UTAMA yang tampil, dalam urutan bagan (untuk pencarian dan
+// panel). Kartu rujukan (antarsepupu) tidak dihitung: orangnya punya kartu
+// utama sendiri.
 function semuaKartu(akar) {
   const hasil = []
   const jalan = (s) => {
     hasil.push(s.kartu)
     for (const k of s.pasangan) {
-      if (k.kartu && !hasil.some((x) => x.id === k.id)) hasil.push(k.kartu)
+      if (k.kartu && !k.keturunan && !hasil.some((x) => x.id === k.id)) hasil.push(k.kartu)
       k.anak.forEach(jalan)
     }
   }
@@ -182,6 +194,7 @@ function IsiBagan() {
   const [params, setParams] = useSearchParams()
   const [terpilih, setTerpilih] = useState(params.get('pilih'))
   const [bilah, setBilah] = useState(true)
+  const pengukur = useRef(null)
 
   const fokusId = bagan && bagan.simpul.has(params.get('fokus')) ? params.get('fokus') : null
   const akar = useMemo(() => (bagan ? (fokusId ? bagan.simpul.get(fokusId) : bagan.akar) : null), [bagan, fokusId])
@@ -212,9 +225,15 @@ function IsiBagan() {
     setParams(baru, { replace: true })
   }
   const indukId = fokusId ? bagan.induk.get(fokusId) : null
+  // Ke kartu utama seseorang. Kalau kartunya tidak ada di cabang yang sedang
+  // difokuskan, seluruh bagan ditampilkan lagi lalu kartu itu dipusatkan.
   const lompat = (id) => {
     setTerpilih(id)
-    aksi.pusatkanKe(id)
+    if (kartu.some((x) => x.id === id)) {
+      aksi.pusatkanKe(id, bagianTertutupPanel(pengukur.current))
+    } else {
+      setParams(new URLSearchParams({ pilih: id }), { replace: true })
+    }
   }
 
   const fokus = fokusId && (
@@ -247,7 +266,13 @@ function IsiBagan() {
           className="absolute left-0 top-0 w-max origin-top-left p-4"
           style={{ transform: `translate(${pandang.x}px, ${pandang.y}px) scale(${pandang.k})` }}
         >
-          <GambarBagan akar={akar} tata={tata} terpilih={terpilih} saatKetuk={(id) => setTerpilih((x) => (x === id ? null : id))} />
+          <GambarBagan
+            akar={akar}
+            tata={tata}
+            terpilih={terpilih}
+            saatKetuk={(id) => setTerpilih((x) => (x === id ? null : id))}
+            saatLompat={lompat}
+          />
         </div>
       </div>
       {bilah ? (
@@ -260,6 +285,7 @@ function IsiBagan() {
           </button>
         </>
       )}
+      <div ref={pengukur} aria-hidden="true" className="pointer-events-none invisible absolute h-0 w-[26rem]" />
       <Legenda bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} warnaAda={new Set(kartu.map(warnaKartu))} />
       {kartuTerpilih && (
         <PanelOrang
