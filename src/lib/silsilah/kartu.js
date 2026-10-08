@@ -55,9 +55,11 @@ export function labelKartu(s, id) {
   return {
     id,
     nama: namaTampil(orang),
+    sex: orang.sex === 'L' || orang.sex === 'P' ? orang.sex : null,
+    wafat: Boolean(orang.is_deceased),
     panggilan: orang.nickname ?? null,
     tahun: tahunHidup(orang),
-    jenis: gen === null ? 'pasangan' : 'keturunan',
+    jenis: gen === null ? 'pasangan' : gen === 0 ? 'pangkal' : 'keturunan',
     gen,
     labelGen: gen === null ? null : labelGen(gen),
     istilahGen: gen === null ? null : istilahGenerasi(gen, s.daftarGenerasi),

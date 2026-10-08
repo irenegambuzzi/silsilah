@@ -47,7 +47,7 @@ function FormKode({ faktor, onBerhasil, onBatal }) {
     setSedang(false)
   }
   return (
-    <form onSubmit={kirim} noValidate className="flex flex-col gap-3 rounded-2xl border-2 border-garis bg-kertas p-5">
+    <form onSubmit={kirim} noValidate className="flex flex-col gap-3 rounded-xl border border-t-[3px] border-tepi border-t-emas bg-kertas p-5 shadow-lembut">
       {faktor.length > 1 && (
         <>
           <label htmlFor="authenticator" className="text-lg font-semibold">{T.pilihAuthenticator}</label>
@@ -55,7 +55,7 @@ function FormKode({ faktor, onBerhasil, onBatal }) {
             id="authenticator"
             value={pilihan}
             onChange={(e) => setPilihan(e.target.value)}
-            className="min-h-14 rounded-xl border-2 border-garis bg-kertas px-3 text-lg"
+            className="isian min-h-14 px-3 text-lg"
           >
             {faktor.map((f) => <option key={f.id} value={f.id}>{f.nama}</option>)}
           </select>
@@ -72,7 +72,7 @@ function FormKode({ faktor, onBerhasil, onBatal }) {
         maxLength={6}
         aria-describedby="bantuan-kode-dua-langkah"
         aria-invalid={galat ? true : undefined}
-        className="min-h-14 rounded-xl border-2 border-garis bg-kertas px-4 text-center font-mono text-2xl tracking-widest"
+        className="isian min-h-14 px-4 text-center font-mono text-2xl tracking-widest"
       />
       <p id="bantuan-kode-dua-langkah" className="text-base text-redup">{T.kodeBantuan}</p>
       {galat && <Pesan jenis="galat">{galat.pesan}</Pesan>}
@@ -180,7 +180,7 @@ export function PanelDuaLangkah({ dariGerbang = false }) {
                   <p className="text-xl font-bold">{f.nama}</p>
                   {f.dibuat && <p className="text-lg">{isiTeks(T.didaftarkan, { waktu: formatTanggalJam(f.dibuat, teks.silsilah.bulan) })}</p>}
                   {konfirmasi === f.id ? (
-                    <div className="flex flex-col gap-3 border-t-2 border-garis pt-3">
+                    <div className="flex flex-col gap-3 border-t border-tepi pt-3">
                       <p className="text-lg font-semibold">{isiTeks(T.hapusJudul, { nama: f.nama })}</p>
                       <p className="text-lg">{faktor.length === 1 ? T.hapusTerakhir : T.hapusIsi}</p>
                       <Tombol varian="bahaya" ikon={Trash2} disabled={sedang} onClick={() => hapus(f.id)}>{T.hapusYa}</Tombol>

@@ -29,7 +29,7 @@ function IsiDaftar() {
           onChange={(e) => setKata(e.target.value)}
           placeholder={teks.daftar.petunjukCari}
           autoComplete="off"
-          className="min-h-12 rounded-xl border-2 border-garis bg-kertas px-4 text-lg"
+          className="isian text-lg"
         />
       </div>
       <p role="status" className="text-lg text-redup">

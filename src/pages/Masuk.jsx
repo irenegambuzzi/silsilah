@@ -38,7 +38,7 @@ export default function Masuk() {
       <p className="text-xl">{T.sapaan}</p>
       <p className="text-lg">{T.punyaLink}</p>
 
-      <form onSubmit={kirim} noValidate className="flex flex-col gap-3 rounded-2xl border-2 border-garis bg-kertas p-5">
+      <form onSubmit={kirim} noValidate className="flex flex-col gap-3 rounded-xl border border-t-[3px] border-tepi border-t-emas bg-kertas p-5 shadow-lembut">
         <Subjudul>{T.judulKode}</Subjudul>
         <label htmlFor="kode" className="text-lg font-semibold">
           {T.labelKode}
@@ -56,7 +56,7 @@ export default function Masuk() {
           maxLength={9}
           aria-describedby="bantuan-kode"
           aria-invalid={bentukSalah || undefined}
-          className="min-h-14 rounded-xl border-2 border-garis bg-kertas px-4 text-center font-mono text-2xl tracking-widest"
+          className="isian min-h-14 px-4 text-center font-mono text-2xl tracking-widest"
         />
         <p id="bantuan-kode" className="text-base text-redup">
           {T.bantuanKode}

@@ -13,7 +13,7 @@ export function BannerAksesSementara({ berakhir }) {
   if (sisa == null) return null
   const T = teks.aksesSementara
   return (
-    <div role="timer" className="border-b-2 border-garis bg-peringatan p-3 text-peringatan-teks">
+    <div role="timer" className="border-b-2 border-emas bg-peringatan p-3 text-peringatan-teks">
       <p className="mx-auto flex max-w-xl items-start gap-2 text-lg font-semibold">
         <Timer aria-hidden="true" className="mt-0.5 size-6 shrink-0" />
         <span>

@@ -4,7 +4,6 @@ export const SKALA_MIN = 0.05
 export const SKALA_MAX = 2.5
 export const TEPI = 16
 const TERLIHAT_MIN = 80
-const SKALA_AWAL_MIN = 0.75
 
 export const batasiSkala = (k) => Math.min(SKALA_MAX, Math.max(SKALA_MIN, k))
 
@@ -37,14 +36,13 @@ export function pasDiLayar(isi, bingkai) {
   return { k, x: (bingkai.lebar - isi.lebar * k) / 2, y: Math.max(TEPI, (bingkai.tinggi - isi.tinggi * k) / 2) }
 }
 
-// Tampilan pertama: ukuran asli kalau muat; kalau terlalu lebar, diperkecil
-// paling banyak sampai tiga perempat (supaya tulisan tetap terbaca oleh yang
-// lebih tua) dan dimulai dari tengah atas, tempat pangkal berada. Untuk
-// gambaran seluruhnya ada tombol "Pas di layar".
+// Tampilan pertama, seperti aplikasi lama: seluruh bagan terlihat
+// (diperkecil secukupnya, tidak pernah diperbesar melebihi ukuran asli),
+// berpusat di bingkai. Sesudah itu bisa diperbesar.
 export function pandangAwal(isi, bingkai) {
-  const muat = (bingkai.lebar - 2 * TEPI) / isi.lebar
-  const k = batasiSkala(Math.max(Math.min(1, muat), SKALA_AWAL_MIN))
-  return { k, x: (bingkai.lebar - isi.lebar * k) / 2, y: TEPI }
+  const p = pasDiLayar(isi, bingkai)
+  if (p.k <= 1) return p
+  return { k: 1, x: (bingkai.lebar - isi.lebar) / 2, y: TEPI }
 }
 
 // Menggeser supaya titik `pusat` (koordinat isi, sebelum zoom) berada di tengah bingkai.

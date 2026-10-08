@@ -7,6 +7,11 @@ import { geser, jagaTerlihat, pandangAwal, pasDiLayar, pusatkan, zoomDi } from '
 const AMBANG_SERET_PX = 6
 const LANGKAH_PANAH_PX = 80
 const FAKTOR_TOMBOL = 1.25
+const SKALA_TERBACA = 1
+
+// Kartu (utama) seseorang di dalam isi bagan. Tanda kutip dan garis miring
+// di id di-escape sendiri (CSS.escape tidak ada di semua lingkungan).
+const kartuDi = (isi, id) => isi?.querySelector(`[data-orang="${String(id).replace(/["\\]/g, '\\$&')}"]`) ?? null
 
 const jarak = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 const tengah = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })
@@ -52,8 +57,8 @@ export function useGeserZoom({ kunci, pusat = null }) {
     const u = ukuran()
     if (!u) return
     let p = pandangAwal(u.isi, u.bingkai)
-    const kartu = pusat && isi.current.querySelector(`[data-orang="${CSS.escape(pusat)}"]`)
-    if (kartu) p = jagaTerlihat(pusatkan({ ...p, k: Math.max(p.k, 0.8) }, letakDiIsi(kartu, isi.current), u.bingkai), u.isi, u.bingkai)
+    const kartu = pusat && kartuDi(isi.current, pusat)
+    if (kartu) p = jagaTerlihat(pusatkan({ ...p, k: Math.max(p.k, SKALA_TERBACA) }, letakDiIsi(kartu, isi.current), u.bingkai), u.isi, u.bingkai)
     setPandang(p)
   }, [kunci, pusat, ukuran])
 
@@ -90,6 +95,14 @@ export function useGeserZoom({ kunci, pusat = null }) {
         if (u) setPandang(pasDiLayar(u.isi, u.bingkai))
       },
       geser: (dx, dy) => setPandang((p) => jaga(geser(p, dx, dy))),
+      // Melompat ke kartu seseorang (pencarian, kartu rujukan): kartu itu di
+      // tengah bingkai, diperbesar sampai tulisannya terbaca.
+      pusatkanKe: (id) => {
+        const u = ukuran()
+        const kartu = kartuDi(isi.current, id)
+        if (!u || !kartu) return
+        setPandang((p) => jaga(pusatkan({ ...p, k: Math.max(p.k, SKALA_TERBACA) }, letakDiIsi(kartu, isi.current), u.bingkai)))
+      },
     }),
     [jaga, ukuran, zoomTengah]
   )

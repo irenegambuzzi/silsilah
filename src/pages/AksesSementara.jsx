@@ -134,13 +134,13 @@ export default function AksesSementara() {
       {info && <Pesan jenis="sukses">{info}</Pesan>}
       {galat && <Pesan jenis="galat">{pesanGalat(galat)}</Pesan>}
 
-      <form onSubmit={buat} className="flex flex-col gap-4 rounded-2xl border-2 border-garis bg-kertas p-5">
+      <form onSubmit={buat} className="flex flex-col gap-4 rounded-xl border border-t-[3px] border-tepi border-t-emas bg-kertas p-5 shadow-lembut">
         <label htmlFor="anggota" className="text-lg font-semibold">{T.pilihAnggota}</label>
         <select
           id="anggota"
           value={anggotaId}
           onChange={(e) => setAnggotaId(e.target.value)}
-          className="min-h-14 rounded-xl border-2 border-garis bg-kertas px-3 text-lg"
+          className="isian min-h-14 px-3 text-lg"
         >
           <option value="">{T.pilihPlaceholder}</option>
           {data.nama.map((n) => <option key={n.id} value={n.id}>{n.display_name}</option>)}
@@ -150,7 +150,7 @@ export default function AksesSementara() {
           id="durasi"
           value={Math.min(menit, data.batas)}
           onChange={(e) => setMenit(Number(e.target.value))}
-          className="min-h-14 rounded-xl border-2 border-garis bg-kertas px-3 text-lg"
+          className="isian min-h-14 px-3 text-lg"
         >
           {pilihanMenit.map((m) => <option key={m} value={m}>{durasiTeks(m)}</option>)}
         </select>
@@ -173,7 +173,7 @@ export default function AksesSementara() {
                   <p className="text-lg">{a.label}</p>
                   <p className="text-lg font-semibold">{isiTeks(T.berjalan, { jam: formatJam(a.expires_at) })}</p>
                   {konfirmasi === a.id ? (
-                    <div className="flex flex-col gap-3 border-t-2 border-garis pt-3">
+                    <div className="flex flex-col gap-3 border-t border-tepi pt-3">
                       <p className="text-lg font-semibold">{isiTeks(T.akhiriJudul, { nama: a.display_name })}</p>
                       <p className="text-lg">{T.akhiriIsi}</p>
                       <Tombol varian="bahaya" ikon={Trash2} disabled={sedang} onClick={() => akhiri(a.id)}>{T.akhiriYa}</Tombol>

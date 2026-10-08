@@ -35,7 +35,7 @@ export function susunDaftar(s) {
       keterangan: k.keterangan,
       nomor: s.nomor.get(id) ?? null,
     }
-    ;(k.jenis === 'keturunan' ? keturunan : pasangan).push(baris)
+    ;(k.jenis === 'pasangan' ? pasangan : keturunan).push(baris)
   }
   keturunan.sort((a, b) => bandingkanNomor(a.nomor ?? '', b.nomor ?? '') || bandingkanNama(a, b))
   pasangan.sort(bandingkanNama)
@@ -43,7 +43,7 @@ export function susunDaftar(s) {
 }
 
 // Huruf besar/kecil dan tanda aksen tidak dibedakan.
-const polos = (teks) => teks.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('id')
+export const polos = (teks) => teks.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('id')
 
 export function cariDaftar(daftar, kata) {
   const cari = polos(kata.trim())

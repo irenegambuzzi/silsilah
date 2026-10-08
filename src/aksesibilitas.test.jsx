@@ -102,8 +102,9 @@ describe.each(LAYAR)('layar %s', (_nama, url, buatKlien, jangkar) => {
     pasang(url, buatKlien())
     await tunggu(jangkar)
     const kecil = [...document.querySelectorAll('main button:not(.sr-only), main a.inline-flex')]
-      .filter((elemen) => !/\bmin-h-1[2-9]\b|\bmin-h-\[/.test(elemen.className) && !elemen.closest('nav'))
+      .filter((elemen) => !/\bmin-h-1[2-9]\b|\bmin-h-\[|\bsize-1[2-9]\b|\bkartu-orang\b/.test(elemen.className) && !elemen.closest('nav'))
     // Tautan teks biasa (mis. "Privasi") boleh lebih kecil tetapi punya min-h-12 di kelasnya.
+    // Kartu di Bagan berukuran 10rem × 6,75rem (index.css, .kartu-orang).
     expect(kecil.map((elemen) => elemen.outerHTML.slice(0, 90))).toEqual([])
     for (const isian of document.querySelectorAll('input:not([type=radio])')) {
       expect(isian.labels?.length, isian.outerHTML.slice(0, 60)).toBeGreaterThan(0)

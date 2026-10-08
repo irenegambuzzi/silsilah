@@ -12,6 +12,7 @@ export const isiTeks = (kalimat, nilai = {}) =>
 export const teks = {
   aplikasi: {
     nama: 'Silsilah Keluarga',
+    subjudul: 'Arsip Warisan & Sejarah',
     sedangDibangun: 'Aplikasi ini sedang dibangun.',
     tidakDitemukanJudul: 'Halaman tidak ditemukan',
     tidakDitemukanIsi: 'Alamat yang Anda buka tidak ada di aplikasi ini.',
@@ -289,15 +290,25 @@ export const teks = {
   // Bagan silsilah (langkah 1.22).
   bagan: {
     judul: 'Bagan',
-    caraPakai: 'Cara memakai bagan',
-    petunjuk:
-      'Geser dengan satu jari. Perbesar atau perkecil dengan dua jari atau tombol di atas bagan. Ketuk kartu untuk melihat pilihannya.',
-    bingkai: 'Bagan silsilah. Gunakan tombol panah untuk menggeser, tanda + dan − untuk memperbesar dan memperkecil, angka 0 untuk memuat semuanya di layar.',
+    bingkai: 'Bagan silsilah. Gunakan tombol panah untuk menggeser, tanda + dan − untuk memperbesar dan memperkecil, angka 0 untuk melihat seluruh bagan.',
     perbesar: 'Perbesar',
     perkecil: 'Perkecil',
-    pas: 'Pas di layar',
+    pusatkan: 'Pusatkan',
+    cari: 'Cari nama',
+    petunjukCari: 'Cari nama…',
+    cariHasil: '{ke} dari {n}: {nama}',
+    cariTidakAda: 'Tidak ada nama yang cocok.',
+    sembunyikanMenu: 'Sembunyikan menu bagan',
+    tampilkanMenu: 'Tampilkan menu bagan',
+    statusLive: 'Tersambung · data terbaru',
+    statusDimuat: 'Data dimuat pukul {jam}',
+    statusSalinan: 'Data tersimpan di perangkat ini',
     tanpaPangkal: 'Pangkal silsilah belum ditentukan, jadi bagan belum bisa disusun. Hubungi admin.',
-    anakDi: 'Anak mereka ada di bawah {nama}',
+    pasanganDari: 'Pasangan {nama}',
+    pasanganDariCerai: 'Pasangan {nama} (bercerai)',
+    anakDari: 'Anak {nama}',
+    anakBerdua: 'Anak {nama} dan {pasangan}',
+    pasanganTidakDiketahui: 'Tidak diketahui',
     fokusJudul: 'Menampilkan satu cabang: {nama}',
     tampilkanSemua: 'Tampilkan semua',
     naikKe: 'Naik ke {nama}',
@@ -307,8 +318,22 @@ export const teks = {
     tutup: 'Tutup',
     lihatDiBagan: 'Lihat di bagan',
     lihatBagan: 'Lihat bagan',
-    tanpaCabang: 'Orang ini tidak punya cabang untuk difokuskan.',
+    legenda: {
+      judul: 'Keterangan warna',
+      sembunyikan: 'Sembunyikan keterangan',
+      tampilkan: 'Tampilkan keterangan warna',
+      baris: [
+        ['tl', 'Laki-laki'],
+        ['tp', 'Perempuan'],
+        ['x', 'Tidak diketahui'],
+        ['pangkal', 'Pangkal'],
+        ['wafat', 'Almarhum/Almarhumah'],
+      ],
+      cerai: 'Bercerai',
+      petunjuk: 'Ketuk kartu untuk melihat keterangannya.',
+    },
   },
+
 
   // Layar Daftar dan Detail orang (langkah 1.21).
   daftar: {

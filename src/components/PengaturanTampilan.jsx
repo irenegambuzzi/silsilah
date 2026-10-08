@@ -22,8 +22,8 @@ export function PilihanUkuranHuruf() {
         return (
           <label
             key={u}
-            className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-2 text-lg font-semibold ${
-              dipilih ? 'border-utama bg-utama text-utama-teks' : 'border-garis bg-kertas'
+            className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-2 text-lg font-semibold ${
+              dipilih ? 'border-utama bg-utama text-utama-teks' : 'border-garis bg-latar'
             } has-[:focus-visible]:outline-4 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-fokus`}
           >
             <input
@@ -61,7 +61,7 @@ export function SakelarKontras() {
         role="switch"
         aria-checked={tampilan.kontras}
         onClick={balik}
-        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-garis bg-kertas px-5 py-3 text-lg font-semibold sm:w-auto"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-garis bg-latar px-5 py-3 text-lg font-semibold sm:w-auto"
       >
         <Contrast aria-hidden="true" className="size-6" />
         {teks.saya.kontras}: {tampilan.kontras ? teks.saya.kontrasMenyala : teks.saya.kontrasMati}

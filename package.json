@@ -18,6 +18,8 @@
     "lokasi-ip:buat": "node scripts/lokasi-ip/buat-data.mjs"
   },
   "dependencies": {
+    "@fontsource/cinzel": "5.3.0",
+    "@fontsource/plus-jakarta-sans": "5.3.0",
     "@supabase/supabase-js": "2.117.2",
     "lucide-react": "1.49.0",
     "qrcode": "1.5.4",

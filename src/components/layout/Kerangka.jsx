@@ -15,17 +15,30 @@ const MENU = [
   { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound },
 ]
 
-// Bingkai halaman: tombol "langsung ke isi" untuk papan ketik, isi halaman,
-// dan (kalau sudah masuk) navigasi bawah.
+// Nama aplikasi di atas setiap layar, seperti aplikasi lama (di Bagan
+// tempatnya di bilah atas bagan; di layar Masuk sudah menjadi judul).
+export function Merek({ className = '' }) {
+  return (
+    <div className={className}>
+      <p className="font-judul text-xl font-bold uppercase tracking-wider text-emas-teks">{teks.aplikasi.nama}</p>
+      <p className="text-sm font-semibold uppercase tracking-widest text-redup">{teks.aplikasi.subjudul}</p>
+    </div>
+  )
+}
+
+// Bingkai halaman: tombol "langsung ke isi" untuk papan ketik, nama
+// aplikasi, isi halaman, dan (kalau sudah masuk) navigasi bawah. Bagan
+// memakai seluruh layar di atas navigasi bawah.
 export default function Kerangka({ children, spanduk = null }) {
   const { status, klien, berakhir } = useSesi()
   const isi = useRef(null)
-  const lebar = useLocation().pathname === '/bagan' ? 'max-w-6xl' : 'max-w-xl'
+  const { pathname } = useLocation()
+  const penuh = pathname === '/bagan'
   const masuk = status === 'masuk' || status === 'offline'
   const belumDibaca = useBelumDibaca(klien, status === 'masuk')
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={`flex flex-col ${penuh ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
       <button
         type="button"
         className="sr-only focus:not-sr-only focus:m-2 focus:rounded-lg focus:bg-kertas focus:p-3 focus:text-lg focus:font-semibold"
@@ -36,18 +49,23 @@ export default function Kerangka({ children, spanduk = null }) {
       {spanduk}
       {status === 'masuk' && berakhir && <BannerAksesSementara berakhir={berakhir} />}
       {masuk && <SpandukData />}
+      {!penuh && pathname !== '/masuk' && <Merek className="mx-auto w-full max-w-xl px-5 pt-5 text-center" />}
       <main
         id="isi"
         ref={isi}
         tabIndex={-1}
-        className={`mx-auto flex w-full ${lebar} flex-1 flex-col gap-5 p-5 outline-none ${masuk ? 'pb-28' : 'justify-center'}`}
+        className={
+          penuh
+            ? 'relative min-h-0 w-full flex-1 outline-none'
+            : `mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 p-5 outline-none ${masuk ? 'pb-8' : 'justify-center'}`
+        }
       >
         {children}
       </main>
       {masuk ? (
         <nav
           aria-label={teks.navigasi.menu}
-          className="fixed inset-x-0 bottom-0 border-t-2 border-garis bg-kertas"
+          className="sticky bottom-0 z-30 border-t border-t-tepi bg-kertas shadow-lembut"
         >
           <ul className="mx-auto flex max-w-xl">
             {MENU.map(({ ke, teks: nama, ikon: Ikon, akhir, lencana }) => (
@@ -57,7 +75,7 @@ export default function Kerangka({ children, spanduk = null }) {
                   end={akhir}
                   className={({ isActive }) =>
                     `flex min-h-16 flex-col items-center justify-center gap-1 break-words px-1 text-center text-sm font-semibold leading-tight ${
-                      isActive ? 'underline decoration-4 underline-offset-4' : ''
+                      isActive ? 'text-emas-teks underline decoration-4 underline-offset-4' : 'text-teks'
                     }`
                   }
                 >

@@ -103,7 +103,7 @@ export default function PerangkatSaya() {
                   <p className="text-base font-semibold">{isiTeks(T.berakhirPukul, { jam: formatJam(p.expires_at) })}</p>
                 )}
                 {konfirmasi === p.id ? (
-                  <div className="flex flex-col gap-3 border-t-2 border-garis pt-3">
+                  <div className="flex flex-col gap-3 border-t border-tepi pt-3">
                     <p className="text-lg font-semibold">{T.cabutJudul}</p>
                     <p className="text-lg">{ini ? T.cabutIsiIni : T.cabutIsiLain}</p>
                     <Tombol varian="bahaya" ikon={Trash2} disabled={sedang} onClick={() => cabut(p)}>{T.cabutYa}</Tombol>

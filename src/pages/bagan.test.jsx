@@ -25,50 +25,46 @@ const isiBagan = () => document.querySelector('[role="group"] > div')
 const transform = () => isiBagan().style.transform
 
 describe('Bagan: isi kartu', () => {
-  it('kartu menampilkan GEN, istilah Jawa, nama, tahun, dan keterangan anak ke-n', async () => {
+  it('kartu keturunan: GEN di pojok, nama, dan istilah Jawa', async () => {
     pasang('/bagan', klienKeluarga())
-    await screen.findByRole('heading', { name: 'Bagan', level: 1 })
+    await screen.findByRole('heading', { name: 'Silsilah Keluarga', level: 1 })
     await tunggu()
-    const mega = k('mega').textContent
-    expect(mega).toContain('GEN.2')
-    expect(mega).toContain('Putu')
-    expect(mega).toContain('1983')
-    expect(mega).toContain('Anak ke-6 · dari istri ke-1')
+    const mega = k('mega')
+    expect(mega.querySelector('.kartu-gen').textContent).toBe('GEN.2')
+    expect(mega.querySelector('.kartu-nama').textContent).toBe('Mega')
+    expect(mega.querySelector('.kartu-label').textContent).toBe('Putu')
   })
 
-  it('nama dengan Alm./Almh.; kartu pangkal GEN.0 "Pangkal"', async () => {
+  it('kartu pangkal: nama dengan Alm./Almh. dan label "Pangkal"', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
-    const raksa = k('raksa')
-    expect(raksa.textContent).toContain('GEN.0')
-    expect(raksa.textContent).toContain('Pangkal')
-    expect(raksa.textContent).toContain('1920–1990')
+    expect(k('raksa').textContent).toContain('Alm. Raksa')
+    expect(k('raksa').textContent).toContain('Pangkal')
     expect(k('selara').textContent).toContain('Almh. Selara')
+    expect(k('selara').textContent).toContain('Pangkal')
   })
 
   it('anak sambung/angkat tampil sama persis dengan saudaranya, tanpa label khusus', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
-    expect(document.body.textContent).not.toMatch(/sambung|angkat/i)
-    expect(k('vino').textContent).toContain('Anak ke-1')
+    expect(document.body.textContent).not.toMatch(/\bsambung\b|\bangkat\b/i)
+    expect(k('vino').querySelector('.kartu-label').textContent).toBe('Putu')
   })
 
-  it('pasangan yang bukan keturunan: "Pasangan dari …", tanpa GEN, dengan "Istri ke-n"', async () => {
+  it('pasangan yang bukan keturunan: tanpa GEN, dengan "Istri ke-n" di atas kartunya', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
-    const eka = k('eka')
-    expect(eka.textContent).toContain('Pasangan dari Bima')
-    expect(eka.textContent).not.toContain('GEN')
+    expect(k('eka').textContent).not.toContain('GEN')
     expect(screen.getByText('Istri ke-1')).toBeTruthy()
     expect(screen.getByText('Istri ke-3')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Istri ke-2: Fitri' })).toBe(k('fitri'))
   })
 
-  it('pernikahan antarsepupu: anak tampil sekali, dengan catatan di kartu pasangan yang lain', async () => {
+  it('pernikahan antarsepupu: anak tampil sekali', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(document.querySelectorAll('[data-orang="hasna"]')).toHaveLength(1)
     expect(document.querySelectorAll('[data-orang="nirvo"]')).toHaveLength(1)
-    expect(screen.getByText('Anak mereka ada di bawah Rangga')).toBeTruthy()
   })
 
   it('pohon keluarga asal tidak muncul di bagan', async () => {
@@ -80,8 +76,67 @@ describe('Bagan: isi kartu', () => {
   it('struktur daftar bersarang (pembaca layar) dan semua kartu bernama', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
-    expect(document.querySelectorAll('ul.bagan-anak').length).toBeGreaterThan(3)
+    expect(document.querySelectorAll('[role="group"] ul ul').length).toBeGreaterThan(3)
+    expect(screen.getByRole('list', { name: 'Anak Bima dan Gita' })).toBeTruthy()
     for (const k of semuaKartu()) expect(k.textContent.trim()).not.toBe('')
+  })
+
+  it('ikon hati untuk setiap pasangan dan garis bercerai putus-putus', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(document.querySelector('[data-hati="h:cahya:0"]')).toBeTruthy()
+    expect(document.querySelectorAll('[data-hati^="h:bima:"]')).toHaveLength(3)
+    expect(document.querySelectorAll('path[data-putus]').length).toBeGreaterThan(0)
+    for (const p of document.querySelectorAll('path[data-putus]')) expect(p.getAttribute('data-garis')).toBe('nikah')
+    // pembaca layar tetap mendengar status perceraian
+    expect(screen.getAllByText('Pasangan Bima (bercerai)')).toHaveLength(2)
+  })
+})
+
+describe('Bagan: bilah atas dan legenda', () => {
+  it('bilah atas: judul, status, cari, perbesar/perkecil, Pusatkan; bisa disembunyikan', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(screen.getByText('Arsip Warisan & Sejarah')).toBeTruthy()
+    expect(screen.getByRole('searchbox', { name: 'Cari nama' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Pusatkan' })).toBeTruthy()
+    // fitur yang belum ada tidak ditampilkan
+    expect(screen.queryByRole('button', { name: /Tambah Anggota|Unduh PDF/i })).toBeNull()
+    await aksi.click(screen.getByRole('button', { name: 'Sembunyikan menu bagan' }))
+    expect(screen.queryByRole('searchbox')).toBeNull()
+    await aksi.click(screen.getByRole('button', { name: 'Tampilkan menu bagan' }))
+    expect(screen.getByRole('searchbox', { name: 'Cari nama' })).toBeTruthy()
+  })
+
+  it('cari nama: kartu yang cocok terpilih; Cari lagi ke hasil berikutnya', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'ga{Enter}')
+    // "ga" cocok dengan beberapa nama (Mega, Rangga, Yoga)
+    const panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    const pertama = within(panel).getByRole('heading').textContent
+    await aksi.click(screen.getByRole('button', { name: 'Cari nama' }))
+    const kedua = within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading').textContent
+    expect(kedua).not.toBe(pertama)
+    expect(screen.getByText(/^2 dari \d+: /)).toBeTruthy()
+  })
+
+  it('cari nama yang tidak ada: pesan jelas', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'zzz{Enter}')
+    expect(screen.getByText('Tidak ada nama yang cocok.')).toBeTruthy()
+  })
+
+  it('legenda di kiri bawah bisa ditutup dan dibuka lagi', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
+    expect(within(legenda).getByText('Bercerai')).toBeTruthy()
+    await aksi.click(screen.getByRole('button', { name: 'Sembunyikan keterangan' }))
+    expect(screen.queryByRole('region', { name: 'Keterangan warna' })).toBeNull()
+    await aksi.click(screen.getByRole('button', { name: 'Tampilkan keterangan warna' }))
+    expect(screen.getByRole('region', { name: 'Keterangan warna' })).toBeTruthy()
   })
 })
 
@@ -231,7 +286,7 @@ describe('Bagan: geser dan zoom', () => {
 })
 
 describe('Bagan: ukuran huruf dan kontras', () => {
-  const sumber = ['components/bagan/KartuOrang.jsx', 'components/bagan/BlokKeluarga.jsx', 'pages/Bagan.jsx']
+  const sumber = ['components/bagan/KartuOrang.jsx', 'components/bagan/GambarBagan.jsx', 'components/bagan/Legenda.jsx', 'pages/Bagan.jsx']
     .map((f) => fs.readFileSync(path.join(import.meta.dirname, '..', f), 'utf8'))
     .join('\n')
 
@@ -241,8 +296,9 @@ describe('Bagan: ukuran huruf dan kontras', () => {
   it('warna hanya dari token tema (ikut kontras tinggi)', () => {
     expect(sumber).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(|bg-(white|black|gray|slate|zinc|neutral)|text-(white|black|gray|slate)|border-(white|black|gray|slate)/i)
   })
-  it('garis penghubung memakai warna garis tema', () => {
+  it('garis penghubung dan hati memakai warna tema', () => {
     const css = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.css'), 'utf8')
-    expect(css).toMatch(/--bagan-garis:\s*2px solid var\(--c-garis\)/)
+    expect(css).toMatch(/\.bagan-garis-anak\s*\{\s*stroke:\s*var\(--c-garis-bagan\)/)
+    expect(css).toMatch(/\.bagan-garis-nikah\s*\{\s*stroke:\s*var\(--c-hati\)/)
   })
 })

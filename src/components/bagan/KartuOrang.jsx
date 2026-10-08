@@ -1,29 +1,29 @@
-// Satu kartu di Bagan: GEN dan istilah Jawa, nama (dengan Alm./Almh. dan
-// gelar), panggilan, tahun lahir–wafat, dan keterangan kecil ("Anak ke-6 ·
-// dari istri ke-1" atau "Pasangan dari …"). Anak sambung dan angkat
-// memakai kartu yang sama persis. Pasangan yang bukan keturunan bergaris putus-putus.
-export function KartuOrang({ kartu, terpilih, saatKetuk }) {
-  const pasangan = kartu.jenis === 'pasangan'
+const SIMBOL = { L: '♂', P: '♀' }
+
+// Satu kartu di Bagan, seperti aplikasi lama: strip warna tipis di tepi
+// atas, lingkaran kecil berisi simbol ♂/♀, NAMA kapital (Cinzel, boleh dua
+// baris), dan satu label kecil kapital di bawahnya. GEN di pojok kartu.
+// Gaya: .kartu-orang di index.css. Letak (rem) dari tata letak bagan.
+export function KartuOrang({ kartu, letak, label = null, gen = null, terpilih = false, saatKetuk, ...sisa }) {
   return (
     <button
       type="button"
       data-orang={kartu.id}
+      data-sex={kartu.sex ?? 'x'}
+      data-jenis={kartu.jenis}
+      data-wafat={kartu.wafat || undefined}
       aria-pressed={terpilih}
       onClick={() => saatKetuk(kartu.id)}
-      className={`flex min-h-[6rem] w-44 flex-col items-center gap-1 rounded-xl border-2 bg-kertas px-2 py-2 text-center ${
-        pasangan ? 'border-dashed' : 'border-solid'
-      } ${terpilih ? 'border-fokus outline-4 outline-fokus' : 'border-garis'}`}
+      className="kartu-orang absolute"
+      style={{ left: `${letak.x}rem`, top: `${letak.y}rem` }}
+      {...sisa}
     >
-      {kartu.labelGen && (
-        <span className="text-sm font-semibold leading-tight text-redup">
-          {kartu.labelGen}
-          {kartu.istilahGen ? ` · ${kartu.istilahGen}` : ''}
-        </span>
-      )}
-      <span className="text-base font-bold leading-tight">{kartu.nama}</span>
-      {kartu.panggilan && <span className="text-sm leading-tight">“{kartu.panggilan}”</span>}
-      {kartu.tahun && <span className="text-sm leading-tight">{kartu.tahun}</span>}
-      {kartu.keterangan && <span className="text-sm leading-tight text-redup">{kartu.keterangan}</span>}
+      <span aria-hidden="true" className="kartu-simbol">
+        {SIMBOL[kartu.sex] ?? '?'}
+      </span>
+      {gen && <span className="kartu-gen">{gen}</span>}
+      <span className="kartu-nama">{kartu.nama}</span>
+      {label && <span className="kartu-label">{label}</span>}
     </button>
   )
 }

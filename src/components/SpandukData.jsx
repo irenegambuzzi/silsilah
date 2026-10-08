@@ -16,7 +16,7 @@ export function SpandukData() {
     ? (kapan ? isiTeks(galat?.jenis === 'offline' ? T.offline : T.salinan, { waktu: kapan }) : T.salinanTanpaWaktu)
     : T.gagalPerbarui
   return (
-    <div role="status" className="border-b-2 border-garis bg-peringatan p-3 text-peringatan-teks">
+    <div role="status" className="border-b-2 border-emas bg-peringatan p-3 text-peringatan-teks">
       <div className="mx-auto flex max-w-xl flex-col gap-2">
         <p className="flex items-start gap-2 text-lg font-semibold">
           <CloudOff aria-hidden="true" className="mt-0.5 size-6 shrink-0" />

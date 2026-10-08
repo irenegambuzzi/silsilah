@@ -24,7 +24,7 @@ export function KodeQr({ nilai, label, ukuran = 256 }) {
       width={ukuran}
       height={ukuran}
       shapeRendering="crispEdges"
-      className="mx-auto max-w-full rounded-xl border-2 border-garis"
+      className="mx-auto max-w-full rounded-xl border border-tepi bg-kertas p-2 shadow-lembut"
       style={{ background: '#ffffff' }}
     >
       <path d={jalur.d} fill="#000000" />

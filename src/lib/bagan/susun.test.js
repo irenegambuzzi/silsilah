@@ -74,10 +74,30 @@ describe('susunBagan', () => {
     const gendis = bagan.simpul.get('rangga').pasangan.find((p) => p.id === 'gendis')
     expect(gendis.anakDi).toBeNull() // anak ada di bawah Rangga sendiri
     const rangga = bagan.simpul.get('gendis').pasangan.find((p) => p.id === 'rangga')
-    expect(rangga.anakDi).toBe('Rangga')
+    expect(rangga.anakDi).toEqual({ id: 'rangga', nama: 'Rangga' })
     const wati = bagan.simpul.get('tamran').pasangan.find((p) => p.id === 'wati')
     expect(wati.anakDi).toBeNull()
-    expect(bagan.simpul.get('wati').pasangan.find((p) => p.id === 'tamran').anakDi).toBe('Tamran')
+    expect(bagan.simpul.get('wati').pasangan.find((p) => p.id === 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran' })
+  })
+
+  it('anak dikelompokkan per pasangan; menikah lagi dengan pasangan yang sama tetap satu kelompok', () => {
+    const bima = bagan.simpul.get('bima')
+    expect(bima.pasangan.map((k) => [k.id, k.anak.map(nama)])).toEqual([
+      ['eka', ['Tamran', 'Ika', 'Tirwan', 'Mega', 'Nanda']],
+      ['fitri', ['Kirana', 'Lintang']],
+      ['gita', ['Oka', 'Putri', 'Qori', 'Rangga']],
+    ])
+  })
+
+  it('status cerai menurut pernikahan terakhir dengan pasangan itu', () => {
+    expect(bagan.simpul.get('bima').pasangan.map((k) => k.cerai)).toEqual([true, true, false])
+    expect(bagan.simpul.get('cahya').pasangan[0].cerai).toBe(false)
+  })
+
+  it('pasangan yang juga keturunan (antarsepupu) ditandai; pasangan pangkal tidak', () => {
+    expect(bagan.simpul.get('rangga').pasangan[0].keturunan).toBe(true)
+    expect(bagan.simpul.get('bima').pasangan[0].keturunan).toBe(false)
+    expect(bagan.akar.pasangan[0].keturunan).toBe(false)
   })
 
   it('kartu keturunan: GEN, istilah Jawa, tahun, dan keterangan "dari istri ke-n"', () => {

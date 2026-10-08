@@ -32,7 +32,7 @@ const TambahPerangkat = lazy(() => import('./pages/TambahPerangkat.jsx'))
 function TidakDitemukan() {
   return (
     <>
-      <h1 className="text-3xl font-bold">{teks.aplikasi.tidakDitemukanJudul}</h1>
+      <h1 className="font-judul text-3xl font-bold text-emas-teks">{teks.aplikasi.tidakDitemukanJudul}</h1>
       <p className="text-lg">{teks.aplikasi.tidakDitemukanIsi}</p>
       <Link to="/" className="inline-flex min-h-12 items-center text-lg font-semibold underline">
         {teks.aplikasi.kembaliKeAwal}

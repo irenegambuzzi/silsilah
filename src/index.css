@@ -1,23 +1,75 @@
 @import 'tailwindcss';
+/* Huruf aplikasi lama, disimpan di aplikasi sendiri (bukan dari Google Fonts),
+   supaya tidak ada permintaan ke luar dan tetap tampil saat offline.
+   Cinzel untuk nama dan judul; Plus Jakarta Sans untuk teks lain. */
+@import '@fontsource/cinzel/700.css';
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
 
-/* Warna sebagai token (PLAN.md 15.4: kontras minimal WCAG AA, teks utama
-   diusahakan AAA, dan ada mode kontras tinggi). Tes src/tampilan.test.js
-   menghitung rasio kontras pasangan warna di bawah ini. */
+/* Warna sebagai token, meniru aplikasi lama (krem, emas, cokelat tua).
+   PLAN.md 15.4: kontras minimal WCAG AA, teks utama diusahakan AAA, dan ada
+   mode kontras tinggi. Tes src/kontras.test.js menghitung rasio kontras
+   pasangan warna di bawah ini; beberapa warna lama sedikit digelapkan supaya
+   lolos (teks samar, emas untuk tulisan, tombol emas). */
 :root {
-  --c-latar: #fbf8f2;
+  --c-latar: #fbf6ec;
   --c-kertas: #ffffff;
-  --c-teks: #1c1a17;
-  --c-redup: #4a443c;
-  --c-garis: #6f675b;
-  --c-utama: #1f5c3a;
+  --c-teks: #2c221e;
+  --c-redup: #554a42;
+  /* garis isian dan tombol (≥ 3:1); tepi kotak yang hanya hiasan memakai --c-tepi */
+  --c-garis: #8c7454;
+  --c-tepi: #e2d9cc;
+  /* emas: hiasan (strip, bingkai, titik latar); emas-teks: tulisan emas */
+  --c-emas: #a67c1e;
+  --c-emas-teks: #8a6516;
+  --c-utama: #6e5110;
+  --c-utama-hover: #5e450d;
   --c-utama-teks: #ffffff;
-  --c-bahaya: #9b1c1c;
+  --c-bahaya: #942a26;
   --c-bahaya-teks: #ffffff;
-  --c-info: #e6eefa;
-  --c-info-teks: #10294a;
+  --c-sukses: #2f6b3a;
+  --c-info: #f3ead6;
+  --c-info-teks: #2c221e;
   --c-peringatan: #fff1c2;
   --c-peringatan-teks: #3d2e00;
   --c-fokus: #0b4fc4;
+
+  /* Bagan: garis ke anak (cokelat keemasan) dan hati pernikahan */
+  --c-garis-bagan: #9a7a4c;
+  --c-hati: #a85a73;
+
+  /* Kartu orang: latar lembut, strip, dan simbol ♂/♀ per jenis kartu.
+     tl/tp = keturunan laki-laki/perempuan, pl/pp = pasangan laki-laki/
+     perempuan, x = jenis kelamin tidak diketahui. */
+  --c-k-tl-latar: #eef4f9;
+  --c-k-tl-strip: #7fa6c4;
+  --c-k-tl-simbol: #3f6e93;
+  --c-k-tp-latar: #fbeff2;
+  --c-k-tp-strip: #d998a8;
+  --c-k-tp-simbol: #a14e66;
+  --c-k-pl-latar: #eff5ee;
+  --c-k-pl-strip: #8fae8b;
+  --c-k-pl-simbol: #4f7a4b;
+  --c-k-pp-latar: #fcf1e8;
+  --c-k-pp-strip: #e0a97e;
+  --c-k-pp-simbol: #a2602f;
+  --c-k-x-latar: #f4f1ec;
+  --c-k-x-strip: #a69c8c;
+  --c-k-x-simbol: #6b6255;
+  --c-k-pangkal-latar: #fbf4e2;
+  /* wafat: keturunan hitam arang tua, pasangan hitam arang lebih muda;
+     tulisan terang; simbol ♂/♀ tetap biru/pink (versi terang) */
+  --c-k-wafat: #4a423b;
+  --c-k-wafat-pasangan: #5c554f;
+  --c-k-wafat-teks: #ffffff;
+  --c-k-wafat-redup: #e6dcd0;
+  --c-k-wafat-simbol-l: #a9cbe3;
+  --c-k-wafat-simbol-p: #f0b9c6;
+  --c-k-wafat-simbol-x: #d4ccc0;
+
+  --titik-latar: rgb(166 124 30 / 0.12);
+  --bayangan: 0 4px 20px rgb(44 34 30 / 0.08);
 }
 
 /* Kontras tinggi: hitam-putih dengan kuning sebagai penegas. */
@@ -27,15 +79,49 @@ html[data-kontras='tinggi'] {
   --c-teks: #ffffff;
   --c-redup: #ffffff;
   --c-garis: #ffffff;
+  --c-tepi: #ffffff;
+  --c-emas: #ffe14d;
+  --c-emas-teks: #ffe14d;
   --c-utama: #ffe14d;
+  --c-utama-hover: #fff09a;
   --c-utama-teks: #000000;
   --c-bahaya: #ff8a8a;
   --c-bahaya-teks: #000000;
+  --c-sukses: #8af59a;
   --c-info: #000000;
   --c-info-teks: #ffffff;
   --c-peringatan: #000000;
   --c-peringatan-teks: #ffe14d;
   --c-fokus: #6fb1ff;
+  --c-garis-bagan: #ffffff;
+  --c-hati: #ff9ec0;
+
+  --c-k-tl-latar: #000000;
+  --c-k-tl-strip: #9cc8ff;
+  --c-k-tl-simbol: #9cc8ff;
+  --c-k-tp-latar: #000000;
+  --c-k-tp-strip: #ffb3c7;
+  --c-k-tp-simbol: #ffb3c7;
+  --c-k-pl-latar: #000000;
+  --c-k-pl-strip: #a8e6a1;
+  --c-k-pl-simbol: #a8e6a1;
+  --c-k-pp-latar: #000000;
+  --c-k-pp-strip: #ffc896;
+  --c-k-pp-simbol: #ffc896;
+  --c-k-x-latar: #000000;
+  --c-k-x-strip: #ffffff;
+  --c-k-x-simbol: #ffffff;
+  --c-k-pangkal-latar: #000000;
+  --c-k-wafat: #000000;
+  --c-k-wafat-pasangan: #000000;
+  --c-k-wafat-teks: #ffffff;
+  --c-k-wafat-redup: #ffffff;
+  --c-k-wafat-simbol-l: #9cc8ff;
+  --c-k-wafat-simbol-p: #ffb3c7;
+  --c-k-wafat-simbol-x: #ffffff;
+
+  --titik-latar: transparent;
+  --bayangan: none;
 }
 
 @theme inline {
@@ -44,15 +130,23 @@ html[data-kontras='tinggi'] {
   --color-teks: var(--c-teks);
   --color-redup: var(--c-redup);
   --color-garis: var(--c-garis);
+  --color-tepi: var(--c-tepi);
+  --color-emas: var(--c-emas);
+  --color-emas-teks: var(--c-emas-teks);
   --color-utama: var(--c-utama);
+  --color-utama-hover: var(--c-utama-hover);
   --color-utama-teks: var(--c-utama-teks);
   --color-bahaya: var(--c-bahaya);
   --color-bahaya-teks: var(--c-bahaya-teks);
+  --color-sukses: var(--c-sukses);
   --color-info: var(--c-info);
   --color-info-teks: var(--c-info-teks);
   --color-peringatan: var(--c-peringatan);
   --color-peringatan-teks: var(--c-peringatan-teks);
   --color-fokus: var(--c-fokus);
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-judul: 'Cinzel', ui-serif, Georgia, serif;
+  --shadow-lembut: var(--bayangan);
 }
 
 /* Ukuran huruf: dasar 18px, dengan pilihan Besar dan Sangat besar. Semua
@@ -67,15 +161,23 @@ html[data-ukuran='sangatBesar'] {
   font-size: 24px;
 }
 
+/* Latar krem dengan pola titik emas, seperti aplikasi lama. */
 body {
-  background: var(--c-latar);
+  background-color: var(--c-latar);
+  background-image: radial-gradient(var(--titik-latar) 1px, transparent 1px);
+  background-size: 26px 26px;
   color: var(--c-teks);
+  font-family: var(--font-sans);
 }
 
-/* Fokus selalu terlihat (papan ketik dan pembaca layar). */
+/* Fokus selalu terlihat (papan ketik dan pembaca layar). Judul yang
+   difokuskan otomatis saat layar dibuka (tabindex -1) tidak diberi bingkai. */
 :focus-visible {
   outline: 4px solid var(--c-fokus);
   outline-offset: 2px;
+}
+[tabindex='-1']:focus {
+  outline: none;
 }
 
 /* Menghormati pengguna yang mematikan gerakan. */
@@ -90,63 +192,220 @@ body {
   }
 }
 
-/* Bagan silsilah: kartu dengan garis penghubung. Garis memakai warna garis
-   tema, jadi ikut kontras tinggi. Ukuran memakai rem, jadi ikut pengaturan
-   ukuran huruf. */
-.bagan-anak {
-  --bagan-garis: 2px solid var(--c-garis);
-  --bagan-jarak: 1.5rem;
+/* Judul kecil kapital berwarna emas ("INFORMASI ANGGOTA"). */
+.judul-kecil {
+  font-family: var(--font-judul);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-emas-teks);
+}
+
+/* Isian (kotak teks): latar krem, garis yang cukup jelas. */
+.isian {
+  min-height: 3rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--c-garis);
+  background: var(--c-latar);
+  color: var(--c-teks);
+  padding: 0 1rem;
+  font-size: 1.1rem;
+}
+
+/* ── Bagan silsilah ─────────────────────────────────────────────────
+   Kartu seperti aplikasi lama: strip warna tipis di tepi atas, lingkaran
+   kecil berisi simbol ♂/♀ di tengah atas, NAMA kapital (Cinzel), dan satu
+   label kecil kapital. Ukuran memakai rem (ikut pengaturan ukuran huruf);
+   warna dari token (ikut kontras tinggi). */
+.bagan-latar {
+  background-color: var(--c-latar);
+  background-image: radial-gradient(var(--titik-latar) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.kartu-orang {
+  --k-latar: var(--c-kertas);
+  --k-strip: var(--c-k-x-strip);
+  --k-simbol: var(--c-k-x-simbol);
+  --k-simbol-latar: var(--c-kertas);
+  --k-simbol-tepi: var(--k-strip);
+  --k-teks: var(--c-teks);
+  --k-redup: var(--c-redup);
+  --k-tepi: var(--c-tepi);
+  position: absolute;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 10rem;
+  height: 6.75rem;
+  padding: 2.1rem 0.5rem 0.55rem;
+  border-radius: 12px;
+  border: 1px solid var(--k-tepi);
+  background: var(--k-latar);
+  color: var(--k-teks);
+  box-shadow: var(--bayangan);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+html[data-kontras='tinggi'] .kartu-orang {
+  border-width: 2px;
+}
+.kartu-orang::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0.6rem;
+  right: 0.6rem;
+  height: 0.25rem;
+  border-radius: 0 0 2px 2px;
+  background: var(--k-strip);
+}
+.kartu-orang:hover,
+.kartu-orang[aria-pressed='true'] {
+  border-color: var(--c-emas);
+  box-shadow:
+    0 0 0 2px var(--c-emas),
+    0 8px 18px rgb(44 34 30 / 0.18);
+}
+.kartu-simbol {
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
   justify-content: center;
-  position: relative;
-  padding-top: var(--bagan-jarak);
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 9999px;
+  border: 1.5px solid var(--k-simbol-tepi);
+  background: var(--k-simbol-latar);
+  color: var(--k-simbol);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
 }
-/* garis turun dari pasangan ke garis datar anak-anaknya */
-.bagan-anak::before {
+.kartu-gen {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.55rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--k-redup);
+}
+.kartu-nama {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: auto 0;
+  font-family: var(--font-judul);
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.kartu-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k-redup);
+}
+
+/* Garis bagan: garis ke anak cokelat keemasan; garis pernikahan dan hati
+   berwarna mawar seperti aplikasi lama. Putus-putus HANYA untuk pernikahan
+   yang bercerai. */
+.bagan-garis {
+  fill: none;
+  stroke-width: 0.1;
+  stroke-linejoin: round;
+}
+.bagan-garis-anak {
+  stroke: var(--c-garis-bagan);
+}
+.bagan-garis-nikah {
+  stroke: var(--c-hati);
+}
+.bagan-garis-putus {
+  stroke-dasharray: 0.3 0.22;
+}
+.bagan-hati {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1.5px solid var(--c-hati);
+  background: var(--c-kertas);
+  color: var(--c-hati);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* Warna kartu (sementara: menurut jenis kelamin, pangkal emas, wafat hitam
+   arang pada strip dan simbol, seperti aplikasi lama). */
+.kartu-orang[data-sex='L'] {
+  --k-strip: var(--c-k-tl-strip);
+  --k-simbol: var(--c-k-tl-simbol);
+}
+.kartu-orang[data-sex='P'] {
+  --k-strip: var(--c-k-tp-strip);
+  --k-simbol: var(--c-k-tp-simbol);
+}
+.kartu-orang[data-jenis='pangkal'] {
+  --k-latar: var(--c-k-pangkal-latar);
+  --k-strip: var(--c-emas);
+  --k-simbol: var(--c-emas-teks);
+  --k-tepi: var(--c-emas);
+}
+.kartu-orang[data-wafat] {
+  --k-strip: var(--c-k-wafat);
+  --k-simbol: var(--c-k-wafat);
+}
+
+/* Legenda: contoh kartu kecil dan contoh garis putus-putus. */
+.legenda-contoh {
+  position: relative;
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  border: 1px solid var(--c-tepi);
+  background: var(--c-kertas);
+  overflow: hidden;
+}
+.legenda-contoh::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 50%;
-  height: var(--bagan-jarak);
-  border-left: var(--bagan-garis);
+  inset: 0 0 auto 0;
+  height: 0.25rem;
+  background: var(--strip, var(--c-k-x-strip));
 }
-.bagan-anak > li {
-  position: relative;
-  padding: var(--bagan-jarak) 0.5rem 0;
+.legenda-contoh[data-warna='tl'] {
+  --strip: var(--c-k-tl-strip);
 }
-.bagan-anak > li::before,
-.bagan-anak > li::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  width: 50%;
-  height: var(--bagan-jarak);
-  border-top: var(--bagan-garis);
+.legenda-contoh[data-warna='tp'] {
+  --strip: var(--c-k-tp-strip);
 }
-.bagan-anak > li::before {
-  right: 50%;
+.legenda-contoh[data-warna='pangkal'] {
+  --strip: var(--c-emas);
+  background: var(--c-k-pangkal-latar);
+  border-color: var(--c-emas);
 }
-.bagan-anak > li::after {
-  left: 50%;
-  border-left: var(--bagan-garis);
+.legenda-contoh[data-warna='wafat'] {
+  --strip: var(--c-k-wafat);
 }
-.bagan-anak > li:only-child {
-  padding-top: 0;
-}
-.bagan-anak > li:only-child::before,
-.bagan-anak > li:only-child::after {
-  display: none;
-}
-.bagan-anak > li:first-child::before,
-.bagan-anak > li:last-child::after {
-  border-top: 0;
-}
-.bagan-anak > li:last-child::before {
-  border-right: var(--bagan-garis);
-}
-.bagan-anak > li:first-child::after {
-  border-top-left-radius: 0.5rem;
-}
-.bagan-anak > li:last-child::before {
-  border-top-right-radius: 0.5rem;
+.legenda-garis {
+  flex-shrink: 0;
+  width: 1.6rem;
+  border-top: 2px dashed var(--c-hati);
 }

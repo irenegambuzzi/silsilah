@@ -28,7 +28,7 @@ describe('kartu keturunan', () => {
     expect(labelKartu(s, 'raksa')).toMatchObject({
       nama: 'Alm. Raksa',
       tahun: '1920–1990',
-      jenis: 'keturunan',
+      jenis: 'pangkal',
       gen: 0,
       labelGen: 'GEN.0',
       istilahGen: 'Pangkal',
@@ -78,8 +78,8 @@ describe('kartu keturunan', () => {
       expect(JSON.stringify(labelKartu(s, id)).toLowerCase()).not.toMatch(/sambung|angkat/)
     }
     // Bentuknya sama dengan saudara kandung.
-    const { id: _a, nama: _b, panggilan: _c, tahun: _d, keterangan: _e, ...vino } = labelKartu(s, 'vino')
-    const { id: _f, nama: _g, panggilan: _h, tahun: _i, keterangan: _j, ...wati } = labelKartu(s, 'wati')
+    const { id: _a, nama: _b, panggilan: _c, tahun: _d, keterangan: _e, sex: _k, ...vino } = labelKartu(s, 'vino')
+    const { id: _f, nama: _g, panggilan: _h, tahun: _i, keterangan: _j, sex: _l, ...wati } = labelKartu(s, 'wati')
     expect(vino).toEqual(wati)
   })
 

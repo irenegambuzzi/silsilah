@@ -44,14 +44,11 @@ describe('tampilan awal', () => {
     const p = pandangAwal({ lebar: 200, tinggi: 200 }, bingkai)
     expect(p).toEqual({ k: 1, x: 100, y: TEPI })
   })
-  it('bagan lebar: diperkecil secukupnya, tidak kurang dari tiga perempat, mulai dari tengah atas', () => {
-    const p = pandangAwal({ lebar: 4000, tinggi: 1000 }, bingkai)
-    expect(p.k).toBe(0.75)
-    expect(p.x).toBe((400 - 3000) / 2) // tengah isi di tengah bingkai (pangkal ada di tengah atas)
-  })
-  it('bagan agak lebar: diperkecil agar muat', () => {
-    const p = pandangAwal({ lebar: 450, tinggi: 400 }, bingkai)
-    expect(p.k).toBeCloseTo((400 - 2 * TEPI) / 450)
+  it('bagan lebar: diperkecil sampai seluruh bagan terlihat, berpusat', () => {
+    const isi = { lebar: 4000, tinggi: 1000 }
+    const p = pandangAwal(isi, bingkai)
+    expect(p).toEqual(pasDiLayar(isi, bingkai))
+    expect(isi.lebar * p.k).toBeLessThanOrEqual(bingkai.lebar - 2 * TEPI + 1e-6)
   })
   it('"Pas di layar" memuat seluruh bagan, walau sangat kecil', () => {
     const isi = { lebar: 4000, tinggi: 3000 }
