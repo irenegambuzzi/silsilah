@@ -6,10 +6,6 @@ const T = teks.bagan
 const rem = (n) => `${n}rem`
 const jalur = (titik) => titik.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ')
 
-// Label kecil kapital di bawah nama: istilah generasi untuk keturunan.
-const labelUntuk = (kartu) => (kartu.jenis === 'pasangan' ? null : kartu.istilahGen)
-const genUntuk = (kartu) => (kartu.jenis === 'keturunan' && kartu.gen > 0 ? kartu.labelGen : null)
-
 // Satu keturunan dengan pernikahan dan anak-anaknya. Kartu diletakkan
 // menurut tata letak (posisi absolut), tetapi urutan di halaman tetap
 // berupa daftar bersarang, supaya pembaca layar membacanya sebagai silsilah.
@@ -20,8 +16,6 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
       <KartuOrang
         kartu={simpul.kartu}
         letak={letak(`o:${simpul.id}`)}
-        label={labelUntuk(simpul.kartu)}
-        gen={genUntuk(simpul.kartu)}
         terpilih={terpilih === simpul.id}
         saatKetuk={saatKetuk}
       />
@@ -47,7 +41,6 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
               <KartuOrang
                 kartu={k.kartu}
                 letak={lKartu}
-                label={labelUntuk(k.kartu)}
                 terpilih={terpilih === k.id}
                 saatKetuk={saatKetuk}
                 aria-label={k.label ? `${k.label}: ${k.kartu.nama}` : undefined}

@@ -7,7 +7,7 @@ const SIMBOL = { L: '♂', P: '♀' }
 // baris), dan satu label kecil kapital di bawahnya. GEN di pojok kartu.
 // Warnanya menurut warnaKartu (keturunan/pasangan, jenis kelamin, pangkal,
 // wafat). Gaya: .kartu-orang di index.css. Letak (rem) dari tata letak bagan.
-export function KartuOrang({ kartu, letak, label = null, gen = null, terpilih = false, saatKetuk, ...sisa }) {
+export function KartuOrang({ kartu, letak, terpilih = false, saatKetuk, ...sisa }) {
   return (
     <button
       type="button"
@@ -24,9 +24,9 @@ export function KartuOrang({ kartu, letak, label = null, gen = null, terpilih = 
       <span aria-hidden="true" className="kartu-simbol">
         {SIMBOL[kartu.sex] ?? '?'}
       </span>
-      {gen && <span className="kartu-gen">{gen}</span>}
+      {kartu.pojok && <span className="kartu-gen">{kartu.pojok}</span>}
       <span className="kartu-nama">{kartu.nama}</span>
-      {label && <span className="kartu-label">{label}</span>}
+      {kartu.label && <span className="kartu-label">{kartu.label}</span>}
     </button>
   )
 }

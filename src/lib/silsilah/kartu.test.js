@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from './keluargaFiktif.js'
 import { susunSilsilah } from './silsilah.js'
-import { labelDetail, labelKartu } from './kartu.js'
+import { keteranganDaftar, labelDetail, labelKartu } from './kartu.js'
 import { awalanAlmarhum, namaTampil } from './nama.js'
 
 const s = susunSilsilah(bangunKeluargaFiktif())
-const ket = (id) => labelKartu(s, id).keterangan
+const ket = (id) => keteranganDaftar(s, id).keterangan
+// Kartu + keterangan yang tampil di Daftar dan panel (tahun, "Anak ke-n", "Pasangan dari …").
+const info = (id, d = s) => ({ ...labelKartu(d, id), ...keteranganDaftar(d, id) })
 
 describe('Alm./Almh.', () => {
   it('ditambahkan otomatis di depan nama orang yang sudah wafat', () => {
@@ -25,7 +27,7 @@ describe('Alm./Almh.', () => {
 
 describe('kartu keturunan', () => {
   it('pasangan pangkal: GEN.0 Pangkal, tahun lahir–wafat, tanpa keterangan', () => {
-    expect(labelKartu(s, 'raksa')).toMatchObject({
+    expect(info('raksa')).toMatchObject({
       nama: 'Alm. Raksa',
       tahun: '1920–1990',
       jenis: 'pangkal',
@@ -38,7 +40,7 @@ describe('kartu keturunan', () => {
   })
 
   it('anak: GEN, istilah Jawa, dan keterangan', () => {
-    expect(labelKartu(s, 'tamran')).toMatchObject({
+    expect(info('tamran')).toMatchObject({
       nama: 'Tamran',
       tahun: '1971',
       gen: 2,
@@ -78,13 +80,13 @@ describe('kartu keturunan', () => {
       expect(JSON.stringify(labelKartu(s, id)).toLowerCase()).not.toMatch(/sambung|angkat/)
     }
     // Bentuknya sama dengan saudara kandung.
-    const { id: _a, nama: _b, panggilan: _c, tahun: _d, keterangan: _e, sex: _k, ...vino } = labelKartu(s, 'vino')
-    const { id: _f, nama: _g, panggilan: _h, tahun: _i, keterangan: _j, sex: _l, ...wati } = labelKartu(s, 'wati')
+    const { id: _a, nama: _b, panggilan: _c, sex: _k, ...vino } = labelKartu(s, 'vino')
+    const { id: _f, nama: _g, panggilan: _h, sex: _l, ...wati } = labelKartu(s, 'wati')
     expect(vino).toEqual(wati)
   })
 
   it('pernikahan antarsepupu: GEN dan "Anak ke-n" mengikuti jalur terdekat', () => {
-    expect(labelKartu(s, 'hasna')).toMatchObject({
+    expect(info('hasna')).toMatchObject({
       gen: 3,
       labelGen: 'GEN.3',
       istilahGen: 'Buyut',
@@ -111,9 +113,35 @@ describe('kartu keturunan', () => {
   })
 })
 
+describe('isi kartu sederhana seperti aplikasi lama', () => {
+  const semua = [...s.graf.orang.keys()].filter((id) => (s.graf.orang.get(id).tree_id ?? null) === null)
+  const tampil = (k) => [k.nama, k.label, k.pojok].filter(Boolean).join(' ')
+
+  it('kartu keturunan: nama, istilah Jawa sebagai label, dan GEN di pojok', () => {
+    expect(labelKartu(s, 'mega')).toMatchObject({ nama: 'Mega', jenis: 'keturunan', label: 'Putu', pojok: 'GEN.2' })
+  })
+  it('kartu pangkal: nama dan label "Pangkal", tanpa GEN', () => {
+    expect(labelKartu(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenis: 'pangkal', label: 'Pangkal', pojok: null })
+    expect(labelKartu(s, 'selara')).toMatchObject({ jenis: 'pangkal', label: 'Pangkal', pojok: null })
+  })
+  it('kartu pasangan: hanya nama, tanpa label dan tanpa GEN', () => {
+    for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila']) {
+      expect(labelKartu(s, id)).toMatchObject({ jenis: 'pasangan', label: null, pojok: null })
+    }
+  })
+  it('tidak ada kartu yang memuat tahun, "Anak ke-n", atau "Pasangan dari"', () => {
+    for (const id of semua) {
+      const k = labelKartu(s, id)
+      expect(k).not.toHaveProperty('tahun')
+      expect(k).not.toHaveProperty('keterangan')
+      expect(tampil(k), id).not.toMatch(/\d{4}|anak ke-|pasangan dari|istri ke-|suami ke-|sambung|angkat/i)
+    }
+  })
+})
+
 describe('kartu pasangan', () => {
   it('"Pasangan dari …" tanpa istilah generasi', () => {
-    expect(labelKartu(s, 'gita')).toMatchObject({
+    expect(info('gita')).toMatchObject({
       jenis: 'pasangan',
       gen: null,
       labelGen: null,
@@ -131,13 +159,13 @@ describe('kartu pasangan', () => {
   it('menikah lagi setelah bercerai: tidak lagi tertulis bercerai', () => {
     const d = bangunKeluargaFiktif()
     d.unions.find((u) => u.id === 'u3').status = 'menikah'
-    expect(labelKartu(susunSilsilah(d), 'eka').keterangan).toBe('Pasangan dari Bima')
+    expect(keteranganDaftar(susunSilsilah(d), 'eka').keterangan).toBe('Pasangan dari Bima')
   })
 
   it('nama pasangan memakai Alm. kalau keturunannya sudah wafat', () => {
     const d = bangunKeluargaFiktif()
     Object.assign(d.people.find((p) => p.id === 'lorvan'), { is_deceased: true, death_y: 2020 })
-    expect(labelKartu(susunSilsilah(d), 'sinta').keterangan).toBe('Pasangan dari Alm. Lorvan')
+    expect(keteranganDaftar(susunSilsilah(d), 'sinta').keterangan).toBe('Pasangan dari Alm. Lorvan')
   })
 
   it('pasangan dari beberapa keturunan', () => {
@@ -146,7 +174,7 @@ describe('kartu pasangan', () => {
       id: 'ux', tree_id: null, partner1_id: 'lorvan', partner2_id: 'gita', status: 'menikah',
       marriage_y: 2000, deleted_at: null, created_at: '2026-03-01T00:00:00Z',
     })
-    expect(labelKartu(susunSilsilah(d), 'gita').keterangan).toBe('Pasangan dari Bima dan Lorvan')
+    expect(keteranganDaftar(susunSilsilah(d), 'gita').keterangan).toBe('Pasangan dari Bima dan Lorvan')
   })
 })
 

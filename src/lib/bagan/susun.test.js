@@ -49,7 +49,7 @@ describe('susunBagan', () => {
     expect(Object.keys(sambung).sort()).toEqual(Object.keys(kandung).sort())
     expect(JSON.stringify(sambung)).not.toMatch(/sambung|angkat/i)
     expect(JSON.stringify(bagan.simpul.get('yoga').kartu)).not.toMatch(/sambung|angkat/i)
-    expect(sambung.keterangan).toBe('Anak ke-1')
+    expect(sambung.label).toBe(kandung.label)
   })
 
   it('pasangan yang bukan keturunan tidak punya simpul sendiri tetapi ada tempatnya', () => {
@@ -100,11 +100,8 @@ describe('susunBagan', () => {
     expect(bagan.akar.pasangan[0].keturunan).toBe(false)
   })
 
-  it('kartu keturunan: GEN, istilah Jawa, tahun, dan keterangan "dari istri ke-n"', () => {
-    expect(bagan.simpul.get('mega').kartu).toMatchObject({ labelGen: 'GEN.2', istilahGen: 'Putu', tahun: '1983' })
-    expect(bagan.simpul.get('mega').kartu.keterangan).toBe('Anak ke-6 · dari istri ke-1')
-    expect(bagan.simpul.get('nanda').kartu.keterangan).toBe('Anak ke-7 · dari istri ke-1')
-    expect(bagan.simpul.get('oka').kartu.keterangan).toBe('Anak ke-8 · dari istri ke-3')
+  it('kartu keturunan: istilah Jawa sebagai label dan GEN di pojok', () => {
+    expect(bagan.simpul.get('mega').kartu).toMatchObject({ label: 'Putu', pojok: 'GEN.2' })
   })
 
   it('pohon keluarga asal tidak ikut', () => {

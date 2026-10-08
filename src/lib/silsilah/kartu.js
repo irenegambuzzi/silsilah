@@ -1,10 +1,13 @@
 // Label untuk kartu di Bagan dan panel Detail (PLAN.md bagian 15.1).
 //
-// Kartu: nama (dengan Alm./Almh.), nama panggilan, tahun lahir–wafat, GEN
-// beserta istilah Jawanya, dan keterangan kecil seperti
-// "Anak ke-6 · dari istri ke-1". Anak sambung dan anak angkat tampil SAMA
-// PERSIS dengan saudaranya; keterangan "Anak sambung"/"Anak angkat" hanya
-// ada di Detail.
+// Kartu dibuat SEDERHANA seperti aplikasi lama: nama (dengan Alm./Almh. dan
+// gelar) dan SATU label kecil, yaitu istilah Jawa ("Putu") untuk keturunan
+// dengan "GEN.n" di pojok, "Pangkal" untuk pasangan pangkal, dan TANPA label
+// untuk pasangan (warnanya sudah menandakan pasangan). Tahun lahir–wafat,
+// "Anak ke-n", "dari istri ke-n", dan "Pasangan dari …" ada di panel
+// keterangan dan Daftar. Anak sambung dan anak angkat tampil SAMA PERSIS
+// dengan saudaranya; keterangan "Anak sambung"/"Anak angkat" hanya ada di
+// keterangan anak itu sendiri.
 import { teks } from '../../teks/id.js'
 import { namaTampil } from './nama.js'
 import { formatTanggal, tahunHidup, tanggalDari, teksPeristiwa } from './tanggal.js'
@@ -32,7 +35,7 @@ const gabungNama = (nama) =>
 
 // "Pasangan dari [nama]" untuk orang yang bukan keturunan; "· bercerai" kalau
 // pernikahan terakhirnya dengan setiap keturunan itu berakhir cerai.
-function keteranganPasangan(s, id) {
+export function keteranganPasangan(s, id) {
   const terakhir = new Map() // keturunan → pernikahan terakhir dengan orang ini
   for (const u of s.graf.pernikahan.get(id) ?? []) {
     const pasangan = pasanganDi(u, id)
@@ -47,23 +50,38 @@ function keteranganPasangan(s, id) {
   return `${KATA.pasanganDari} ${gabungNama(nama)}${bercerai ? ` · ${KATA.bercerai}` : ''}`
 }
 
+// jenis: 'pangkal' (GEN.0) | 'keturunan' | 'pasangan' (bukan keturunan).
+// label: satu label kecil di bawah nama; pojok: "GEN.n" di pojok kartu.
+// panggilan hanya untuk pencarian, tidak tampil di kartu.
 export function labelKartu(s, id) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const gen = s.gen.get(id) ?? null
-  const utama = s.jalur.get(id)?.[0]
+  const jenis = gen === null ? 'pasangan' : gen === 0 ? 'pangkal' : 'keturunan'
+  const istilah = gen === null ? null : istilahGenerasi(gen, s.daftarGenerasi)
   return {
     id,
     nama: namaTampil(orang),
     sex: orang.sex === 'L' || orang.sex === 'P' ? orang.sex : null,
     wafat: Boolean(orang.is_deceased),
     panggilan: orang.nickname ?? null,
-    tahun: tahunHidup(orang),
-    jenis: gen === null ? 'pasangan' : gen === 0 ? 'pangkal' : 'keturunan',
+    jenis,
     gen,
     labelGen: gen === null ? null : labelGen(gen),
-    istilahGen: gen === null ? null : istilahGenerasi(gen, s.daftarGenerasi),
-    keterangan: gen === null ? keteranganPasangan(s, id) : utama ? teksJalur(utama) : '',
+    istilahGen: istilah,
+    label: jenis === 'pasangan' ? null : istilah,
+    pojok: jenis === 'keturunan' ? labelGen(gen) : null,
+  }
+}
+
+// Untuk Daftar: tahun lahir–wafat dan keterangan singkat ("Anak ke-6 · dari
+// istri ke-1", atau "Pasangan dari …").
+export function keteranganDaftar(s, id) {
+  const orang = s.graf.orang.get(id)
+  const utama = s.jalur.get(id)?.[0]
+  return {
+    tahun: tahunHidup(orang),
+    keterangan: !s.gen.has(id) ? keteranganPasangan(s, id) : utama ? teksJalur(utama) : '',
   }
 }
 

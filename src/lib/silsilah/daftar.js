@@ -1,7 +1,7 @@
 // Daftar orang untuk layar Daftar: keturunan menurut nomor silsilah, lalu
 // pasangan (dan siapa pun yang belum terhubung ke keturunan) menurut nama.
 // Hanya silsilah utama; orang di pohon keluarga asal tidak ikut.
-import { labelKartu } from './kartu.js'
+import { keteranganDaftar, labelKartu } from './kartu.js'
 
 const angka = (nomor) => nomor.split('.').map(Number)
 
@@ -24,15 +24,16 @@ export function susunDaftar(s) {
   for (const [id, orang] of s.graf.orang) {
     if ((orang.tree_id ?? null) !== null) continue
     const k = labelKartu(s, id)
+    const { tahun, keterangan } = keteranganDaftar(s, id)
     const baris = {
       id,
       nama: k.nama,
       panggilan: k.panggilan,
-      tahun: k.tahun,
+      tahun,
       gen: k.gen,
       labelGen: k.labelGen,
       istilahGen: k.istilahGen,
-      keterangan: k.keterangan,
+      keterangan,
       nomor: s.nomor.get(id) ?? null,
     }
     ;(k.jenis === 'pasangan' ? pasangan : keturunan).push(baris)

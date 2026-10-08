@@ -60,6 +60,19 @@ describe('Bagan: isi kartu', () => {
     expect(screen.getByRole('button', { name: 'Istri ke-2: Fitri' })).toBe(k('fitri'))
   })
 
+  it('kartu tidak memuat tahun atau "Anak ke-n"; kartu pasangan hanya simbol dan nama', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    for (const kartu of semuaKartu()) {
+      expect(kartu.textContent, kartu.dataset.orang).not.toMatch(/\d{4}|anak ke-|pasangan dari|dari istri|dari suami/i)
+    }
+    for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila']) {
+      expect(k(id).querySelector('.kartu-label'), id).toBeNull()
+      expect(k(id).querySelector('.kartu-gen'), id).toBeNull()
+      expect(k(id).querySelector('.kartu-simbol')).toBeTruthy()
+    }
+  })
+
   it('pernikahan antarsepupu: anak tampil sekali', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
