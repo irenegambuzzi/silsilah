@@ -32,6 +32,9 @@ Istilah:
 7. **Data kontak dan lokasi diperlakukan paling ketat:** terenkripsi, dicatat setiap kali dibuka, tidak pernah disimpan offline, dan tidak pernah ikut cetakan atau notifikasi.
 8. **Semua teks berbahasa Indonesia**, termasuk pesan error. Semua teks dikumpulkan di `src/teks/id.js`.
 9. **Ramah untuk HP dan untuk orang tua**: huruf besar, kontras tinggi, tombol besar yang memakai teks + ikon.
+10. **Identitas visual aplikasi lama dipertahankan** (acuan desain di bagian 15.5). Tampilan diperbaiki, bukan diganti total. Perubahan besar pada tampilan harus Anda setujui dulu.
+11. **Setiap kelompok yang mengubah tampilan diakhiri dengan tinjauan Anda lewat mode contoh** (`npm run dev:contoh`) sebelum kelompok berikutnya dimulai. Laporan kelompok memuat alamat mode contoh dan daftar hal yang perlu diperiksa.
+12. **Mode contoh selalu lengkap.** Setiap fitur baru **wajib** ditambahkan ke data contoh fiktif, termasuk data kontak, Kabar Keluarga, Kumpul Keluarga, dan foto saat fiturnya dibuat. Tes `src/contoh/kelengkapan.test.js` menjaga semua kasus yang sudah didukung; daftar "di mana menemukan setiap kasus" ada di README.
 
 ---
 
@@ -997,7 +1000,7 @@ Tempat semua anggota keluarga cepat mengetahui kabar penting.
 | 3 | **Selamat datang** | "Apakah ini Anda?", tips huruf, notifikasi, layar utama, dan tambah perangkat |
 | 4 | **Bagan** (silsilah utama) | Kartu seperti aplikasi lama, geser/zoom, mode fokus cabang, *breadcrumb*, "Tampilkan saya", serta "+ Anak / + Pasangan" di kartu (untuk yang bisa mengedit) |
 | 5 | **Daftar** | Teks berjenjang dengan nomor silsilah, istilah generasi, dan GEN |
-| 6 | **Detail orang** | Data, "Generasi ke-n (Putu)" (kalau kedua orang tua keturunan: **kedua jalur** dan "Anak ke-n" untuk masing-masing), "Anak sambung"/"Anak angkat" (kata lembut, hanya di sini), pernikahan berurutan, anak per pernikahan, kontak (Tampilkan), kabar terkait, riwayat, dan Laporkan kesalahan |
+| 6 | **Detail orang** | Format panel aplikasi lama (bagian 15.1): avatar, nama, "Putu · Generasi ke-2", Informasi Anggota (orang tua, urutan lahir, pasangan berurutan; antarsepupu: "Anak ke-n" dari masing-masing orang tua), Riwayat Hidup, anak, pekerjaan, catatan, "Anak sambung"/"Anak angkat" (kata lembut, hanya di keterangan anak itu), kontak (Tampilkan), kabar terkait, riwayat, dan Laporkan kesalahan |
 | 7 | **Form orang / pernikahan / anak** | Gelar "(opsional)", pekerjaan, alamat, dan HP (tidak wajib, tanpa tulisan opsional), tanggal kabur, jenis anak, dan urutan lahir |
 | 8 | **Pohon keluarga asal** | Untuk yang diberi akses. Pohon terpisah dengan warna latar berbeda dan istilah dari sudut pandang pasangan khusus (Bapak, Mbah, Pakdhe, …). Hanya admin yang bisa mengedit. |
 | 9 | **Pencarian** | Semua hasil yang cocok + toleran ejaan; pencarian wilayah/nomor (yang berwenang) |
@@ -1030,24 +1033,39 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 
 ### 15.1 Kartu dan istilah
 
-- **Bagan dengan kartu** seperti aplikasi lama: nama besar (dengan "Alm./Almh." otomatis), nama panggilan, dan tahun lahir–wafat.
+- **Bagan dengan kartu sederhana** seperti aplikasi lama (ditetapkan saat perbaikan tampilan, Oktober 2026):
+  - **Keturunan**: lingkaran simbol ♂/♀, NAMA (dengan "Alm./Almh." otomatis dan gelar), istilah Jawa kapital kecil (misalnya "PUTU"), dan "GEN.n" kecil di **pojok** kartu.
+  - **Pangkal**: lingkaran simbol, NAMA, dan label "PANGKAL" (tanpa GEN).
+  - **Pasangan**: **hanya** lingkaran simbol dan NAMA, tanpa label dan tanpa GEN; warnanya sudah menandakan pasangan.
+  - Tahun lahir–wafat, nama panggilan, "Anak ke-n", "dari istri ke-n", dan "Pasangan dari … · bercerai" **tidak** di kartu, tetapi di panel keterangan.
+  - Label "Istri ke-n"/"Suami ke-n" di atas kartu pasangan **hanya** kalau orang itu menikah dengan lebih dari satu orang.
+- **Warna kartu** (latar lembut + strip atas + lingkaran simbol), semuanya lolos tes kontras biasa dan kontras tinggi (`src/kontras.test.js`):
+  - keturunan laki-laki biru, keturunan perempuan pink, pasangan laki-laki hijau sage, pasangan perempuan peach, jenis kelamin tidak diketahui abu;
+  - **kedua** kartu pasangan pangkal emas (latar krem keemasan, bingkai emas); kalau wafat tetap emas, tanda wafat cukup strip atas dan lingkaran simbol hitam arang, ditambah "Alm./Almh.";
+  - keturunan wafat: seluruh kartu hitam arang tua dengan tulisan terang; pasangan wafat: hitam arang yang lebih muda dengan tulisan putih; simbol ♂/♀ tetap berwarna sesuai jenis kelamin.
+- **Garis**: setiap pernikahan punya ikon hati di antara kedua pasangan; garis ke anak keluar dari hati itu (turun lurus, lalu bercabang siku-siku ke setiap anak). **Garis putus-putus hanya untuk pernikahan yang bercerai**; ditinggal wafat atau masih menikah memakai garis biasa.
 - **Istilah generasi Jawa** tampil jelas, dengan label kecil **"GEN.n"**:
   - GEN.0 Pangkal, GEN.1 Anak, GEN.2 Putu, GEN.3 Buyut, GEN.4 Canggah, GEN.5 Wareng;
   - GEN.6 Udheg-udheg, GEN.7 Gantung siwur, GEN.8 Gropak senthe, GEN.9 Debog bosok, GEN.10 Galih asem;
   - mulai GEN.11, hanya "GEN.11", "GEN.12", dst., tanpa istilah.
 - **Kedua orang tua sama-sama keturunan** (pernikahan antarsepupu):
   - GEN mengikuti **jalur yang paling dekat ke pangkal**.
-  - Kartu menampilkan "Anak ke-n" dari orang tua di jalur itu.
-  - Panel detail menampilkan **kedua jalur** beserta "Anak ke-n" untuk masing-masing orang tua.
-- **Keterangan kecil** di kartu, misalnya **"Anak ke-6 · dari istri ke-1"**:
+  - Di bagan, anak tampil **sekali**, di bawah orang tua di jalur itu. Di samping setiap keturunan, pasangannya dari cabang lain tampil sebagai **kartu rujukan** yang dihubungkan dengan ikon hati: warna keturunan sesuai jenis kelaminnya, keterangan kecil "Dari cabang lain" dan tanda ↗; mengetuknya melompat ke kartu utamanya. Di tempat orang tua yang tidak memuat anaknya ada catatan kecil "Anak mereka ada di cabang …" yang bisa diketuk.
+  - Panel keterangan menampilkan "Anak ke-n dari …" untuk masing-masing orang tua, dan satu baris singkat "Lewat …: Canggah · Generasi ke-4" hanya kalau GEN kedua jalur berbeda. Tanpa kalimat penjelasan teknis.
+- **Urutan lahir** di panel keterangan, misalnya **"Anak ke-6 · dari istri ke-1"**:
   - "Anak ke-n" adalah urutan lahir lintas semua pernikahan orang tua keturunan.
   - "istri/suami ke-n" adalah urutan **pasangan yang berbeda**, menurut pernikahan pertama dengan pasangan itu. Contoh: istri ke-1 → anak 1–3, istri ke-2 → anak 4–5, kembali ke istri ke-1 → anak 6–7 ("dari istri ke-1"), istri ke-3 → anak 8–11.
   - Bagian "· dari istri ke-n" hanya muncul kalau orang tua itu pernah punya lebih dari satu pasangan.
-- **Anak sambung dan anak angkat**: kartu **sama persis**, istilah dan GEN sama dengan saudaranya, dan ikut urutan keluarga itu. Keterangan "Anak sambung" atau "Anak angkat" **hanya** ada di panel detail.
-- **Pasangan**: "Pasangan dari [nama]", tanpa istilah generasi. Kalau bercerai, tertulis "· bercerai".
-- **Panel detail** menampilkan "Generasi ke-n" beserta istilahnya.
+- **Anak sambung dan anak angkat**: kartu **sama persis**, istilah dan GEN sama dengan saudaranya, dan ikut urutan keluarga itu. Keterangan "Anak sambung"/"Anak angkat" (kata lembut) **hanya** ada di panel keterangan anak itu sendiri, tidak di daftar anak milik orang tuanya dan tidak di Daftar.
+- **Pasangan**: di panel, "Pasangan dari [nama]" di bawah nama, tanpa istilah generasi. Kalau bercerai, tertulis "· bercerai".
+- **Panel keterangan** (format aplikasi lama; di layar lebar di sisi kanan, di HP dari bawah):
+  - atas: avatar dalam lingkaran berbingkai emas (sementara emoji sesuai jenis kelamin; komponen `Avatar` sudah siap menampilkan foto untuk Fase 3), NAMA, lalu **"Putu · Generasi ke-2"** (istilah Jawa dulu, bukan "Generasi ke-2 (Putu)");
+  - **INFORMASI ANGGOTA**: jenis kelamin, panggilan, orang tua dalam satu baris ("Bima & Eka", keduanya bisa diketuk), urutan lahir, pasangan ("Tidak ada" kalau tidak ada; baris ini tidak tampil untuk anak di bawah umur atau yang wafat semasa kecil), nomor silsilah. Lebih dari satu pasangan: "Istri ke-1: … (bercerai)", dst.;
+  - **RIWAYAT HIDUP**: Lahir (tempat, tanggal), Wafat (kalau ada);
+  - **ANAK**: nama-nama yang bisa diketuk, urut kelahiran; lalu **PEKERJAAN** dan **CATATAN** kalau ada; lalu tempat tombol aksi (gaya tombol aplikasi lama).
+- **Aturan tulisan** (dijaga `src/tulisan.test.jsx`): satu pernikahan tanpa "ke-1"; "Menikah tahun 1974" (bukan "Menikah · Menikah 1974"); tanpa kata ganda, penomoran yang tidak perlu, istilah teknis, atau kalimat yang bisa menyinggung.
 - **Nomor silsilah otomatis** di tampilan Daftar (misalnya 1.6.2).
-  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Angka terakhir selalu sama dengan "Anak ke-n" di kartu. Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak bernomor.
+  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Angka terakhir selalu sama dengan "Anak ke-n" di panel keterangan. Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak bernomor.
 - **Nama di kartu** memuat gelar religius di depan dan gelar pendidikan di belakang: "Alm. KH. Nama, S.Ag.".
 
 ### 15.2 Pencarian
@@ -1073,6 +1091,23 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
   - **Data kontak dan lokasi anggota tidak pernah disimpan offline.**
   - Semua data offline dihapus saat keluar, saat akses sementara habis, dan saat perangkat dicabut.
 - **noindex**: `<meta name="robots" content="noindex, nofollow">`. Judul dan pratinjau WhatsApp generik, tanpa nama.
+
+### 15.5 Acuan desain: identitas visual aplikasi lama
+
+Aturan tetap (prinsip 10): tampilan mengikuti aplikasi lama. Perubahan besar harus Anda setujui dulu. Berlaku di **semua** layar (Masuk, Selamat datang, Beranda, Bagan, Daftar, Saya, Perangkat, Privasi, Kotak masuk, dan layar baru).
+
+**Token desain lama:** latar #FBF6EC dengan pola titik emas (radial-gradient rgba(166,124,30,0.12) 1px, jarak 26px); kartu #FFFFFF, sudut 12px, tepi #E2D9CC, bayangan halus; emas #A67C1E (hover #C59B3F); teks #2C221E; teks samar #7A6E65; garis #B89A6E; laki-laki #7FA6C4; perempuan #D998A8; tidak diketahui #A69C8C; wafat #4A423B; nama dengan huruf Cinzel 700 kapital; teks lain Plus Jakarta Sans. Huruf dipasang dari paket lokal (bukan Google Fonts), jadi tetap jalan offline.
+
+**Penyesuaian demi kontras** (tes kontras yang sudah ada tetap berlaku): teks samar #554A42; emas untuk tulisan #8A6516; tombol utama emas tua #6E5110 dengan teks putih; garis ke anak #9A7A4C; pasangan wafat #5C554F (bukan ±#756D66, karena teks putih di sana kurang kontras). Warna asli tetap dipakai untuk hiasan (strip, bingkai, titik latar).
+
+**Pengamatan video aplikasi lama** (diikuti sedekat mungkin):
+
+- **Bilah atas** melayang di kiri atas: judul "SILSILAH KELUARGA" (Cinzel, emas), subjudul kecil "ARSIP WARISAN & SEJARAH", status kecil hijau tentang sinkronisasi; lalu kotak cari, tombol cari, + dan −, "Pusatkan", dan tombol aksi emas. Ada × untuk menyembunyikan bilah. Tombol untuk fitur yang belum ada (Tambah Anggota, Unduh PDF) baru ditampilkan saat fiturnya dibuat.
+- **Legenda** di kiri bawah, bisa ditutup; saat ditutup tersisa tombol bulat kecil di pojok kiri bawah.
+- Saat dibuka, **bagan tampil utuh** (diperkecil supaya seluruh pohon terlihat), lalu bisa diperbesar.
+- **Kartu**: strip warna tipis di tepi atas, lingkaran kecil berisi simbol ♂/♀ menempel di tengah atas, NAMA kapital Cinzel (boleh dua baris), dan di bawahnya satu label kecil kapital (istilah). Kartu terpilih/hover: bingkai emas.
+- **Pasangan** duduk tepat di samping keturunannya, dengan ikon **hati** di dalam lingkaran kecil di antara keduanya. Garis ke anak keluar dari ikon hati: turun lurus, lalu bercabang siku-siku ke setiap anak; garis tipis cokelat keemasan.
+- **Panel detail** di sisi kanan, berlatar putih (di HP: lembar dari bawah atau layar penuh): avatar emoji di dalam lingkaran berbingkai emas, NAMA (Cinzel), istilah di bawahnya, lalu bagian "INFORMASI ANGGOTA" dan "RIWAYAT HIDUP" dengan judul kecil kapital berwarna emas. Tombol utama emas berbentuk kotak membulat; tombol hapus bergaris merah.
 
 ---
 
@@ -1147,6 +1182,7 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 4 | 1.19 | Opus 5.5 · high | – (selesai) |
 | ✅ 5 | 1.20 | Opus 5.5 · high | – (selesai) |
 | ✅ 6 | 1.21 + 1.22 | Sonnet 5.5 · high | – (selesai; opsional: lihat lewat mode contoh) |
+| ✅ 6b | perbaikan tampilan menurut tinjauan Anda (identitas visual lama, warna kartu, isi kartu, garis, antarsepupu, panel, tulisan, mode contoh lengkap) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
 | 9 | 1.26 | Sonnet 5.5 · high | – |
@@ -1265,6 +1301,14 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 ### Fase 3: Arsip Keluarga
 
 - **Foto keluarga**: bucket privat, dikompres, URL bertanda tangan.
+- **Foto anggota** (avatar di kartu dan panel keterangan). Persyaratan keamanan, **ditetapkan sekarang** (Oktober 2026):
+  - Disimpan di bucket Storage **privat**; hanya bisa dilihat anggota yang login dari perangkat yang sah.
+  - Ditampilkan lewat **signed URL yang kedaluwarsa dalam hitungan menit**. Ini mekanisme di belakang layar: foto **tetap tampil tanpa batas waktu dan tanpa hitung mundur** selama dibuka di perangkat anggota sendiri, dan aplikasi membuat link baru secara otomatis. Batas waktu tampil hanya berlaku di perangkat akses sementara (yang otomatis keluar saat waktunya habis).
+  - Saat unggah, **semua metadata yang bisa dipakai melacak seseorang dihapus**, bukan hanya GPS: EXIF, XMP, IPTC, waktu pemotretan, merek/model/nomor seri perangkat, nama pemilik, dan thumbnail tersembunyi. Caranya: foto **digambar ulang menjadi file baru yang bersih**, dan nama file aslinya diganti.
+  - Foto **dikecilkan otomatis** dan **tidak disimpan offline** di HP.
+  - Foto anak di bawah umur hanya bisa diunggah oleh orang tuanya, admin utama, atau asisten yang diizinkan.
+  - Setiap unggah/hapus tercatat; perlindungannya setara data kontak (bagian 7).
+  - Mode contoh mendapat foto fiktif saat fitur ini dibuat (prinsip 12).
 - **Cerita/kenangan**.
 - **Pengingat ulang tahun**.
 - **Tanggal Hijriah dan pengingat haul**.
