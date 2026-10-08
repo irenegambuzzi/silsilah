@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Info, X } from 'lucide-react'
+import { WARNA_LEGENDA } from '../../lib/bagan/warna.js'
 import { teks } from '../../teks/id.js'
 
 const T = teks.bagan.legenda
@@ -14,7 +15,7 @@ const layarLebar = () => (typeof window === 'undefined' || !window.matchMedia ? 
 
 // Keterangan warna di kiri bawah, seperti aplikasi lama. Bisa ditutup;
 // saat ditutup tersisa tombol bulat kecil di pojok kiri bawah.
-export function Legenda({ bingkai, tombolBulat }) {
+export function Legenda({ bingkai, tombolBulat, warnaAda }) {
   const [buka, setBuka] = useState(layarLebar)
   if (!buka) {
     return (
@@ -34,10 +35,10 @@ export function Legenda({ bingkai, tombolBulat }) {
         <X aria-hidden="true" className="size-5" />
       </button>
       <ul className="flex flex-col gap-1.5">
-        {T.baris.map(([warna, nama]) => (
+        {WARNA_LEGENDA.filter((w) => w !== 'x' || warnaAda?.has('x')).map((warna) => (
           <li key={warna} className="flex items-center gap-2.5">
             <Contoh warna={warna} />
-            {nama}
+            {T.warna[warna]}
           </li>
         ))}
         <li className="flex items-center gap-2.5">

@@ -54,7 +54,7 @@ function Simpul({ simpul, tata, terpilih, saatKetuk }) {
               />
             )}
             {!k.kartu && lKartu && (
-              <div className="kartu-orang absolute cursor-default" style={{ left: rem(lKartu.x), top: rem(lKartu.y) }}>
+              <div data-warna="x" className="kartu-orang absolute cursor-default" style={{ left: rem(lKartu.x), top: rem(lKartu.y) }}>
                 <span aria-hidden="true" className="kartu-simbol">?</span>
                 <span className="kartu-nama">{T.pasanganTidakDiketahui}</span>
               </div>

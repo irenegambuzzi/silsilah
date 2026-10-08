@@ -1,6 +1,7 @@
 // Rasio kontras warna (WCAG), dihitung dari token warna di index.css:
-// teks utama diusahakan AAA (7:1), teks lain minimal AA (4,5:1), garis dan
-// fokus minimal 3:1. Berlaku untuk tampilan biasa dan kontras tinggi.
+// teks utama diusahakan AAA (7:1), teks lain minimal AA (4,5:1), garis,
+// simbol, dan fokus minimal 3:1. Berlaku untuk tampilan biasa dan kontras
+// tinggi, termasuk setiap warna kartu di bagan.
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -40,6 +41,31 @@ const PASANGAN = [
   ['fokus', 'kertas', 3, 'tanda fokus di kartu'],
   ['utama', 'latar', 3, 'tombol utama terhadap latar'],
   ['bahaya', 'kertas', 3, 'tepi tombol/kotak bahaya'],
+  ['bahaya', 'latar', 7, 'tulisan tombol hapus (bergaris merah, latar krem)'],
+  ['emas-teks', 'latar', 4.5, 'tulisan emas (judul) di latar halaman'],
+  ['emas-teks', 'kertas', 4.5, 'tulisan emas (judul kecil) di kotak'],
+  ['emas', 'latar', 3, 'bingkai emas (kartu pangkal, terpilih) di latar'],
+  ['sukses', 'kertas', 4.5, 'status hijau di bilah atas bagan'],
+  ['garis-bagan', 'latar', 3, 'garis ke anak di bagan'],
+  ['hati', 'latar', 3, 'garis pernikahan di bagan'],
+  ['hati', 'kertas', 3, 'ikon hati (lingkaran putih)'],
+  // Kartu orang di bagan: nama (teks) dan label (redup) di setiap latar kartu.
+  ...['k-tl-latar', 'k-tp-latar', 'k-pl-latar', 'k-pp-latar', 'k-x-latar', 'k-pangkal-latar'].flatMap((latar) => [
+    ['teks', latar, 7, `nama di kartu (${latar})`],
+    ['redup', latar, 7, `label kecil di kartu (${latar})`],
+  ]),
+  // Simbol ♂/♀ di lingkaran putih.
+  ...['k-tl-simbol', 'k-tp-simbol', 'k-pl-simbol', 'k-pp-simbol', 'k-x-simbol', 'emas-teks', 'k-pangkal-wafat'].map((simbol) => [
+    simbol, 'kertas', 4.5, `simbol ${simbol} di lingkaran putih`,
+  ]),
+  // Kartu wafat: tulisan terang, simbol biru/pink terang.
+  ['k-wafat-teks', 'k-wafat', 7, 'nama di kartu keturunan wafat'],
+  ['k-wafat-redup', 'k-wafat', 7, 'label kecil di kartu keturunan wafat'],
+  ['k-wafat-teks', 'k-wafat-pasangan', 7, 'nama di kartu pasangan wafat'],
+  ...['k-wafat-simbol-l', 'k-wafat-simbol-p', 'k-wafat-simbol-x'].flatMap((simbol) => [
+    [simbol, 'k-wafat', 3, `simbol ${simbol} di kartu keturunan wafat`],
+    [simbol, 'k-wafat-pasangan', 3, `simbol ${simbol} di kartu pasangan wafat`],
+  ]),
 ]
 
 describe.each([

@@ -81,6 +81,21 @@ describe('Bagan: isi kartu', () => {
     for (const k of semuaKartu()) expect(k.textContent.trim()).not.toBe('')
   })
 
+  it('warna kartu: keturunan, pasangan, pangkal (lengkap dengan tanda wafat)', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(k('bima').dataset.warna).toBe('keturunan-l')
+    expect(k('cahya').dataset.warna).toBe('keturunan-p')
+    expect(k('umar').dataset.warna).toBe('pasangan-l')
+    expect(k('eka').dataset.warna).toBe('pasangan-p')
+    expect(k('raksa').dataset.warna).toBe('pangkal')
+    expect(k('raksa').dataset.wafat).toBe('true')
+    const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
+    for (const nama of ['Keturunan laki-laki', 'Keturunan perempuan', 'Pasangan laki-laki', 'Pasangan perempuan', 'Pangkal', 'Wafat (keturunan)', 'Wafat (pasangan)', 'Bercerai']) {
+      expect(within(legenda).getByText(nama)).toBeTruthy()
+    }
+  })
+
   it('ikon hati untuk setiap pasangan dan garis bercerai putus-putus', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()

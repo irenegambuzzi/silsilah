@@ -10,6 +10,7 @@ import { Avatar } from '../components/Avatar.jsx'
 import { useDataSilsilah } from '../lib/data/konteksData.js'
 import { susunBagan } from '../lib/bagan/susun.js'
 import { tataBagan } from '../lib/bagan/tata.js'
+import { warnaKartu } from '../lib/bagan/warna.js'
 import { useGeserZoom } from '../lib/bagan/useGeserZoom.js'
 import { polos } from '../lib/silsilah/daftar.js'
 import { useSilsilah } from '../lib/silsilah/useSilsilah.js'
@@ -259,7 +260,7 @@ function IsiBagan() {
           </button>
         </>
       )}
-      <Legenda bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} />
+      <Legenda bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} warnaAda={new Set(kartu.map(warnaKartu))} />
       {kartuTerpilih && (
         <PanelOrang
           kartu={kartuTerpilih}

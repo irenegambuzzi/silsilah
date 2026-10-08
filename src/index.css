@@ -58,6 +58,7 @@
   --c-k-x-strip: #a69c8c;
   --c-k-x-simbol: #6b6255;
   --c-k-pangkal-latar: #fbf4e2;
+  --c-k-pangkal-wafat: #4a423b;
   /* wafat: keturunan hitam arang tua, pasangan hitam arang lebih muda;
      tulisan terang; simbol ♂/♀ tetap biru/pink (versi terang) */
   --c-k-wafat: #4a423b;
@@ -112,6 +113,7 @@ html[data-kontras='tinggi'] {
   --c-k-x-strip: #ffffff;
   --c-k-x-simbol: #ffffff;
   --c-k-pangkal-latar: #000000;
+  --c-k-pangkal-wafat: #ffffff;
   --c-k-wafat: #000000;
   --c-k-wafat-pasangan: #000000;
   --c-k-wafat-teks: #ffffff;
@@ -351,36 +353,85 @@ html[data-kontras='tinggi'] .kartu-orang {
   line-height: 1;
 }
 
-/* Warna kartu (sementara: menurut jenis kelamin, pangkal emas, wafat hitam
-   arang pada strip dan simbol, seperti aplikasi lama). */
-.kartu-orang[data-sex='L'] {
+/* Warna kartu (lib/bagan/warna.js): latar lembut + strip + lingkaran
+   simbol. Berlaku untuk kartu di bagan dan contoh kecil di legenda. */
+[data-warna='keturunan-l'] {
+  --k-latar: var(--c-k-tl-latar);
   --k-strip: var(--c-k-tl-strip);
   --k-simbol: var(--c-k-tl-simbol);
 }
-.kartu-orang[data-sex='P'] {
+[data-warna='keturunan-p'] {
+  --k-latar: var(--c-k-tp-latar);
   --k-strip: var(--c-k-tp-strip);
   --k-simbol: var(--c-k-tp-simbol);
 }
-.kartu-orang[data-jenis='pangkal'] {
+[data-warna='pasangan-l'] {
+  --k-latar: var(--c-k-pl-latar);
+  --k-strip: var(--c-k-pl-strip);
+  --k-simbol: var(--c-k-pl-simbol);
+}
+[data-warna='pasangan-p'] {
+  --k-latar: var(--c-k-pp-latar);
+  --k-strip: var(--c-k-pp-strip);
+  --k-simbol: var(--c-k-pp-simbol);
+}
+[data-warna='x'] {
+  --k-latar: var(--c-k-x-latar);
+  --k-strip: var(--c-k-x-strip);
+  --k-simbol: var(--c-k-x-simbol);
+}
+/* Pangkal: krem keemasan dengan bingkai emas, juga kalau sudah wafat. */
+[data-warna='pangkal'] {
   --k-latar: var(--c-k-pangkal-latar);
   --k-strip: var(--c-emas);
   --k-simbol: var(--c-emas-teks);
   --k-tepi: var(--c-emas);
 }
-.kartu-orang[data-wafat] {
+.kartu-orang[data-warna='pangkal'] {
+  border-width: 2px;
+}
+/* Pangkal yang sudah wafat: hanya strip dan lingkaran simbol hitam arang. */
+[data-warna='pangkal'][data-wafat] {
+  --k-strip: var(--c-k-pangkal-wafat);
+  --k-simbol: var(--c-k-pangkal-wafat);
+}
+/* Wafat: seluruh kartu hitam arang dengan tulisan terang; simbol ♂/♀ tetap
+   biru/pink. */
+[data-warna='keturunan-wafat'],
+[data-warna='pasangan-wafat'] {
+  --k-latar: var(--c-k-wafat);
   --k-strip: var(--c-k-wafat);
-  --k-simbol: var(--c-k-wafat);
+  --k-tepi: var(--c-k-wafat);
+  --k-teks: var(--c-k-wafat-teks);
+  --k-redup: var(--c-k-wafat-redup);
+  --k-simbol: var(--c-k-wafat-simbol-x);
+  --k-simbol-latar: var(--k-latar);
+  --k-simbol-tepi: var(--k-simbol);
+}
+[data-warna='pasangan-wafat'] {
+  --k-latar: var(--c-k-wafat-pasangan);
+  --k-strip: var(--c-k-wafat-pasangan);
+  --k-tepi: var(--c-k-wafat-pasangan);
+}
+[data-warna$='-wafat'][data-sex='L'] {
+  --k-simbol: var(--c-k-wafat-simbol-l);
+}
+[data-warna$='-wafat'][data-sex='P'] {
+  --k-simbol: var(--c-k-wafat-simbol-p);
+}
+html[data-kontras='tinggi'] [data-warna$='-wafat'] {
+  --k-tepi: var(--c-tepi);
 }
 
-/* Legenda: contoh kartu kecil dan contoh garis putus-putus. */
+/* Legenda: contoh kartu kecil (latar + strip) dan contoh garis putus-putus. */
 .legenda-contoh {
   position: relative;
   flex-shrink: 0;
   width: 1.6rem;
   height: 1.1rem;
   border-radius: 4px;
-  border: 1px solid var(--c-tepi);
-  background: var(--c-kertas);
+  border: 1px solid var(--k-tepi, var(--c-tepi));
+  background: var(--k-latar, var(--c-kertas));
   overflow: hidden;
 }
 .legenda-contoh::before {
@@ -388,21 +439,7 @@ html[data-kontras='tinggi'] .kartu-orang {
   position: absolute;
   inset: 0 0 auto 0;
   height: 0.25rem;
-  background: var(--strip, var(--c-k-x-strip));
-}
-.legenda-contoh[data-warna='tl'] {
-  --strip: var(--c-k-tl-strip);
-}
-.legenda-contoh[data-warna='tp'] {
-  --strip: var(--c-k-tp-strip);
-}
-.legenda-contoh[data-warna='pangkal'] {
-  --strip: var(--c-emas);
-  background: var(--c-k-pangkal-latar);
-  border-color: var(--c-emas);
-}
-.legenda-contoh[data-warna='wafat'] {
-  --strip: var(--c-k-wafat);
+  background: var(--k-strip, var(--c-k-x-strip));
 }
 .legenda-garis {
   flex-shrink: 0;
