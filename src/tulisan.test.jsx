@@ -86,7 +86,7 @@ describe('label silsilah untuk SETIAP orang di keluarga fiktif', () => {
   it('tanpa kata ganda di keterangan siapa pun', () => {
     for (const id of utama) {
       const d = labelDetail(s, id)
-      const tulisan = [d.nama, d.subjudul, ...d.urutan, d.lewat, ...d.pasangan.map((p) => `${p.ke ?? ''} ${p.nama} ${p.waktu}`), d.lahir, d.wafat]
+      const tulisan = [d.nama, d.subjudul, ...d.urutan, d.lewat, ...d.pasangan.map((p) => `${p.ke ?? ''} ${p.nama ?? teks.detail.pasanganTidakDiketahui} ${p.waktu ?? ''}`), d.lahir, d.wafat]
       for (const t of tulisan.filter(Boolean)) {
         expect(t, id).not.toMatch(KATA_GANDA)
         for (const re of TERLARANG) expect(t, id).not.toMatch(re)
@@ -129,7 +129,7 @@ describe('tulisan di layar', () => {
     ['Bagan', '/bagan', klienKeluarga, 'Hasna'],
     ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
     ['Saya', '/saya', klienKeluarga, 'Ukuran huruf'],
-    ...['bima', 'cahya', 'eka', 'vino', 'yoga', 'hasna', 'nirvo', 'raksa', 'gendis', 'oka'].map((id) => [
+    ...['bima', 'cahya', 'eka', 'vino', 'yoga', 'hasna', 'nirvo', 'raksa', 'gendis', 'oka', 'ika', 'tirwan', 'lintang', 'sekar', 'dara', 'halvin', 'ragil'].map((id) => [
       `Keterangan ${id}`, `/orang/${id}`, klienKeluarga, 'Informasi Anggota',
     ]),
     ...['bima', 'eka', 'hasna'].map((id) => [`Panel bagan ${id}`, `/bagan?pilih=${id}`, klienKeluarga, 'Informasi Anggota']),

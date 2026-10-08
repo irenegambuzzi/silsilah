@@ -16,13 +16,15 @@
 //                       kode yang diterima hanya 123456.
 //
 // Silsilah contoh: keluarga fiktif dari src/lib/silsilah/keluargaFiktif.js
-// (pohon keluarga asal "T1" hanya terlihat oleh admin utama).
+// (pohon keluarga asal "T1" dan "T2" hanya terlihat oleh admin utama).
+// Alamat dan nomor HP fiktif: src/contoh/kontakContoh.js.
 // Mencoba offline: setelah masuk dan data termuat, matikan internet (atau
 // DevTools → Network → Offline), lalu muat ulang halaman: aplikasi dibuka
 // dari salinan di perangkat. Klien contoh menjawab seperti jaringan putus
 // selama browser offline.
 import { BENTUK_KODE, BENTUK_TOKEN, rapikanKode } from '../../supabase/functions/_shared/rahasia.js'
 import { bangunKeluargaFiktif } from '../lib/silsilah/keluargaFiktif.js'
+import { kontakContoh } from './kontakContoh.js'
 import { bacaTersimpan, tulisTersimpan } from '../lib/penyimpanan.js'
 
 export const PENANDA_KLIEN_CONTOH = 'KLIEN-CONTOH-FIKTIF'
@@ -282,6 +284,9 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
 
   const klien = {
     [PENANDA_KLIEN_CONTOH]: true,
+    // Alamat dan nomor HP fiktif, untuk RPC buka kontak saat fitur data
+    // kontak dibuat (langkah 2.8–2.9). Belum dipakai layar mana pun.
+    kontakContoh,
     auth: {
       async getSession() { return tunggu(ok({ session: sesiSaatIni() })) },
       async verifyOtp() {

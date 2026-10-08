@@ -61,7 +61,7 @@ describe('Keterangan orang (halaman sendiri)', () => {
     ])
     expect(info.textContent).toContain('menikah lagi tahun 1982')
     expect(within(bagian('Anak')).getAllByRole('link').map((a) => a.textContent)).toEqual([
-      'Tamran', 'Ika', 'Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
+      'Tamran', 'Ika', 'Alm. Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
     ])
     expect(screen.queryByText(/Pernikahan ke-/)).toBeNull()
   })

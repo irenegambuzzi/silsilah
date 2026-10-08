@@ -38,6 +38,8 @@ describe('build produksi', () => {
     const isi = semuaIsi(out)
     expect(isi).not.toContain('KELUARGA-CONTOH-FIKTIF')
     expect(isi).not.toContain('KLIEN-CONTOH-FIKTIF')
+    expect(isi).not.toContain('KONTAK-CONTOH-FIKTIF')
+    expect(isi).not.toContain('0812-0000-00')
     expect(isi).not.toContain('Bu Contoh')
     expect(isi).not.toContain('MODE CONTOH')
     // Keluarga fiktif mode contoh (keluargaFiktif.js) juga tidak ikut.

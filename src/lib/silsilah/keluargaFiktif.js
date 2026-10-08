@@ -11,10 +11,19 @@
 //   Tamran + Wati: pernikahan antarsepupu, kedua orang tua sama GEN-nya.
 //   Rangga + Gendis: pernikahan antarsepupu, GEN orang tuanya berbeda
 //         (Rangga GEN.2, Gendis GEN.3), jadi anak mereka mengikuti Rangga.
+//   Ika: ditinggal wafat suami ke-1 (H. Halvin), lalu menikah lagi (Joval).
+//         Anak: Dorvi (gelar, panggilan, tanggal lengkap), Sekar (wafat saat
+//         bayi), Laras, dan Bayu (di bawah umur, dari suami ke-2).
+//   Tirwan: keturunan yang sudah wafat; istrinya Hj. Dara ditinggal wafat.
+//         Anak: Rinzo, Nala (di bawah umur), Ragil (jenis kelamin tidak
+//         diketahui). Dara = pasangan khusus B (istri anak Eka).
+//   Lintang: pasangan tidak diketahui, satu anak (Arya).
+//   Tanggal kabur: tahun saja, "sekitar", bulan dan tahun, tanggal lengkap.
 //
 //   Pohon keluarga asal Eka ("T1"): orang tuanya, saudaranya, Mbah, Mbah
 //   buyut, Pakdhe/Budhe/Paklik/Bulik, sepupu, keponakan, dan satu paman
 //   yang urutan lahirnya tidak diketahui.
+//   Pohon keluarga asal Dara ("T2"): orang tua, adik, Mbah, dan Pakdhe.
 
 export function bangunKeluargaFiktif() {
   const data = {
@@ -22,7 +31,10 @@ export function bangunKeluargaFiktif() {
     unions: [],
     children: [],
     birth_ranks: [],
-    origin_trees: [{ id: 'T1', anchor_person_id: 'eka', is_active: true }],
+    origin_trees: [
+      { id: 'T1', anchor_person_id: 'eka', is_active: true },
+      { id: 'T2', anchor_person_id: 'dara', is_active: true },
+    ],
     root_union_id: null,
   }
   const tanpaUrutan = new Set()
@@ -57,6 +69,8 @@ export function bangunKeluargaFiktif() {
   }
   const asal = (id, nama, sex, lahir, tambahan = {}) =>
     orang(id, nama, sex, lahir, { tree_id: 'T1', ...tambahan })
+  const asal2 = (id, nama, sex, lahir, tambahan = {}) =>
+    orang(id, nama, sex, lahir, { tree_id: 'T2', ...tambahan })
 
   const nikah = (id, partner1, partner2, tambahan = {}) => {
     data.unions.push({
@@ -97,6 +111,8 @@ export function bangunKeluargaFiktif() {
     })
   }
   const anakAsal = (union, child, kind = 'kandung') => anak(union, child, kind, { tree_id: 'T1' })
+  const nikahAsal2 = (id, p1, p2, tambahan = {}) => nikah(id, p1, p2, { tree_id: 'T2', ...tambahan })
+  const anakAsal2 = (union, child) => anak(union, child, 'kandung', { tree_id: 'T2' })
 
   // ── Silsilah utama ──────────────────────────────────────────────
   orang('raksa', 'Raksa', 'L', 1920, { is_deceased: true, death_y: 1990 })
@@ -161,6 +177,43 @@ export function bangunKeluargaFiktif() {
   orang('hasna', 'Hasna', 'P', 2024)
   anak('u8', 'hasna')
 
+  // Ditinggal wafat lalu menikah lagi; anak wafat saat bayi; gelar; tanggal kabur.
+  orang('halvin', 'Halvin', 'L', 1968, {
+    birth_approx: true, religious_title: 'H.', is_deceased: true, death_y: 2008, death_m: 8,
+    death_place: 'Kota Contoh', occupation: 'Petani', nickname: 'Pak Halvin',
+  })
+  nikah('u10', 'ika', 'halvin', { marriage_y: 1995 })
+  orang('dorvi', 'Dorvi', 'L', 1996, {
+    birth_m: 3, birth_d: 12, birth_place: 'Kota Contoh', academic_title: 'S.Kom.', nickname: 'Orvi', occupation: 'Guru',
+  })
+  orang('sekar', 'Sekar', 'P', 1998, {
+    birth_m: 5, birth_d: 3, birth_place: 'Kota Contoh', is_deceased: true, death_y: 1998, death_m: 5, death_d: 20,
+    notes: 'Wafat saat masih bayi. Dimakamkan di makam keluarga.',
+  })
+  orang('laras', 'Laras', 'P', 2001, { birth_place: 'Desa Contoh', academic_title: 'S.Ked.', occupation: 'Dokter muda' })
+  for (const a of ['dorvi', 'sekar', 'laras']) anak('u10', a)
+  orang('joval', 'Joval', 'L', 1970, { academic_title: 'S.E.', nickname: 'Mas Joval', occupation: 'Pedagang' })
+  nikah('u11', 'ika', 'joval', { marriage_y: 2012, marriage_m: 2 })
+  orang('bayu', 'Bayu', 'L', 2013, { birth_place: 'Kota Contoh' })
+  anak('u11', 'bayu')
+
+  // Keturunan yang sudah wafat, dengan istri yang ditinggal wafat.
+  Object.assign(data.people.find((p) => p.id === 'tirwan'), {
+    is_deceased: true, death_y: 2015, death_place: 'Kota Contoh', occupation: 'Pegawai negeri',
+    notes: 'Dikenal suka menanam pohon mangga di halaman rumah.',
+  })
+  orang('dara', 'Dara', 'P', 1978, { birth_m: 6, religious_title: 'Hj.', nickname: 'Mbak Dara', birth_place: 'Kota Lain Contoh' })
+  nikah('u12', 'tirwan', 'dara', { marriage_y: 2000 })
+  orang('rinzo', 'Rinzo', 'L', 2003)
+  orang('nala', 'Nala', 'P', 2010)
+  orang('ragil', 'Ragil', null, 2014)
+  for (const a of ['rinzo', 'nala', 'ragil']) anak('u12', a)
+
+  // Pasangan tidak diketahui.
+  nikah('u13', 'lintang', null, { status: 'tidak_diketahui' })
+  orang('arya', 'Arya', 'L', 2005)
+  anak('u13', 'arya')
+
   // ── Pohon keluarga asal Eka ─────────────────────────────────────
   asal('karto', 'Karto', 'L', 1860)
   asal('sumi', 'Sumi', 'P', 1865)
@@ -208,6 +261,20 @@ export function bangunKeluargaFiktif() {
 
   // Orang di pohon asal yang tidak terhubung ke Eka.
   asal('asing', 'Asing', 'L', 1900)
+
+  // ── Pohon keluarga asal Dara (pasangan khusus B) ─────────────────
+  asal2('kromo', 'Kromo', 'L', 1925, { is_deceased: true, death_y: 1999 })
+  asal2('painem', 'Painem', 'P', 1928, { is_deceased: true, death_y: 2005 })
+  nikahAsal2('ov1', 'kromo', 'painem')
+  asal2('sarno', 'Sarno', 'L', 1948)
+  asal2('sastro', 'Sastro', 'L', 1950)
+  anakAsal2('ov1', 'sarno')
+  anakAsal2('ov1', 'sastro')
+  asal2('wiji', 'Wiji', 'P', 1953)
+  nikahAsal2('ov2', 'sastro', 'wiji')
+  anakAsal2('ov2', 'dara') // Dara sendiri (orang: silsilah utama; hubungan: pohon asal)
+  asal2('wulan', 'Wulan', 'P', 1981)
+  anakAsal2('ov2', 'wulan')
 
   hitungUrutanLahir(data, tanpaUrutan)
   return data

@@ -249,9 +249,9 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
 
   it('anak dari semua pernikahan, urut lahir', () => {
     expect(labelDetail(s, 'bima').anak.map((a) => a.nama)).toEqual([
-      'Tamran', 'Ika', 'Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
+      'Tamran', 'Ika', 'Alm. Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
     ])
-    expect(labelDetail(s, 'eka').anak.map((a) => a.nama)).toEqual(['Tamran', 'Ika', 'Tirwan', 'Mega', 'Nanda'])
+    expect(labelDetail(s, 'eka').anak.map((a) => a.nama)).toEqual(['Tamran', 'Ika', 'Alm. Tirwan', 'Mega', 'Nanda'])
   })
 
   it('riwayat hidup: "tempat, tanggal"', () => {

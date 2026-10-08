@@ -31,7 +31,7 @@ describe('susunBagan', () => {
   it('anak banyak pernikahan: 11 anak Bima urut "ke-n" lintas pasangan', () => {
     const bima = bagan.simpul.get('bima')
     expect(bima.anak.map(nama)).toEqual([
-      'Tamran', 'Ika', 'Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
+      'Tamran', 'Ika', 'Alm. Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
     ])
     // Tiga pasangan berbeda (Eka menikah dua kali = satu kartu), diberi "Istri ke-n".
     expect(bima.pasangan.map((p) => [p.kartu.nama, p.label])).toEqual([
@@ -83,7 +83,7 @@ describe('susunBagan', () => {
   it('anak dikelompokkan per pasangan; menikah lagi dengan pasangan yang sama tetap satu kelompok', () => {
     const bima = bagan.simpul.get('bima')
     expect(bima.pasangan.map((k) => [k.id, k.anak.map(nama)])).toEqual([
-      ['eka', ['Tamran', 'Ika', 'Tirwan', 'Mega', 'Nanda']],
+      ['eka', ['Tamran', 'Ika', 'Alm. Tirwan', 'Mega', 'Nanda']],
       ['fitri', ['Kirana', 'Lintang']],
       ['gita', ['Oka', 'Putri', 'Qori', 'Rangga']],
     ])

@@ -34,9 +34,34 @@ perintah itu, buka alamat yang tampil di Terminal):
 | kode `UTAMA234` | masuk sebagai admin utama: layar admin (Saya → "Beri akses sementara") terkunci sampai verifikasi dua langkah. Authenticator di mode contoh **tiruan**: kode yang diterima hanya `123456` (kunci/QR yang tampil bukan kunci sungguhan) |
 | `/#/privasi` | halaman Privasi |
 | Beranda setelah masuk | jumlah orang di silsilah contoh (keluarga fiktif): tanda data silsilah sudah termuat |
-| menu Daftar (atau `/#/daftar`) | daftar keluarga fiktif menurut nomor silsilah, dengan kotak pencarian; ketuk satu nama untuk membuka Detail. Contoh pernikahan antarsepupu: cari "Hasna" atau "Nirvo" dan lihat bagian "Orang tua" (dua jalur) |
-| menu Bagan (atau `/#/bagan`) | bagan kartu keluarga fiktif dengan garis penghubung. Geser dengan satu jari (di laptop: seret dengan mouse atau tombol panah), perbesar/perkecil dengan dua jari (di laptop: Ctrl + roda mouse) atau tombol Perbesar/Perkecil/Pas di layar. Ketuk satu kartu → panel "Buka keterangan lengkap" / "Fokus pada cabang ini". Di Saya, coba ukuran huruf Sangat besar dan Kontras tinggi: bagan ikut berubah |
+| menu Daftar (atau `/#/daftar`) | daftar keluarga fiktif menurut nomor silsilah, dengan kotak pencarian; ketuk satu nama untuk membuka keterangannya |
+| menu Bagan (atau `/#/bagan`) | bagan kartu keluarga fiktif, mula-mula tampil utuh. Geser dengan satu jari (di laptop: seret dengan mouse atau tombol panah), perbesar/perkecil dengan dua jari (di laptop: Ctrl + roda mouse) atau tombol + / − ; "Pusatkan" kembali ke seluruh bagan. Ketuk satu kartu → panel keterangan di kanan (di HP: dari bawah) dengan "Fokus pada cabang ini". Di Saya, coba ukuran huruf Sangat besar dan Kontras tinggi: bagan ikut berubah |
 | offline | setelah data termuat, matikan internet (atau DevTools → Network → Offline) lalu muat ulang halaman: aplikasi terbuka dari salinan di perangkat, dengan spanduk "Anda sedang offline". Nyalakan lagi internet: spanduk hilang. Dengan kode `AKSES234` tidak ada salinan (perangkat pinjaman) |
+
+### Kasus khusus di data contoh
+
+Data contoh harus selalu memuat semua kasus yang sudah didukung (tes
+`src/contoh/kelengkapan.test.js`). Cari namanya di Bagan atau Daftar:
+
+| Kasus | Di mana |
+|---|---|
+| Pasangan pangkal, keduanya wafat | Alm. Raksa & Almh. Selara (kartu emas, strip dan simbol hitam arang) |
+| Banyak pernikahan, menikah lagi dengan pasangan yang sama, cerai | Bima: Istri ke-1 Eka (dua kali menikah, bercerai), Istri ke-2 Fitri (bercerai), Istri ke-3 Gita. Garis putus-putus = bercerai |
+| Ditinggal wafat lalu menikah lagi | Ika: Suami ke-1 Alm. H. Halvin, Suami ke-2 Joval, S.E. Juga Hj. Dara (istri Alm. Tirwan) |
+| Keturunan wafat / pasangan wafat | Alm. Tirwan (kartu hitam arang) / Alm. H. Halvin (kartu arang lebih muda) |
+| Anak wafat saat bayi | Almh. Sekar, anak Ika (dengan catatan) |
+| Anak sambung / anak angkat | Vino (anak Cahya & Umar) / Yoga (anak Lorvan & Sinta): keterangannya hanya di panel anak itu |
+| Antarsepupu, generasi sama | Tamran & Wati, anaknya Nirvo |
+| Antarsepupu, generasi berbeda | Rangga & Gendis, anaknya Hasna |
+| Pasangan tidak diketahui | Lintang, anaknya Arya |
+| Jenis kelamin tidak diketahui | Ragil, anak Alm. Tirwan (kartu abu) |
+| Gelar religius / pendidikan | H. Halvin, Hj. Dara / Dorvi, S.Kom., Laras, S.Ked., Joval, S.E. |
+| Nama panggilan | Dorvi, Joval, Hj. Dara, H. Halvin |
+| Tanggal kabur | H. Halvin "sekitar 1968"; Hj. Dara "Juni 1978"; tahun saja di banyak orang; tanggal lengkap: Dorvi |
+| Pekerjaan / catatan | Dorvi, Laras, Joval, H. Halvin, Alm. Tirwan / Almh. Sekar, Alm. Tirwan |
+| Anak di bawah umur | Bayu, Nala, Ragil, Hasna |
+| Pohon keluarga asal | Eka (pasangan khusus A) dan Hj. Dara (pasangan khusus B). Hanya dimuat untuk admin utama (kode `UTAMA234`); layarnya belum dibuat |
+| Alamat dan nomor HP fiktif | `src/contoh/kontakContoh.js` (24 orang); layar data kontak belum dibuat |
 
 ## Menyambungkan ke database
 
