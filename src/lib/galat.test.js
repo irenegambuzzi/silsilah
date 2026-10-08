@@ -20,7 +20,7 @@ describe('project dijeda atau layanan tidak tersedia', () => {
   it('status 540 → "Aplikasi sedang dipulihkan"', () => {
     const h = petakanGalat({ message: 'whatever' }, { status: 540 })
     expect(h).toMatchObject({ jenis: 'dipulihkan', bisaCobaLagi: true })
-    expect(h.pesan).toBe('Aplikasi sedang dipulihkan. Silakan coba lagi beberapa saat lagi.')
+    expect(h.pesan).toBe('Aplikasi sedang dipulihkan. Silakan coba beberapa saat lagi.')
     expect(h.judul).toBe('Aplikasi sedang dipulihkan')
   })
   it('status 503, kode PGRST002, atau teks "project paused"', () => {

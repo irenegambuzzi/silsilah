@@ -34,7 +34,7 @@ export const teks = {
     galat: { judul: 'Terjadi masalah', isi: 'Data belum bisa dimuat.' },
     dipulihkan: {
       judul: 'Aplikasi sedang dipulihkan',
-      isi: 'Aplikasi sedang dipulihkan. Silakan coba lagi beberapa saat lagi.',
+      isi: 'Aplikasi sedang dipulihkan. Silakan coba beberapa saat lagi.',
     },
     belumDisiapkan: {
       judul: 'Aplikasi belum siap',
@@ -42,7 +42,7 @@ export const teks = {
     },
     kosong: {
       judul: 'Belum ada data',
-      isi: 'Belum ada data, hubungi admin.',
+      isi: 'Silsilah belum berisi nama siapa pun. Hubungi admin keluarga.',
     },
     belumDiperbarui: {
       judul: 'Database belum diperbarui',
@@ -60,16 +60,16 @@ export const teks = {
 
   // Pesan untuk setiap jenis galat (lihat src/lib/galat.js).
   galat: {
-    dipulihkan: 'Aplikasi sedang dipulihkan. Silakan coba lagi beberapa saat lagi.',
+    dipulihkan: 'Aplikasi sedang dipulihkan. Silakan coba beberapa saat lagi.',
     belumDiperbarui: 'Aplikasi membutuhkan pembaruan database yang belum dilakukan. Hubungi admin.',
     offline: 'Tidak ada koneksi internet. Periksa sambungan Anda, lalu coba lagi.',
     jaringan: 'Tidak bisa terhubung ke server. Periksa internet Anda, lalu coba lagi.',
     sesiHabis: 'Sesi Anda berakhir. Silakan masuk lagi.',
     tanpaIzin: 'Anda tidak punya izin untuk melakukan ini.',
     bentrok: 'Data ini baru saja diubah orang lain atau sudah tidak ada. Muat ulang, lalu coba lagi.',
-    sibuk: 'Server sedang sibuk. Silakan coba lagi beberapa saat lagi.',
+    sibuk: 'Server sedang sibuk. Silakan coba beberapa saat lagi.',
     terlaluSering: 'Terlalu banyak permintaan dalam waktu singkat. Silakan tunggu sebentar, lalu coba lagi.',
-    server: 'Server sedang bermasalah. Silakan coba lagi beberapa saat lagi.',
+    server: 'Server sedang bermasalah. Silakan coba beberapa saat lagi.',
     tidakDikenal:
       'Terjadi masalah yang tidak dikenal. Silakan coba lagi. Kalau terus terjadi, hubungi admin.',
     dataDitolak: 'Data ini tidak bisa disimpan karena tidak memenuhi aturan.',
@@ -281,8 +281,8 @@ export const teks = {
   beranda: {
     judul: 'Beranda',
     sapa: 'Halo, {nama}',
-    ringkasan: 'Data silsilah sudah termuat: {n} orang di silsilah utama.',
-    isi: 'Buka Bagan untuk melihat kartu keluarga dengan garis penghubung, atau Daftar untuk mencari seseorang. Tampilan dan perangkat bisa Anda atur di menu Saya.',
+    ringkasan: 'Silsilah keluarga saat ini berisi {n} orang.',
+    isi: 'Buka Bagan untuk melihat silsilah keluarga, atau Daftar untuk mencari nama seseorang. Ukuran huruf dan perangkat bisa Anda atur di menu Saya.',
     lihatDaftar: 'Lihat daftar orang',
     lihatBagan: 'Lihat bagan keluarga',
   },
@@ -348,7 +348,7 @@ export const teks = {
     jumlah: '{n} orang',
     tidakAda: 'Tidak ada nama yang cocok.',
     keturunan: 'Keturunan',
-    pasangan: 'Pasangan dan lainnya',
+    pasangan: 'Pasangan',
     nomor: 'No. {nomor}',
   },
   detail: {
@@ -605,7 +605,7 @@ export const teks = {
     },
     kode: {
       format_salah: 'Kode terdiri dari 8 huruf dan angka, misalnya ABCD-2345. Periksa lagi kodenya.',
-      salah: 'Kode salah. Periksa lagi kodenya, lalu coba lagi.',
+      salah: 'Kode salah. Periksa kodenya, lalu coba lagi.',
       sudah_dipakai: 'Kode ini sudah dipakai. Buat atau mintalah kode baru.',
       kedaluwarsa: 'Kode ini sudah tidak berlaku (lebih dari 10 menit). Buat atau mintalah kode baru.',
       dicabut: 'Kode ini sudah dibatalkan. Buat atau mintalah kode baru.',
@@ -645,11 +645,6 @@ export const teks = {
     menikahLagi: 'menikah lagi',
     jenisKelamin: { L: 'Laki-laki', P: 'Perempuan', x: 'Tidak diketahui' },
     generasiKe: 'Generasi ke-',
-    statusPernikahan: {
-      menikah: 'Menikah',
-      cerai: 'Bercerai',
-      tidak_diketahui: 'Status tidak diketahui',
-    },
     bulan: [
       'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',

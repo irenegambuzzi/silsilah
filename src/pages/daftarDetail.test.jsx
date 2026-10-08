@@ -22,7 +22,7 @@ describe('Daftar', () => {
     expect(tamran).toContain('Putu')
     expect(tamran).toContain('Anak ke-1')
     expect(tamran).toMatch(/No\. 1\.1\.1/)
-    expect(screen.getByRole('heading', { name: 'Pasangan dan lainnya' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Pasangan' })).toBeTruthy()
   })
 
   it('pencarian menyaring nama dan mengumumkan jumlahnya', async () => {

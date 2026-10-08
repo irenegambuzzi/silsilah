@@ -28,7 +28,7 @@ afterEach(() => {
 
 const keluarga = bangunKeluargaFiktif()
 const JUMLAH_UTAMA = keluarga.people.filter((p) => p.tree_id === null).length
-const ringkasan = (n) => `Data silsilah sudah termuat: ${n} orang di silsilah utama.`
+const ringkasan = (n) => `Silsilah keluarga saat ini berisi ${n} orang.`
 const tabelKeluarga = () => ({
   people: structuredClone(keluarga.people),
   unions: structuredClone(keluarga.unions),
@@ -106,7 +106,7 @@ describe('Supabase gagal → layar keterangan, TIDAK PERNAH menulis data bawaan'
       // Sesi berakhir: keluar dan data dihapus, bukan menulis apa pun.
       expect(await screen.findByText(teks.keluar.alasan.sesi)).toBeTruthy()
     }
-    expect(screen.queryByText(/Data silsilah sudah termuat/)).toBeNull()
+    expect(screen.queryByText(/Silsilah keluarga saat ini berisi/)).toBeNull()
     hanyaMembaca(klien)
   })
 
@@ -243,14 +243,14 @@ describe('salinan offline', () => {
     keadaanOffline()
     pasang('/', klienKeluarga({ fungsi: { 'cek-perangkat': async () => { throw new TypeError('Failed to fetch') } } }))
     expect(await screen.findByText(teks.layar.offline.judul)).toBeTruthy()
-    expect(screen.queryByText(/Data silsilah sudah termuat/)).toBeNull()
+    expect(screen.queryByText(/Silsilah keluarga saat ini berisi/)).toBeNull()
   })
 
   it('server MENOLAK (bukan soal koneksi) → salinan tidak dipakai', async () => {
     await salinanAda()
     pasang('/', klienKeluarga({ gagalTabel: { people: async () => GALAT('42501', 'permission denied').error } }))
     expect(await screen.findByText(teks.galat.tanpaIzin)).toBeTruthy()
-    expect(screen.queryByText(/Data silsilah sudah termuat/)).toBeNull()
+    expect(screen.queryByText(/Silsilah keluarga saat ini berisi/)).toBeNull()
   })
 
   it('perangkat akses sementara tidak pernah menyimpan salinan', async () => {

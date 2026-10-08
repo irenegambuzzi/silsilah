@@ -69,7 +69,7 @@ describe('layar Masuk', () => {
   })
 
   it.each([
-    ['salah', 'Kode salah. Periksa lagi kodenya, lalu coba lagi.'],
+    ['salah', 'Kode salah. Periksa kodenya, lalu coba lagi.'],
     ['sudah_dipakai', 'Kode ini sudah dipakai. Buat atau mintalah kode baru.'],
     ['kedaluwarsa', 'Kode ini sudah tidak berlaku (lebih dari 10 menit). Buat atau mintalah kode baru.'],
     ['terlalu_sering', 'Terlalu banyak percobaan kode yang salah. Tunggu 15 menit, lalu coba lagi.'],
@@ -157,7 +157,7 @@ describe('membuka link undangan', () => {
     })
     const { aksi } = pasang(`/u/${TOKEN}`, klien)
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    expect(await screen.findByText('Server sedang bermasalah. Silakan coba lagi beberapa saat lagi.')).toBeTruthy()
+    expect(await screen.findByText('Server sedang bermasalah. Silakan coba beberapa saat lagi.')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Coba lagi' })).toBeTruthy()
   })
 

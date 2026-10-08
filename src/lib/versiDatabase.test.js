@@ -62,7 +62,7 @@ describe('tafsirkanVersiDatabase', () => {
   it('project dijeda → sedang dipulihkan, bukan "belum diperbarui"', () => {
     const h = tafsirkanVersiDatabase({ error: { message: 'x' }, status: 540 })
     expect(h).toMatchObject({ siap: false, jenis: 'dipulihkan', bisaCobaLagi: true })
-    expect(h.pesan).toBe('Aplikasi sedang dipulihkan. Silakan coba lagi beberapa saat lagi.')
+    expect(h.pesan).toBe('Aplikasi sedang dipulihkan. Silakan coba beberapa saat lagi.')
   })
 
   it('tanpa internet → pesan offline', () => {
