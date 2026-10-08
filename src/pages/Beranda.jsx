@@ -1,11 +1,12 @@
+import { List } from 'lucide-react'
 import { GerbangData } from '../components/GerbangData.jsx'
+import { TautanTombol } from '../components/ui/Tombol.jsx'
 import { Judul } from '../components/ui/Judul.jsx'
 import { useDataSilsilah } from '../lib/data/konteksData.js'
 import { useSesi } from '../lib/konteksSesi.js'
 import { isiTeks, teks } from '../teks/id.js'
 
-// Sementara: daftar dan bagan silsilah menyusul di langkah 1.21–1.22. Untuk
-// sekarang beranda menunjukkan bahwa data silsilah sudah termuat.
+// Ringkasan: bahwa data silsilah sudah termuat, dan jumlah orangnya.
 function RingkasanSilsilah() {
   const { data } = useDataSilsilah()
   const orang = data.people.filter((p) => (p.tree_id ?? null) === null).length
@@ -22,6 +23,9 @@ export default function Beranda() {
         <RingkasanSilsilah />
       </GerbangData>
       <p className="text-xl">{teks.beranda.isi}</p>
+      <TautanTombol to="/daftar" varian="utama" ikon={List}>
+        {teks.beranda.lihatDaftar}
+      </TautanTombol>
     </>
   )
 }

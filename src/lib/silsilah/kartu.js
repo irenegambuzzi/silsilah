@@ -10,7 +10,7 @@ import { namaTampil } from './nama.js'
 import { formatTanggal, tahunHidup, tanggalDari, teksPeristiwa } from './tanggal.js'
 import { istilahGenerasi, labelGen, teksGenerasi } from './generasi.js'
 import { jenisPasangan, pasanganBerurutan, teksAnakKe, teksPasanganKe } from './urutan.js'
-import { pasanganDi, urutanLahir } from './graf.js'
+import { orangTuaUnion, pasanganDi, urutanLahir } from './graf.js'
 
 const KATA = teks.silsilah
 
@@ -113,16 +113,31 @@ export function labelDetail(s, id) {
     }
   })
 
+  // Orang tua yang bukan keturunan (menantu) tidak punya jalur, tetapi tetap
+  // ditampilkan sebagai orang tua.
+  const dalamJalur = new Set(jalur.map((j) => j.orangTuaId))
+  const orangTuaLain = []
+  for (const t of s.graf.tautan.get(id) ?? []) {
+    for (const pid of orangTuaUnion(s.graf.unions.get(t.union_id))) {
+      if (!dalamJalur.has(pid) && !orangTuaLain.some((o) => o.id === pid)) {
+        orangTuaLain.push({ id: pid, nama: nama(pid), jenis: KATA.jenisAnak[t.kind] ?? null })
+      }
+    }
+  }
+
   return {
     id,
     nama: namaTampil(orang),
     panggilan: orang.nickname ?? null,
+    pekerjaan: orang.occupation ?? null,
+    catatan: orang.notes ?? null,
     lahir: teksPeristiwa(orang, 'birth'),
     wafat: teksPeristiwa(orang, 'death'),
     generasi: gen === null ? null : teksGenerasi(gen, s.daftarGenerasi),
     nomor: s.nomor.get(id) ?? null,
     keteranganPasangan: gen === null ? keteranganPasangan(s, id) : '',
     jalur,
+    orangTuaLain,
     pernikahan,
   }
 }

@@ -8,6 +8,8 @@ import { useSesi } from './lib/konteksSesi.js'
 import { SesiProvider } from './lib/sesi.jsx'
 import { teks } from './teks/id'
 import Beranda from './pages/Beranda.jsx'
+import Daftar from './pages/Daftar.jsx'
+import Orang from './pages/Orang.jsx'
 import { Keadaan, KeadaanMemuat } from './pages/Keadaan.jsx'
 import KotakMasuk from './pages/KotakMasuk.jsx'
 import Keluar from './pages/Keluar.jsx'
@@ -81,6 +83,8 @@ export default function App({ Router = HashRouter, klien }) {
           <Suspense fallback={<KeadaanMemuat />}>
           <Routes>
             <Route path="/" element={lindungi(<Beranda />)} />
+            <Route path="/daftar" element={lindungi(<Daftar />)} />
+            <Route path="/orang/:id" element={lindungi(<Orang />)} />
             <Route path="/masuk" element={<Tamu><Masuk /></Tamu>} />
             <Route path="/u/:token" element={<Penukaran jenis="undangan" />} />
             <Route path="/kode/:kode" element={<Penukaran jenis="kode" />} />

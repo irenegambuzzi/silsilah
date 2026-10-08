@@ -7,6 +7,7 @@ import { screen } from '@testing-library/react'
 import axe from 'axe-core'
 import { pasang } from './test/pembantu.jsx'
 import { OK, buatKlienTiruan, klienSudahMasuk } from './test/klienTiruan.js'
+import { klienKeluarga } from './test/klienKeluarga.js'
 import { tampaknyaInggris } from './lib/galat.js'
 
 const TOKEN = 'Q'.repeat(43)
@@ -53,6 +54,9 @@ const LAYAR = [
   ['Kode dari QR', '/kode/ABCD2345', () => buatKlienTiruan({}), 'Masuk dengan kode'],
   ['Selamat datang', '/selamat-datang', () => masuk(), 'Apakah ini Anda?'],
   ['Beranda', '/', () => masuk(), 'Beranda'],
+  ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
+  ['Detail orang', '/orang/hasna', klienKeluarga, 'Jalur terdekat'],
+  ['Detail orang tidak ada', '/orang/tidak-ada', klienKeluarga, 'tidak ditemukan'],
   ['Saya', '/saya', () => masuk(), 'Tampilan'],
   ['Keluar', '/saya/keluar', () => masuk(), 'Keluar dari perangkat ini'],
   ['Tambah perangkat', '/saya/tambah-perangkat', () => masuk(), 'ABCD-2345'],
@@ -126,7 +130,7 @@ describe('struktur umum', () => {
     const nav = screen.getByRole('navigation', { name: 'Menu utama' })
     const aktif = nav.querySelector('[aria-current="page"]')
     expect(aktif.textContent).toBe('Saya')
-    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(3)
+    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(4)
   })
   it('judul layar menerima fokus saat layar terbuka (pembaca layar langsung membacakannya)', async () => {
     pasang('/saya', masuk())

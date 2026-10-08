@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Bell, House, ShieldCheck, UserRound } from 'lucide-react'
+import { Bell, House, List, ShieldCheck, UserRound } from 'lucide-react'
 import { useSesi } from '../../lib/konteksSesi.js'
 import { useBelumDibaca } from '../../lib/useBelumDibaca.js'
 import { isiTeks, teks } from '../../teks/id.js'
@@ -9,6 +9,7 @@ import { SpandukData } from '../SpandukData.jsx'
 
 const MENU = [
   { ke: '/', teks: teks.navigasi.beranda, ikon: House, akhir: true },
+  { ke: '/daftar', teks: teks.navigasi.daftar, ikon: List },
   { ke: '/kotak-masuk', teks: teks.navigasi.kotakMasuk, ikon: Bell, lencana: true },
   { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound },
 ]
@@ -53,7 +54,7 @@ export default function Kerangka({ children, spanduk = null }) {
                   to={ke}
                   end={akhir}
                   className={({ isActive }) =>
-                    `flex min-h-16 flex-col items-center justify-center gap-1 text-base font-semibold ${
+                    `flex min-h-16 flex-col items-center justify-center gap-1 break-words px-1 text-center text-sm font-semibold leading-tight ${
                       isActive ? 'underline decoration-4 underline-offset-4' : ''
                     }`
                   }
