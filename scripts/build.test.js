@@ -40,6 +40,8 @@ describe('build produksi', () => {
     expect(isi).not.toContain('KLIEN-CONTOH-FIKTIF')
     expect(isi).not.toContain('Bu Contoh')
     expect(isi).not.toContain('MODE CONTOH')
+    // Keluarga fiktif mode contoh (keluargaFiktif.js) juga tidak ikut.
+    for (const nama of ['Raksa', 'Selara', 'Lorvan', 'Tamran']) expect(isi).not.toContain(nama)
   }, 60000)
 
   it('memakai VITE_BASE_PATH sebagai alamat dasar di satu tempat', () => {

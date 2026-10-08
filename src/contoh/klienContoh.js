@@ -14,7 +14,15 @@
 //   kode UTAMA234       masuk sebagai admin utama: layar admin terkunci sampai
 //                       verifikasi dua langkah. Authenticator di sini TIRUAN:
 //                       kode yang diterima hanya 123456.
+//
+// Silsilah contoh: keluarga fiktif dari src/lib/silsilah/keluargaFiktif.js
+// (pohon keluarga asal "T1" hanya terlihat oleh admin utama).
+// Mencoba offline: setelah masuk dan data termuat, matikan internet (atau
+// DevTools → Network → Offline), lalu muat ulang halaman: aplikasi dibuka
+// dari salinan di perangkat. Klien contoh menjawab seperti jaringan putus
+// selama browser offline.
 import { BENTUK_KODE, BENTUK_TOKEN, rapikanKode } from '../../supabase/functions/_shared/rahasia.js'
+import { bangunKeluargaFiktif } from '../lib/silsilah/keluargaFiktif.js'
 import { bacaTersimpan, tulisTersimpan } from '../lib/penyimpanan.js'
 
 export const PENANDA_KLIEN_CONTOH = 'KLIEN-CONTOH-FIKTIF'
@@ -81,6 +89,12 @@ const awal = (sekarang) => ({
   faktor: [],
 })
 
+// Jawaban seperti saat jaringan putus (supabase-js tidak melempar, tetapi
+// mengembalikan galat).
+const offline = () => typeof navigator !== 'undefined' && navigator.onLine === false
+const putus = { data: null, error: { message: 'TypeError: Failed to fetch', code: '' }, count: null }
+const putusFungsi = { data: null, error: Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError' }) }
+
 // jeda: tundaan tiap panggilan (ms), supaya terasa seperti server sungguhan.
 export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
   let k
@@ -100,31 +114,45 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
   const perangkatIni = () => k.devices.find((d) => d.session_id === k.idSesi)
   const tunggu = (data) => new Promise((r) => setTimeout(() => r(data), jeda))
 
+  const silsilah = bangunKeluargaFiktif()
+  // Seperti RLS: pohon keluarga asal hanya untuk admin utama.
+  const bolehLihat = (r) => (r.tree_id ?? null) === null || saya().is_owner
   const tabel = (nama) => {
     // Pemberitahuan contoh hanya untuk pengurus (seperti admin sungguhan).
     const sumber = () => ({
       members: SEMUA,
       devices: k.devices,
       notifications: pengurus() || saya().is_owner ? k.notifications : [],
-      settings: [{ temp_access_max_minutes: 1440 }],
+      settings: [{ temp_access_max_minutes: 1440, root_union_id: silsilah.root_union_id, generation_terms: null }],
+      people: silsilah.people.filter(bolehLihat),
+      unions: silsilah.unions.filter(bolehLihat),
+      children: silsilah.children.filter(bolehLihat),
+      birth_ranks: silsilah.birth_ranks.filter(bolehLihat),
+      origin_trees: saya().is_owner ? silsilah.origin_trees : [],
     })[nama] ?? []
     const saringan = []
     let pembaruan = null
+    let dari = 0
+    let batas = Infinity
+    let hitung = false
     const b = {
-      select: () => b,
+      select: (_kolom, o) => { hitung = o?.count === 'exact'; return b },
       update: (isi) => { pembaruan = isi; return b },
       eq: (kol, nilai) => { saringan.push((r) => r[kol] === nilai); return b },
       is: (kol, nilai) => { saringan.push((r) => (r[kol] ?? null) === nilai); return b },
       order: () => b,
-      limit: () => b,
+      limit: (n) => { batas = n; return b },
+      range: (a, z) => { dari = a; batas = z - a + 1; return b },
       then: (selesai, gagal) => {
+        if (offline()) return tunggu(putus).then(selesai, gagal)
         const cocok = sumber().filter((r) => saringan.every((f) => f(r)))
         if (pembaruan) {
           cocok.forEach((r) => Object.assign(r, pembaruan))
           simpan()
           return tunggu(ok(null)).then(selesai, gagal)
         }
-        return tunggu(ok(structuredClone(cocok))).then(selesai, gagal)
+        const hasil = { ...ok(structuredClone(cocok.slice(dari, dari + batas))), count: hitung ? cocok.length : null }
+        return tunggu(hasil).then(selesai, gagal)
       },
     }
     return b
@@ -312,17 +340,27 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
     },
     functions: {
       async invoke(nama, { body } = {}) {
+        if (offline()) return tunggu(putusFungsi)
         const h = await tunggu(await fungsi[nama](body ?? {}))
         simpan()
         return h
       },
     },
     async rpc(nama, args) {
+      if (offline()) return tunggu(putus)
       const h = await tunggu(await (rpc[nama] ?? (async () => galat('PGRST202', 'tidak ada')))(args ?? {}))
       simpan()
       return h
     },
     from: tabel,
+    // Realtime tiruan: tersambung, tetapi data contoh tidak pernah berubah sendiri.
+    channel(nama) {
+      const s = { nama }
+      s.on = () => s
+      s.subscribe = (fn) => { setTimeout(() => fn?.('SUBSCRIBED'), jeda); return s }
+      return s
+    },
+    async removeChannel() { return 'ok' },
   }
   return klien
 }

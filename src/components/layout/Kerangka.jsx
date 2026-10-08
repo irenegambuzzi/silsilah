@@ -5,6 +5,7 @@ import { useSesi } from '../../lib/konteksSesi.js'
 import { useBelumDibaca } from '../../lib/useBelumDibaca.js'
 import { isiTeks, teks } from '../../teks/id.js'
 import { BannerAksesSementara } from '../BannerAksesSementara.jsx'
+import { SpandukData } from '../SpandukData.jsx'
 
 const MENU = [
   { ke: '/', teks: teks.navigasi.beranda, ikon: House, akhir: true },
@@ -17,8 +18,8 @@ const MENU = [
 export default function Kerangka({ children, spanduk = null }) {
   const { status, klien, berakhir } = useSesi()
   const isi = useRef(null)
-  const masuk = status === 'masuk'
-  const belumDibaca = useBelumDibaca(klien, masuk)
+  const masuk = status === 'masuk' || status === 'offline'
+  const belumDibaca = useBelumDibaca(klien, status === 'masuk')
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -30,7 +31,8 @@ export default function Kerangka({ children, spanduk = null }) {
         {teks.navigasi.lewatiKeIsi}
       </button>
       {spanduk}
-      {masuk && berakhir && <BannerAksesSementara berakhir={berakhir} />}
+      {status === 'masuk' && berakhir && <BannerAksesSementara berakhir={berakhir} />}
+      {masuk && <SpandukData />}
       <main
         id="isi"
         ref={isi}

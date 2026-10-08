@@ -33,6 +33,8 @@ perintah itu, buka alamat yang tampil di Terminal):
 | kode `PENGURUS` | masuk sebagai asisten admin: Kotak masuk berisi contoh pemberitahuan, dan menu Saya → "Beri akses sementara" (pilih "Bu Contoh", buat kode, lalu pakai kode itu di jendela lain) |
 | kode `UTAMA234` | masuk sebagai admin utama: layar admin (Saya → "Beri akses sementara") terkunci sampai verifikasi dua langkah. Authenticator di mode contoh **tiruan**: kode yang diterima hanya `123456` (kunci/QR yang tampil bukan kunci sungguhan) |
 | `/#/privasi` | halaman Privasi |
+| Beranda setelah masuk | jumlah orang di silsilah contoh (keluarga fiktif): tanda data silsilah sudah termuat |
+| offline | setelah data termuat, matikan internet (atau DevTools → Network → Offline) lalu muat ulang halaman: aplikasi terbuka dari salinan di perangkat, dengan spanduk "Anda sedang offline". Nyalakan lagi internet: spanduk hilang. Dengan kode `AKSES234` tidak ada salinan (perangkat pinjaman) |
 
 ## Menyambungkan ke database
 

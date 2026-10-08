@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Route, Routes, Link } from 'react-router-dom'
 import KhususAdmin from './components/KhususAdmin.jsx'
 import Kerangka from './components/layout/Kerangka.jsx'
+import { DataSilsilahProvider } from './lib/data/DataSilsilah.jsx'
 import { modeContohAktif } from './lib/modeContoh'
 import { useSesi } from './lib/konteksSesi.js'
 import { SesiProvider } from './lib/sesi.jsx'
@@ -38,7 +39,8 @@ function TidakDitemukan() {
 }
 
 // Layar yang butuh login. Belum masuk → layar Masuk; sedang memeriksa atau
-// gagal memeriksa → layar keadaan (tanpa data apa pun).
+// gagal memeriksa → layar keadaan (tanpa data apa pun). Offline dengan
+// salinan di perangkat → layar dibuka untuk membaca.
 function Terlindungi({ children }) {
   const { status, galat, coba } = useSesi()
   if (status === 'memuat') return <KeadaanMemuat />
@@ -54,7 +56,7 @@ function Terlindungi({ children }) {
 function Tamu({ children }) {
   const { status } = useSesi()
   if (status === 'memuat') return <KeadaanMemuat />
-  if (status === 'masuk') return <Navigate to="/" replace />
+  if (status === 'masuk' || status === 'offline') return <Navigate to="/" replace />
   return children
 }
 
@@ -66,6 +68,7 @@ export default function App({ Router = HashRouter, klien }) {
   return (
     <Router>
       <SesiProvider {...(klien !== undefined ? { klien } : {})}>
+        <DataSilsilahProvider>
         <Kerangka
           spanduk={
             modeContohAktif && (
@@ -94,6 +97,7 @@ export default function App({ Router = HashRouter, klien }) {
           </Routes>
           </Suspense>
         </Kerangka>
+        </DataSilsilahProvider>
       </SesiProvider>
     </Router>
   )

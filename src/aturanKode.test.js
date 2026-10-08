@@ -51,6 +51,22 @@ describe('kode aplikasi (src/)', () => {
     expect(isi).toContain('detectSessionInUrl: false')
   })
 
+  it('lapisan data silsilah hanya MEMBACA: tanpa insert, upsert, update, delete, rpc, atau Edge Function', () => {
+    const data = semua.filter(([f]) => f.startsWith(path.join('lib', 'data') + path.sep))
+    expect(data.map(([f]) => path.basename(f)).sort()).toEqual(
+      ['DataSilsilah.jsx', 'kolom.js', 'konteksData.js', 'muat.js', 'perubahan.js', 'realtime.js', 'salinan.js'])
+    for (const [f, isi] of data) {
+      expect(kode(isi), f).not.toMatch(/\.(insert|upsert|update|delete)\s*\(|\.rpc\s*\(|functions\s*\.\s*invoke/)
+    }
+  })
+
+  it('layar keterangan (galat, kosong, offline) tidak memanggil server', () => {
+    for (const f of [path.join('pages', 'Keadaan.jsx'), path.join('components', 'GerbangData.jsx'), path.join('components', 'SpandukData.jsx')]) {
+      const isi = semua.find(([nama]) => nama === f)[1]
+      expect(kode(isi), f).not.toMatch(/klien|\.from\s*\(|\.rpc\s*\(|from '\.\.\/lib\/api\.js'/)
+    }
+  })
+
   it('tidak ada kunci rahasia di kode aplikasi (hanya publishable key dari variabel build)', () => {
     for (const [f, isi] of semua) {
       expect(isi, f).not.toMatch(/sb_secret_|service_role|KUNCI_SERVER/)

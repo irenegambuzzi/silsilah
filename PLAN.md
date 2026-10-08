@@ -777,6 +777,7 @@ Klien tidak bisa menulis atau mengubah riwayat. Ada dua pengecualian:
 - Peringatan "Data ini baru saja diubah oleh Ratna 3 menit lalu" muncul saat membuka form. Banner muncul kalau ada perubahan saat sedang mengedit.
 - Saat menyimpan, aplikasi hanya mengirim kolom yang diubah, dengan syarat `version` masih sama. Kalau berbeda, dilakukan merge per kolom: kolom yang bentrok ditampilkan "Versi Anda" berdampingan dengan "Versi Ratna" untuk dipilih.
 - Tidak ada penulisan saat offline.
+- **Ditetapkan di langkah 1.20:** semua data silsilah dimuat per halaman (batas 1.000 baris per permintaan di Supabase), hanya dengan kolom yang terdaftar di `src/lib/data/kolom.js`. Realtime menghormati RLS, sehingga baris yang dibuang ke tempat sampah tidak pernah "terkirim" ke anggota biasa; karena itu SQL 014 menambah tabel penanda `sync_removals` (hanya nama tabel + id, tanpa isi, dihapus sendiri setelah 1 hari). Data diambil ulang saat sambungan live pulih, saat internet tersambung lagi, dan saat aplikasi dibuka kembali setelah lebih dari 1 menit. Perubahan akses pohon keluarga asal baru terlihat setelah data diambil ulang.
 
 ### 8.6 Deteksi aktivitas tidak wajar
 
@@ -1068,6 +1069,7 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 - `lang="id"`, label ARIA, fokus terlihat, dan menghormati `prefers-reduced-motion`.
 - **PWA**: bisa dipasang dengan ikon generik "Silsilah Keluarga". Ada banner versi baru.
 - **Data offline**: data terakhir (silsilah, kabar, jadwal) disimpan di perangkat untuk dibaca saat offline.
+  - **Ditetapkan di langkah 1.20:** salinan disimpan di IndexedDB `silsilah` (hanya kolom yang terdaftar, ditambah nama/peran/izin anggota dan akun loginnya). Kalau server tidak terjangkau saat aplikasi dibuka, aplikasi terbuka **hanya untuk membaca** salinan milik akun yang sama, dengan spanduk "Anda sedang offline". **Perangkat dengan akses sementara tidak menyimpan salinan sama sekali.** Kalau server menolak (bukan soal koneksi), salinan tidak dipakai.
   - **Data kontak dan lokasi anggota tidak pernah disimpan offline.**
   - Semua data offline dihapus saat keluar, saat akses sementara habis, dan saat perangkat dicabut.
 - **noindex**: `<meta name="robots" content="noindex, nofollow">`. Judul dan pratinjau WhatsApp generik, tanpa nama.
@@ -1143,7 +1145,7 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 2 | 1.16 | Opus 5.5 · high | – (selesai) |
 | ✅ 3 | 1.17 + 1.18 | Sonnet 5.5 · high | – (selesai) |
 | ✅ 4 | 1.19 | Opus 5.5 · high | – (selesai) |
-| 5 | 1.20 | Opus 5.5 · high | – |
+| ✅ 5 | 1.20 | Opus 5.5 · high | – (selesai) |
 | 6 | 1.21 + 1.22 | Sonnet 5.5 · high | opsional: lihat lewat mode contoh |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
@@ -1193,7 +1195,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 | 1.17 | Layar Masuk, Undangan/Kode, Selamat datang, Tambah perangkat (QR), Perangkat saya, Keluar (hapus data lokal), **halaman Privasi** | Manual: Android, iPhone (Safari + layar utama), laptop. Halaman Privasi bisa dibuka tanpa login dan tidak memuat data. |
 | 1.18 | Akses sementara + hitung mundur + hapus data otomatis + notifikasi admin (kotak masuk) | Manual: akses 30 menit habis → keluar dan data terhapus; RLS menolak. |
 | 1.19 | Verifikasi dua langkah admin (TOTP; passkey kalau tersedia) | Admin tanpa `aal2` tidak bisa membuka fungsi admin. |
-| 1.20 | Lapisan data: muat semua, Realtime, cache offline tanpa kontak, layar error, **tanpa penulisan otomatis** | Tes: Supabase gagal → tidak ada panggilan insert/update. |
+| 1.20 | Lapisan data: muat semua, Realtime, cache offline tanpa kontak, layar error, **tanpa penulisan otomatis** (+ SQL 014: Realtime dan penanda tempat sampah) | Tes: Supabase gagal → tidak ada panggilan insert/update. |
 | 1.21 | Layar Daftar + Detail (termasuk kedua jalur untuk pasangan sepupu) | Tes komponen dengan data fiktif. |
 | 1.22 | Bagan kartu dasar (istilah Jawa, GEN, keterangan anak ke-n) | Dicek dengan data fiktif yang rumit. |
 | 1.23 | Form orang/pernikahan/anak + `version` + merge + peringatan "baru saja diubah" | Dua browser. |

@@ -5,8 +5,15 @@
 //   belumDisiapkan  alamat/kunci database belum diisi (tidak ada klien)
 //   tamu            belum masuk
 //   masuk           sudah masuk, perangkat terdaftar dan sah
+//   offline         tidak bisa memeriksa ke server (tanpa internet, server
+//                   dijeda), tetapi perangkat ini menyimpan salinan data milik
+//                   akun yang sama: aplikasi dibuka HANYA UNTUK MEMBACA salinan
+//                   itu (lihat lib/data/), dan mencoba lagi saat internet
+//                   tersambung atau aplikasi kembali dibuka
 //   galat           tidak bisa memeriksa (jaringan, server dijeda, database
 //                   belum diperbarui); `galat` berisi hasil petakanGalat()
+//
+// `akun`: id akun login (Supabase Auth) di perangkat ini, atau null.
 //
 // `berakhir`: waktu (ISO) akses sementara di perangkat ini berakhir, atau
 // null untuk akses biasa. Saat waktunya habis aplikasi keluar sendiri dan
@@ -26,6 +33,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { petakanGalat } from './galat.js'
 import { bacaAnggotaSaya, bacaVersiDatabase, cekPerangkat, jalankanMasuk, keluarDariPerangkat, statusDuaLangkah } from './api.js'
 import { Konteks } from './konteksSesi.js'
+import { GALAT_PAKAI_SALINAN, bacaSalinanUntuk } from './data/salinan.js'
 import { bacaAksesBerakhir, hapusDataLokal, simpanAksesBerakhir } from './penyimpanan.js'
 import { klienBawaan } from './supabase.js'
 import { tafsirkanVersiDatabase } from './versiDatabase.js'
@@ -48,6 +56,7 @@ async function bacaDuaLangkah(klien, anggota) {
 export function SesiProvider({ klien = klienBawaan, children }) {
   const [keadaan, setKeadaan] = useState({
     status: klien ? 'memuat' : 'belumDisiapkan',
+    akun: null,
     anggota: null,
     duaLangkah: null,
     berakhir: null,
@@ -71,20 +80,34 @@ export function SesiProvider({ klien = klienBawaan, children }) {
         // Sesi lokal dihapus supabase-js walaupun server tidak terjangkau.
       }
       await hapusDataLokal()
-      setKeadaan({ status: 'tamu', anggota: null, duaLangkah: null, berakhir: null, galat: null, alasanKeluar: alasan })
+      setKeadaan({ status: 'tamu', akun: null, anggota: null, duaLangkah: null, berakhir: null, galat: null, alasanKeluar: alasan })
       sedangKeluar.current = false
     },
     [klien]
   )
 
+  // Server tidak bisa ditanya. Kalau hanya karena tidak terjangkau dan
+  // perangkat ini punya salinan milik akun yang sama → offline (hanya
+  // membaca). Selain itu layar keterangan.
+  const gagal = useCallback(async (galat, akun) => {
+    const salinan = akun && GALAT_PAKAI_SALINAN.has(galat.jenis) ? await bacaSalinanUntuk(akun) : null
+    if (salinan) {
+      setKeadaan((s) => ({ ...s, status: 'offline', akun, anggota: salinan.anggota, duaLangkah: null, berakhir: null, galat }))
+    } else {
+      setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, duaLangkah: null, galat }))
+    }
+  }, [])
+
   const muat = useCallback(async () => {
     if (!klien) return
+    let akun = null
     try {
       const { data } = await klien.auth.getSession()
       if (!data?.session) {
-        setKeadaan((s) => ({ ...s, status: 'tamu', anggota: null, duaLangkah: null, berakhir: null, galat: null }))
+        setKeadaan((s) => ({ ...s, status: 'tamu', akun: null, anggota: null, duaLangkah: null, berakhir: null, galat: null }))
         return
       }
+      akun = data.session.user?.id ?? null
       const cek = await cekPerangkat(klien)
       terakhirPeriksa.current = Date.now()
       if (cek.status === 'dicabut') return await akhiri('dicabut')
@@ -92,21 +115,18 @@ export function SesiProvider({ klien = klienBawaan, children }) {
       if (cek.status !== 'ok') return await akhiri(null)
 
       const versi = tafsirkanVersiDatabase(await bacaVersiDatabase(klien), { online: online() })
-      if (!versi.siap) {
-        setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, duaLangkah: null, galat: versi }))
-        return
-      }
+      if (!versi.siap) return await gagal(versi, akun)
       const anggota = await bacaAnggotaSaya(klien)
       const duaLangkah = await bacaDuaLangkah(klien, anggota)
       const berakhir = cek.berakhir ?? null
       simpanAksesBerakhir(berakhir)
-      setKeadaan((s) => ({ ...s, status: 'masuk', anggota, duaLangkah, berakhir, galat: null }))
+      setKeadaan((s) => ({ ...s, status: 'masuk', akun, anggota, duaLangkah, berakhir, galat: null }))
     } catch (e) {
       const galat = petakanGalat(e, { online: online() })
       if (galat.jenis === 'sesiHabis') return await akhiri('sesi')
-      setKeadaan((s) => ({ ...s, status: 'galat', anggota: null, duaLangkah: null, galat }))
+      await gagal(galat, akun)
     }
-  }, [klien, akhiri])
+  }, [klien, akhiri, gagal])
 
   const coba = useCallback(() => {
     setKeadaan((s) => ({ ...s, status: 'memuat', galat: null }))
@@ -218,6 +238,19 @@ export function SesiProvider({ klien = klienBawaan, children }) {
       document.removeEventListener('visibilitychange', saatTampak)
     }
   }, [status, berakhir, klien])
+
+  // Offline: coba lagi saat internet tersambung atau aplikasi kembali terlihat.
+  useEffect(() => {
+    if (status !== 'offline' || !klien) return undefined
+    const coba = () => muatRef.current()
+    const saatTampak = () => document.visibilityState === 'visible' && coba()
+    window.addEventListener('online', coba)
+    document.addEventListener('visibilitychange', saatTampak)
+    return () => {
+      window.removeEventListener('online', coba)
+      document.removeEventListener('visibilitychange', saatTampak)
+    }
+  }, [status, klien])
 
   const nilai = useMemo(
     () => ({ ...keadaan, klien, masuk, keluar, akhiri, coba, muat, perbaruiDuaLangkah }),

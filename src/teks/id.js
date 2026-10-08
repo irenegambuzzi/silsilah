@@ -278,7 +278,17 @@ export const teks = {
   beranda: {
     judul: 'Beranda',
     sapa: 'Halo, {nama}',
-    isi: 'Silsilah keluarga sedang disiapkan untuk ditampilkan di sini. Sementara itu, Anda bisa mengatur tampilan dan perangkat di menu Saya.',
+    ringkasan: 'Data silsilah sudah termuat: {n} orang di silsilah utama.',
+    isi: 'Daftar dan bagan silsilah sedang disiapkan untuk ditampilkan di sini. Sementara itu, Anda bisa mengatur tampilan dan perangkat di menu Saya.',
+  },
+
+  // Keterangan data silsilah (lib/data/): salinan offline dan pembaruan.
+  data: {
+    offline: 'Anda sedang offline. Yang tampil adalah data tersimpan di perangkat ini dari {waktu}.',
+    salinan: 'Server belum bisa dihubungi. Yang tampil adalah data tersimpan di perangkat ini dari {waktu}.',
+    salinanTanpaWaktu: 'Server belum bisa dihubungi. Yang tampil adalah data tersimpan di perangkat ini.',
+    gagalPerbarui: 'Data belum bisa diperbarui. Yang tampil mungkin bukan data terbaru.',
+    hanyaMembaca: 'Untuk sementara data hanya bisa dibaca.',
   },
 
   // Layar Saya / Pengaturan (layar 20).
@@ -479,7 +489,7 @@ export const teks = {
       },
       {
         judul: 'Di perangkat Anda',
-        isi: 'Aplikasi menyimpan tanda masuk Anda dan pilihan tampilan di perangkat. Saat Anda keluar, saat akses sementara habis, atau saat perangkat dicabut admin, semua data aplikasi di perangkat itu dihapus. Pilihan tampilan (ukuran huruf dan kontras) tetap ada karena bukan data keluarga.',
+        isi: 'Aplikasi menyimpan tanda masuk Anda, pilihan tampilan, dan salinan data silsilah terakhir di perangkat, supaya silsilah tetap bisa dibaca saat tidak ada internet. Data kontak (alamat dan nomor HP) tidak pernah disimpan di perangkat. Perangkat dengan akses sementara tidak menyimpan salinan. Saat Anda keluar, saat akses sementara habis, atau saat perangkat dicabut admin, semua data aplikasi di perangkat itu dihapus. Pilihan tampilan (ukuran huruf dan kontras) tetap ada karena bukan data keluarga.',
       },
       {
         judul: 'Akses sementara',
