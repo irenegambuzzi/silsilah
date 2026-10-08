@@ -190,7 +190,13 @@ export function SesiProvider({ klien = klienBawaan, children }) {
     if (status !== 'masuk' || !klien) return undefined
     const tujuan = berakhir ? Date.parse(berakhir) : null
     const habis = () => tujuan != null && Date.now() >= tujuan
-    const id = tujuan == null ? null : setTimeout(() => habis() && akhiriRef.current('berakhir'), Math.max(0, tujuan - Date.now()))
+    // Pengatur waktu bisa berbunyi sedikit lebih awal daripada jam; kalau
+    // belum habis, dijadwalkan lagi untuk sisanya.
+    let id = null
+    const tunggu = () => {
+      id = setTimeout(() => (habis() ? akhiriRef.current('berakhir') : tunggu()), Math.max(0, tujuan - Date.now()))
+    }
+    if (tujuan != null) tunggu()
 
     const saatTampak = async () => {
       if (document.visibilityState !== 'visible') return

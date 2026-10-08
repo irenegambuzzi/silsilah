@@ -14,7 +14,6 @@ afterEach(() => {
 })
 
 const menitLagi = (m) => new Date(Date.now() + m * 60000).toISOString()
-const detikLagi = (d) => new Date(Date.now() + d * 1000).toISOString()
 const jamTeks = (iso) => {
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, '0')}.${String(d.getMinutes()).padStart(2, '0')}`
@@ -25,6 +24,23 @@ const klienSementara = (berakhir, tambahan = {}) =>
     ...tambahan,
   })
 const lihatTampak = () => act(async () => { document.dispatchEvent(new Event('visibilitychange')) })
+// Pendengar "kembali terlihat" dipasang oleh efek React, yang saat komputer
+// sibuk bisa sedikit tertinggal dari teks di layar. Karena itu peristiwanya
+// dikirim berulang sampai harapan terpenuhi.
+const tampakSampai = (harapan) =>
+  waitFor(async () => {
+    await lihatTampak()
+    harapan()
+  }, { timeout: 4000 })
+// Jam perangkat dimajukan (hanya Date; pengatur waktu tetap asli).
+const geserJam = (menit) => {
+  if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(Date.now() + menit * 60000)
+}
+// Jam DAN pengatur waktu tiruan (tetap berjalan sendiri), supaya "tepat
+// waktunya" tidak bergantung pada kecepatan komputer saat tes.
+const pakaiJamTiruan = () => vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'], shouldAdvanceTime: true })
+const majukan = (ms) => act(async () => { await vi.advanceTimersByTimeAsync(ms) })
 
 describe('spanduk hitung mundur', () => {
   it('menampilkan pukul berapa akses berakhir dan sisa waktunya, dengan peran timer', async () => {
@@ -66,12 +82,18 @@ describe('spanduk hitung mundur', () => {
 
 describe('waktu habis saat aplikasi terbuka', () => {
   it('keluar sendiri tepat waktunya: data aplikasi dihapus, sesi diakhiri, pesan di layar Masuk', async () => {
+    pakaiJamTiruan()
     localStorage.setItem('silsilah-salinan-contoh', 'data keluarga fiktif')
     localStorage.setItem('proyek-lain', 'tidak boleh hilang')
-    const klien = klienSementara(detikLagi(1.3))
+    const berakhir = menitLagi(10)
+    const klien = klienSementara(berakhir)
     pasang('/', klien)
     await screen.findByText('Halo, Bu Contoh')
-    expect(await screen.findByText('Akses sementara Anda sudah berakhir. Data di perangkat ini sudah dihapus.', {}, { timeout: 4000 })).toBeTruthy()
+    await majukan(Date.parse(berakhir) - Date.now() - 1000)
+    expect(screen.getByText('Halo, Bu Contoh')).toBeTruthy()
+    expect(localStorage.getItem('silsilah-salinan-contoh')).toBe('data keluarga fiktif')
+    await majukan(1000)
+    expect(await screen.findByText('Akses sementara Anda sudah berakhir. Data di perangkat ini sudah dihapus.')).toBeTruthy()
     expect(screen.queryByText('Halo, Bu Contoh')).toBeNull()
     expect(lokasiSaatIni.pathname).toBe('/masuk')
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBeNull()
@@ -80,16 +102,27 @@ describe('waktu habis saat aplikasi terbuka', () => {
     expect(klien.panggilanKe('auth', 'signOut')).toHaveLength(1)
   })
 
+  it('pengatur waktu berbunyi sedikit lebih awal daripada jam → dijadwalkan lagi dan tetap keluar begitu waktunya habis', async () => {
+    pakaiJamTiruan()
+    const berakhir = menitLagi(10)
+    pasang('/', klienSementara(berakhir))
+    await screen.findByText('Halo, Bu Contoh')
+    const sisa = Date.parse(berakhir) - Date.now()
+    // Jam perangkat tertinggal 5 ms dari pengatur waktu.
+    vi.setSystemTime(Date.now() - 5)
+    await majukan(sisa)
+    await majukan(10)
+    expect(await screen.findByText(/Akses sementara Anda sudah berakhir/)).toBeTruthy()
+  })
+
   it('aplikasi kembali terlihat setelah waktu lewat (pengatur waktu tertunda di latar) → langsung keluar tanpa menunggu server', async () => {
     localStorage.setItem('silsilah-salinan-contoh', 'data')
     const klien = klienSementara(menitLagi(10))
     pasang('/', klien)
     await screen.findByText('Halo, Bu Contoh')
     const panggilanSebelum = klien.panggilanKe('fungsi', 'cek-perangkat').length
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(Date.now() + 11 * 60000)
-    await lihatTampak()
-    expect(await screen.findByText(/Akses sementara Anda sudah berakhir/)).toBeTruthy()
+    geserJam(11)
+    await tampakSampai(() => expect(screen.getByText(/Akses sementara Anda sudah berakhir/)).toBeTruthy())
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBeNull()
     expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(panggilanSebelum)
   })
@@ -125,12 +158,6 @@ describe('aplikasi dibuka kembali', () => {
 })
 
 describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
-  const kembaliSetelah = async (menit) => {
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(Date.now() + menit * 60000)
-    await lihatTampak()
-  }
-
   it('perangkat dicabut admin selagi aplikasi di latar → dikeluarkan dan data dihapus', async () => {
     localStorage.setItem('silsilah-salinan-contoh', 'data')
     let status = 'ok'
@@ -138,8 +165,8 @@ describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
     pasang('/', klien)
     await screen.findByText('Halo, Bu Contoh')
     status = 'dicabut'
-    await kembaliSetelah(2)
-    expect(await screen.findByText(/Akses perangkat ini sudah dicabut/)).toBeTruthy()
+    geserJam(2)
+    await tampakSampai(() => expect(screen.getByText(/Akses perangkat ini sudah dicabut/)).toBeTruthy())
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBeNull()
   })
 
@@ -148,11 +175,14 @@ describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
     pasang('/', klien)
     await screen.findByText('Halo, Bu Contoh')
     const awal = klien.panggilanKe('fungsi', 'cek-perangkat').length
+    geserJam(2)
+    await tampakSampai(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(awal + 1))
+    // Pendengar sudah pasti terpasang (baru saja bereaksi): kurang dari 1 menit → tidak bertanya lagi.
     await lihatTampak()
     await lihatTampak()
-    expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(awal)
-    await kembaliSetelah(2)
-    await waitFor(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(awal + 1))
+    expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(awal + 1)
+    geserJam(2)
+    await tampakSampai(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(awal + 2))
   })
 
   it('tanpa internet saat kembali terlihat → tetap di tempat, data tidak dihapus', async () => {
@@ -165,8 +195,8 @@ describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
     pasang('/', klien)
     await screen.findByText('Halo, Bu Contoh')
     putus = true
-    await kembaliSetelah(2)
-    await waitFor(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(2))
+    geserJam(2)
+    await tampakSampai(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(2))
     expect(screen.getByText('Halo, Bu Contoh')).toBeTruthy()
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBe('data')
   })
