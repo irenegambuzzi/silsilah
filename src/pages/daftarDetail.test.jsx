@@ -110,6 +110,12 @@ describe('Keterangan orang (halaman sendiri)', () => {
     expect(bagian('Informasi Anggota').textContent).toContain('Pasangan: Tidak ada')
   })
 
+  it.each([['bayu', 'Bayu'], ['sekar', 'Almh. Sekar']])('anak di bawah umur atau wafat semasa kecil (%s): tanpa baris "Pasangan"', async (id, nama) => {
+    pasang(`/orang/${id}`, klienKeluarga())
+    await screen.findByRole('heading', { name: nama, level: 1 })
+    expect(bagian('Informasi Anggota').textContent).not.toMatch(/Pasangan/)
+  })
+
   it('orang yang tidak ada atau dari pohon keluarga asal → keterangan, bukan galat', async () => {
     pasang('/orang/tidak-ada', klienKeluarga())
     expect(await screen.findByText('Orang ini tidak ditemukan di silsilah.')).toBeTruthy()

@@ -99,7 +99,9 @@ export function keteranganDaftar(s, id) {
 //                   waktu ("Menikah tahun 1970, bercerai tahun 1976") }]
 //   lahir, wafat "Kota, 12 Maret 1950"
 //   anak         [{ id, nama }] urut lahir, lintas semua pernikahan
-export function labelDetail(s, id) {
+//   masihAnak    belum 18 tahun, atau wafat sebelum 18 tahun: baris
+//                "Pasangan: Tidak ada" tidak perlu ditampilkan
+export function labelDetail(s, id, { tahunIni = new Date().getFullYear() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const gen = s.gen.get(id) ?? null
@@ -190,5 +192,6 @@ export function labelDetail(s, id) {
     anak: anakId.map((c) => ({ id: c, nama: nama(c) })),
     pekerjaan: orang.occupation ?? null,
     catatan: orang.notes ?? null,
+    masihAnak: orang.birth_y != null && (orang.is_deceased ? orang.death_y ?? orang.birth_y : tahunIni) - orang.birth_y < 18,
   }
 }

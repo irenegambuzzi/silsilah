@@ -81,22 +81,24 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
               {d.lewat && <span className="block text-base text-redup">{d.lewat}</span>}
             </Baris>
           )}
-          <Baris nama={T.pasangan}>
-            {d.pasangan.length === 0 ? (
-              T.tidakAda
-            ) : (
-              <ul className={d.pasangan.length > 1 ? 'mt-1 flex flex-col gap-1.5' : 'inline'}>
-                {d.pasangan.map((p, i) => (
-                  <li key={p.id ?? `?${i}`} className={d.pasangan.length > 1 ? '' : 'inline'}>
-                    {p.ke && `${p.ke}: `}
-                    {p.id ? <NamaOrang id={p.id} nama={p.nama} saatPilih={saatPilih} /> : T.pasanganTidakDiketahui}
-                    {p.cerai && ` (${T.bercerai})`}
-                    {p.waktu && <span className="block text-base text-redup">{p.waktu}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Baris>
+          {(d.pasangan.length > 0 || !d.masihAnak) && (
+            <Baris nama={T.pasangan}>
+              {d.pasangan.length === 0 ? (
+                T.tidakAda
+              ) : (
+                <ul className={d.pasangan.length > 1 ? 'mt-1 flex flex-col gap-1.5' : 'inline'}>
+                  {d.pasangan.map((p, i) => (
+                    <li key={p.id ?? `?${i}`} className={d.pasangan.length > 1 ? '' : 'inline'}>
+                      {p.ke && `${p.ke}: `}
+                      {p.id ? <NamaOrang id={p.id} nama={p.nama} saatPilih={saatPilih} /> : T.pasanganTidakDiketahui}
+                      {p.cerai && ` (${T.bercerai})`}
+                      {p.waktu && <span className="block text-base text-redup">{p.waktu}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Baris>
+          )}
           <Baris nama={T.nomor}>{d.nomor}</Baris>
         </dl>
       </Bagian>

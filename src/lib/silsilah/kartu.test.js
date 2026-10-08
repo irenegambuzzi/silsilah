@@ -179,6 +179,13 @@ describe('kartu pasangan', () => {
 })
 
 describe('keterangan orang (panel, format aplikasi lama)', () => {
+  it('masihAnak: di bawah 18 tahun, atau wafat sebelum 18 tahun', () => {
+    expect(labelDetail(s, 'bayu', { tahunIni: 2026 }).masihAnak).toBe(true)
+    expect(labelDetail(s, 'bayu', { tahunIni: 2031 }).masihAnak).toBe(false)
+    expect(labelDetail(s, 'sekar', { tahunIni: 2026 }).masihAnak).toBe(true)
+    expect(labelDetail(s, 'tirwan', { tahunIni: 2026 }).masihAnak).toBe(false)
+  })
+
   it('subjudul: istilah Jawa dulu, lalu generasi; pangkal; pasangan', () => {
     expect(labelDetail(s, 'tamran').subjudul).toBe('Putu · Generasi ke-2')
     expect(labelDetail(s, 'bima').subjudul).toBe('Anak · Generasi ke-1')
