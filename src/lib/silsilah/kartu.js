@@ -56,14 +56,18 @@ export function keteranganPasangan(s, id) {
 
 // jenis: 'pangkal' (GEN.0) | 'keturunan' | 'pasangan' (bukan keturunan).
 // label: satu label kecil di bawah nama; pojok: "GEN.n" di pojok kartu.
+// Di cabang yang dihitung dari orang tertentu (bagan/cabang.js), orang itu
+// berlabel "Pangkal cabang" dengan GEN.0, tetapi warnanya tetap warna
+// keturunan (emas hanya untuk pasangan pangkal utama).
 // belumDewasa: penanda tunas daun di pojok kartu (di bawah 18 tahun).
 // panggilan hanya untuk pencarian, tidak tampil di kartu.
 export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const gen = s.gen.get(id) ?? null
-  const jenis = gen === null ? 'pasangan' : gen === 0 ? 'pangkal' : 'keturunan'
-  const istilah = gen === null ? null : istilahGenerasi(gen, s.daftarGenerasi)
+  const pangkalCabang = s.pangkalCabang === id
+  const jenis = gen === null ? 'pasangan' : gen === 0 && !pangkalCabang ? 'pangkal' : 'keturunan'
+  const istilah = gen === null ? null : pangkalCabang ? KATA.pangkalCabang : istilahGenerasi(gen, s.daftarGenerasi)
   return {
     id,
     nama: namaTampil(orang),
@@ -154,8 +158,9 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
     }
   }
   const lain = jalur.find((j) => j.gen !== gen)
+  // Di cabang yang dihitung ulang, GEN jalur lain tidak lagi sebanding.
   const lewat =
-    jalur.length > 1 && lain
+    jalur.length > 1 && lain && !s.pangkalCabang
       ? isiTeks(KATA.lewat, { nama: nama(lain.orangTuaId), generasi: teksGenerasi(lain.gen, s.daftarGenerasi) })
       : null
 
@@ -203,7 +208,9 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   const subjudul =
     gen === null
       ? keteranganPasangan(s, id)
-      : gen === 0
+      : s.pangkalCabang === id
+        ? KATA.pangkalCabang
+        : gen === 0
         ? (istilahGenerasi(0, s.daftarGenerasi) ?? teksGenerasi(0, s.daftarGenerasi))
         : teksGenerasi(gen, s.daftarGenerasi)
 

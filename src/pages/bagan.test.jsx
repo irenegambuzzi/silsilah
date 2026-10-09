@@ -307,7 +307,10 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     const semua = semuaKartu().length
     await aksi.click(k('lorvan'))
     await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari pangkal utama' }))
     expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
+    expect(k('kelvan').querySelector('.kartu-gen').textContent).toBe('GEN.2') // tetap dari pangkal utama
+    expect(screen.queryByText(/Generasi dihitung dari/)).toBeNull()
     expect(k('cahya')).toBeNull()
     expect(k('hasna')).toBeNull() // cabang Bima
     expect(k('kelvan')).toBeTruthy()
@@ -329,7 +332,44 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await tunggu()
     await aksi.click(k('sinta'))
     await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari Lorvan' }))
     expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
+  })
+
+  it('"Hitung dari [nama]": orang itu PANGKAL CABANG GEN.0, keturunannya dihitung ulang, dengan pita keterangan', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(k('bima'))
+    await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
+    expect(screen.getByRole('button', { name: 'Hitung dari pangkal utama' })).toBeTruthy()
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari Bima' }))
+    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Pangkal cabang')
+    expect(k('bima').querySelector('.kartu-gen').textContent).toBe('GEN.0')
+    expect(k('mega').querySelector('.kartu-label').textContent).toBe('Anak')
+    expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.1')
+    expect(k('hasna').querySelector('.kartu-label').textContent).toBe('Putu')
+    expect(screen.getByText('Generasi dihitung dari Bima')).toBeTruthy()
+    // Panel ikut dihitung ulang.
+    await aksi.click(k('mega'))
+    expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByText('Anak · Generasi ke-1')).toBeTruthy()
+    // Kembali ke pangkal utama: tetap di cabang yang sama, GEN seperti biasa.
+    await aksi.click(screen.getByRole('button', { name: 'Kembali ke pangkal utama' }))
+    expect(screen.queryByText('Generasi dihitung dari Bima')).toBeNull()
+    expect(screen.getByText('Menampilkan satu cabang: Bima')).toBeTruthy()
+    expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.2')
+    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Anak')
+  })
+
+  it('dibuka langsung dari alamat (?fokus=…&hitung=cabang)', async () => {
+    pasang('/bagan?fokus=kelvan&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Kelvan')).toBeTruthy()
+    expect(k('gendis').querySelector('.kartu-gen').textContent).toBe('GEN.1')
+  })
+
+  it('"hitung=cabang" tanpa fokus diabaikan', async () => {
+    pasang('/bagan?hitung=cabang', klienKeluarga())
+    await tunggu()
+    expect(screen.queryByText(/Generasi dihitung dari/)).toBeNull()
   })
 
   it('dibuka dari Detail ("Lihat di bagan"): kartu itu sudah terpilih', async () => {

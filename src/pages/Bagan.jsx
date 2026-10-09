@@ -9,6 +9,7 @@ import { Tombol } from '../components/ui/Tombol.jsx'
 import { KeteranganOrang } from '../components/orang/KeteranganOrang.jsx'
 import { useDataSilsilah } from '../lib/data/konteksData.js'
 import { susunBagan } from '../lib/bagan/susun.js'
+import { silsilahCabang } from '../lib/bagan/cabang.js'
 import { tataBagan } from '../lib/bagan/tata.js'
 import { useGeserZoom } from '../lib/bagan/useGeserZoom.js'
 import { polos } from '../lib/silsilah/daftar.js'
@@ -113,10 +114,11 @@ function Pencarian({ kartu, saatKetemu }) {
   )
 }
 
-// Bilah atas yang melayang di kiri atas, seperti aplikasi lama.
-function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, ref }) {
+// Bilah atas yang melayang di kiri atas, seperti aplikasi lama. `turun`:
+// ada pita keterangan cabang di atasnya.
+function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, turun, ref }) {
   return (
-    <div ref={ref} className={`absolute left-3 right-3 top-3 z-20 flex flex-col gap-3 p-4 pr-14 sm:right-auto sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
+    <div ref={ref} className={`absolute left-3 right-3 z-20 flex flex-col gap-3 p-4 pr-14 sm:right-auto sm:max-w-[calc(100%-1.5rem)] ${turun ? 'top-16' : 'top-3'} ${BINGKAI}`}>
       <button
         type="button"
         onClick={saatTutup}
@@ -156,12 +158,29 @@ function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, ref }) {
   )
 }
 
+// Pita di atas bagan selama generasi dihitung dari orang yang difokuskan.
+function PitaCabang({ nama, saatKembali }) {
+  return (
+    <div role="status" className="absolute inset-x-0 top-0 z-20 flex min-h-14 flex-wrap items-center justify-center gap-x-2 border-b-2 border-emas bg-kertas px-4 py-1 text-center text-lg font-semibold shadow-lembut">
+      <span>{isiTeks(T.pitaCabang, { nama })}</span>
+      <span aria-hidden="true" className="text-redup">·</span>
+      <button type="button" onClick={saatKembali} className="min-h-12 font-bold text-emas-teks underline underline-offset-2">
+        {T.kembaliKePangkal}
+      </button>
+    </div>
+  )
+}
+
 // Panel keterangan di sisi kanan (di HP: lembar dari bawah), berisi
-// keterangan lengkap dalam format aplikasi lama.
-function PanelOrang({ d, bisaFokus, saatFokus, saatPilih, saatTutup }) {
+// keterangan lengkap dalam format aplikasi lama. "Fokus pada cabang ini"
+// menawarkan dua pilihan: generasi dihitung dari pangkal utama, atau dari
+// orang yang difokuskan (`namaCabang`).
+function PanelOrang({ d, bisaFokus, namaCabang, saatFokus, saatPilih, saatTutup }) {
   const judul = useRef(null)
+  const [pilihHitung, setPilihHitung] = useState(false)
   useEffect(() => {
     judul.current?.focus({ preventScroll: true })
+    setPilihHitung(false)
   }, [d.id])
   return (
     <section
@@ -185,11 +204,22 @@ function PanelOrang({ d, bisaFokus, saatFokus, saatPilih, saatTutup }) {
           </h2>
         }
         aksi={
-          bisaFokus && (
-            <Tombol varian="sekunder" ikon={Network} onClick={saatFokus}>
+          bisaFokus &&
+          (pilihHitung ? (
+            <div role="group" aria-label={T.fokusCabang} className="flex w-full flex-col gap-2">
+              <p className="font-semibold">{T.hitungJudul}</p>
+              <Tombol varian="sekunder" ikon={Network} onClick={() => saatFokus(false)}>
+                {T.hitungUtama}
+              </Tombol>
+              <Tombol varian="sekunder" ikon={Network} onClick={() => saatFokus(true)}>
+                {isiTeks(T.hitungDari, { nama: namaCabang })}
+              </Tombol>
+            </div>
+          ) : (
+            <Tombol varian="sekunder" ikon={Network} onClick={() => setPilihHitung(true)}>
               {T.fokusCabang}
             </Tombol>
-          )
+          ))
         }
       />
     </section>
@@ -207,7 +237,17 @@ function IsiBagan() {
   const legendaRef = useRef(null)
 
   const fokusId = bagan && bagan.simpul.has(params.get('fokus')) ? params.get('fokus') : null
-  const akar = useMemo(() => (bagan ? (fokusId ? bagan.simpul.get(fokusId) : bagan.akar) : null), [bagan, fokusId])
+  // "Hitung dari [nama]": GEN dan istilah Jawa dihitung ulang dari orang itu.
+  const hitungCabang = Boolean(fokusId) && params.get('hitung') === 'cabang'
+  const sTampil = useMemo(
+    () => (hitungCabang ? silsilahCabang(silsilah, bagan.simpul.get(fokusId)) : silsilah),
+    [hitungCabang, silsilah, bagan, fokusId]
+  )
+  const baganTampil = useMemo(() => (sTampil === silsilah ? bagan : susunBagan(sTampil)), [sTampil, silsilah, bagan])
+  const akar = useMemo(
+    () => (baganTampil ? (fokusId ? baganTampil.simpul.get(fokusId) : baganTampil.akar) : null),
+    [baganTampil, fokusId]
+  )
   const tata = useMemo(() => (akar ? tataBagan(akar) : null), [akar])
   const pusat = fokusId ? null : params.get('pilih')
   // Bagian bingkai yang tertutup bilah atas dan legenda (tampilan awal).
@@ -220,7 +260,7 @@ function IsiBagan() {
     return hasil
   }
   const pangkal = akar ? [akar.id, akar.pasangan[0]?.id].filter(Boolean) : []
-  const { pandang, props, isi, aksi } = useGeserZoom({ kunci: fokusId ?? '', pusat, pangkal, halangan })
+  const { pandang, props, isi, aksi } = useGeserZoom({ kunci: `${fokusId ?? ''}|${hitungCabang}`, pusat, pangkal, halangan })
   const kartu = useMemo(() => (akar ? semuaKartu(akar) : []), [akar])
   const ada = useMemo(
     () => ({ tanpaJenisKelamin: kartu.some((k) => !k.sex), belumDewasa: kartu.some((k) => k.belumDewasa) }),
@@ -241,10 +281,15 @@ function IsiBagan() {
   // yang bukan keturunan) cabang pasangannya.
   const cabang = kartuTerpilih ? (bagan.simpul.has(kartuTerpilih.id) ? kartuTerpilih.id : bagan.tempat.get(kartuTerpilih.id)) : null
 
-  const ubah = (kunci, nilai) => {
+  // Mengubah parameter alamat (fokus, hitung). Tanpa fokus, tidak ada
+  // hitungan cabang.
+  const ubah = (ganti) => {
     const baru = new URLSearchParams(params)
-    if (nilai) baru.set(kunci, nilai)
-    else baru.delete(kunci)
+    for (const [kunci, nilai] of Object.entries(ganti)) {
+      if (nilai) baru.set(kunci, nilai)
+      else baru.delete(kunci)
+    }
+    if (!baru.get('fokus')) baru.delete('hitung')
     baru.delete('pilih')
     setParams(baru, { replace: true })
   }
@@ -264,11 +309,11 @@ function IsiBagan() {
     <div className="flex flex-col gap-2 border-t border-tepi pt-3">
       <p className="text-lg font-semibold">{isiTeks(T.fokusJudul, { nama: akar.kartu.nama })}</p>
       <div className="flex flex-wrap gap-2">
-        <Tombol varian="sekunder" onClick={() => ubah('fokus', null)}>
+        <Tombol varian="sekunder" onClick={() => ubah({ fokus: null })}>
           {T.tampilkanSemua}
         </Tombol>
         {indukId && (
-          <Tombol varian="sekunder" ikon={ArrowUp} onClick={() => ubah('fokus', indukId)}>
+          <Tombol varian="sekunder" ikon={ArrowUp} onClick={() => ubah({ fokus: indukId })}>
             {isiTeks(T.naikKe, { nama: bagan.simpul.get(indukId).kartu.nama })}
           </Tombol>
         )}
@@ -299,12 +344,13 @@ function IsiBagan() {
           />
         </div>
       </div>
+      {hitungCabang && <PitaCabang nama={akar.kartu.nama} saatKembali={() => ubah({ hitung: null })} />}
       {bilah ? (
-        <BilahAtas ref={atasRef} kartu={kartu} aksi={aksi} saatKetemu={lompat} fokus={fokus} saatTutup={() => setBilah(false)} />
+        <BilahAtas ref={atasRef} kartu={kartu} aksi={aksi} saatKetemu={lompat} fokus={fokus} turun={hitungCabang} saatTutup={() => setBilah(false)} />
       ) : (
         <>
           <h1 className="sr-only">{teks.aplikasi.nama}</h1>
-          <button ref={atasRef} type="button" onClick={() => setBilah(true)} aria-label={T.tampilkanMenu} className={`${TOMBOL_BULAT} left-3 top-3`}>
+          <button ref={atasRef} type="button" onClick={() => setBilah(true)} aria-label={T.tampilkanMenu} className={`${TOMBOL_BULAT} left-3 ${hitungCabang ? 'top-16' : 'top-3'}`}>
             <Menu aria-hidden="true" className="size-6" />
           </button>
         </>
@@ -313,12 +359,13 @@ function IsiBagan() {
       <Legenda ref={legendaRef} bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} ada={ada} />
       {kartuTerpilih && (
         <PanelOrang
-          d={labelDetail(silsilah, kartuTerpilih.id)}
+          d={labelDetail(sTampil, kartuTerpilih.id)}
           saatPilih={lompat}
           bisaFokus={Boolean(cabang) && cabang !== fokusId}
-          saatFokus={() => {
+          namaCabang={cabang ? bagan.simpul.get(cabang).kartu.nama : ''}
+          saatFokus={(dariCabang) => {
             setTerpilih(null)
-            ubah('fokus', cabang)
+            ubah({ fokus: cabang, hitung: dariCabang ? 'cabang' : null })
           }}
           saatTutup={() => setTerpilih(null)}
         />
