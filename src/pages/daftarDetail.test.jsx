@@ -138,6 +138,33 @@ describe('Keterangan orang (halaman sendiri)', () => {
     expect(document.body.textContent).not.toMatch(/Belum menikah/)
   })
 
+  it('berpisah lalu menikah lagi: anak menurut umur, anak sambung tanpa nomor di antara anak kandung', async () => {
+    pasang('/orang/kirana', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Kirana', level: 1 })
+    expect(within(bagian('Anak')).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      '1.Celvia · dari suami ke-1', 'Elvina · anak sambung · dari suami ke-2', '2.Fajrin · dari suami ke-2',
+    ])
+    const info = bagian('Keterangan Pribadi')
+    expect(info.textContent).toContain('Status pernikahan: Menikah')
+    expect(info.textContent).toContain('Suami ke-1: Danuarta (berpisah)')
+  })
+
+  it('"Belum menikah" yang dipilih sendiri', async () => {
+    pasang('/orang/putri', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Putri', level: 1 })
+    expect(bagian('Keterangan Pribadi').textContent).toContain('Status pernikahan: Belum menikah')
+  })
+
+  it('pernikahan baru tanpa pernikahan sebelumnya ditandai berakhir: keduanya tercatat, status Menikah', async () => {
+    pasang('/orang/qori', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Qori', level: 1 })
+    const info = bagian('Keterangan Pribadi')
+    expect(info.textContent).toContain('Status pernikahan: Menikah')
+    expect(within(info).getAllByRole('listitem').map((li) => li.textContent.split('Menikah')[0])).toEqual([
+      'Istri ke-1: Nadira', 'Istri ke-2: Ravela',
+    ])
+  })
+
   it('pasangan (bukan keturunan): "Orang tua: -" dan "Nomor silsilah: -"', async () => {
     pasang('/orang/gita', klienKeluarga())
     await screen.findByRole('heading', { name: 'Gita', level: 1 })

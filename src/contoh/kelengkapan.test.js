@@ -5,6 +5,11 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from '../lib/silsilah/keluargaFiktif.js'
 import { susunSilsilah } from '../lib/silsilah/silsilah.js'
+import { labelDetail } from '../lib/silsilah/kartu.js'
+import { anakOrangTua } from '../lib/silsilah/anak.js'
+import { statusPernikahan } from '../lib/silsilah/status.js'
+import { belumDewasa } from '../lib/silsilah/umur.js'
+import { susunBagan } from '../lib/bagan/susun.js'
 import { kontakContoh } from './kontakContoh.js'
 
 const data = bangunKeluargaFiktif()
@@ -37,8 +42,18 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(berulang).toBe(true)
   })
 
-  it('cerai, dan ditinggal wafat lalu menikah lagi', () => {
+  it('pernikahan berulang dengan urutan anak 1–11 lintas pernikahan, kiri ke kanan di bagan', () => {
+    const bagan = susunBagan(s)
+    const banyak = [...bagan.simpul.values()].find((n) => n.pasangan.some((k) => k.ulang))
+    expect(banyak).toBeTruthy()
+    expect(banyak.anak.map((a) => a.kartu.urut)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+  })
+
+  it('berpisah (juga tanpa jalur resmi) lalu menikah lagi, dan ditinggal wafat lalu menikah lagi', () => {
     expect(nikahUtama.some((u) => u.status === 'cerai')).toBe(true)
+    const tanpaResmi = nikahUtama.find((u) => u.status === 'cerai' && /tanpa jalur resmi/i.test(u.notes ?? ''))
+    expect(tanpaResmi).toBeTruthy()
+    expect(nikahUtama.some((v) => v !== tanpaResmi && v.partner1_id === tanpaResmi.partner1_id && v.marriage_y > tanpaResmi.marriage_y)).toBe(true)
     const ditinggal = nikahUtama.filter((u) => u.status === 'menikah' && u.partner2_id && orang.get(u.partner2_id).is_deceased && !orang.get(u.partner1_id).is_deceased)
     expect(ditinggal.some((u) => nikahUtama.some((v) => v !== u && v.partner1_id === u.partner1_id && (v.marriage_y ?? 0) > (u.marriage_y ?? 0)))).toBe(true)
   })
@@ -52,6 +67,38 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     const jenis = new Set(data.children.filter((c) => c.tree_id === null).map((c) => c.kind))
     expect(jenis).toEqual(new Set(['kandung', 'sambung', 'angkat']))
     expect(utama.some((p) => p.is_deceased && p.death_y - p.birth_y <= 1)).toBe(true)
+  })
+
+  it('anak sambung yang LEBIH TUA dari anak kandung, dan yang LEBIH MUDA dari anak kandung', () => {
+    let lebihTua = false
+    let lebihMuda = false
+    for (const p of s.graf.orang.keys()) {
+      const { semua } = anakOrangTua(s.graf, p)
+      semua.forEach((a, i) => {
+        if (a.kind !== 'sambung' || a.kandung) return
+        if (semua.slice(i + 1).some((b) => b.kandung)) lebihTua = true
+        if (semua.slice(0, i).some((b) => b.kandung)) lebihMuda = true
+      })
+    }
+    expect(lebihTua).toBe(true)
+    expect(lebihMuda).toBe(true)
+  })
+
+  it('pernikahan baru sementara pernikahan sebelumnya belum ditandai berakhir', () => {
+    expect([...s.graf.pernikahan.entries()].some(([id, us]) =>
+      s.gen.has(id) && us.filter((u) => u.status === 'menikah' && u.partner2_id && !orang.get(u.partner2_id).is_deceased).length > 1)).toBe(true)
+  })
+
+  it('status pernikahan: dewasa tanpa data pernikahan ("-") dan yang memilih "Belum menikah" sendiri', () => {
+    const dewasa = utama.filter((p) => !p.is_deceased && p.birth_y && TAHUN_INI - p.birth_y >= 18)
+    expect(dewasa.some((p) => statusPernikahan(s, p.id) === null && !p.marital_choice)).toBe(true)
+    expect(utama.some((p) => p.marital_choice === 'belum_menikah' && statusPernikahan(s, p.id) === 'belum_menikah')).toBe(true)
+    for (const st of ['menikah', 'berpisah', 'ditinggal_wafat']) expect(utama.some((p) => statusPernikahan(s, p.id) === st), st).toBe(true)
+  })
+
+  it('kolom kosong supaya terlihat "-"', () => {
+    const d = labelDetail(s, utama.find((p) => !p.nickname && !p.occupation && !p.notes && !p.birth_place && s.gen.has(p.id)).id)
+    expect([d.panggilan, d.pekerjaan, d.catatan]).toEqual([null, null, null])
   })
 
   it('pernikahan antarsepupu: GEN sama dan GEN berbeda', () => {
@@ -78,8 +125,9 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(utama.some((p) => p.birth_y && p.birth_m && p.birth_d)).toBe(true)
   })
 
-  it('anak di bawah umur', () => {
+  it('anak di bawah umur, termasuk dengan tanggal lahir lengkap', () => {
     expect(utama.filter((p) => !p.is_deceased && TAHUN_INI - p.birth_y < 18).length).toBeGreaterThan(1)
+    expect(utama.some((p) => belumDewasa(p) && p.birth_m && p.birth_d)).toBe(true)
   })
 
   it('kedua pohon keluarga asal (pasangan khusus A dan B)', () => {

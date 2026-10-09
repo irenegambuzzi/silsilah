@@ -155,7 +155,8 @@ describe('tulisan di layar', () => {
     ['Bagan', '/bagan', klienKeluarga, 'Hasna'],
     ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
     ['Saya', '/saya', klienKeluarga, 'Ukuran huruf'],
-    ...['bima', 'cahya', 'eka', 'vino', 'yoga', 'hasna', 'nirvo', 'raksa', 'gendis', 'oka', 'ika', 'tirwan', 'lintang', 'sekar', 'dara', 'halvin', 'ragil'].map((id) => [
+    ...['bima', 'cahya', 'eka', 'vino', 'yoga', 'hasna', 'nirvo', 'raksa', 'gendis', 'oka', 'ika', 'tirwan', 'lintang', 'sekar', 'dara', 'halvin', 'ragil',
+      'kirana', 'elvina', 'fajrin', 'putri', 'qori', 'umar'].map((id) => [
       `Keterangan ${id}`, `/orang/${id}`, klienKeluarga, 'Keterangan Pribadi',
     ]),
     ...['bima', 'eka', 'hasna'].map((id) => [`Panel bagan ${id}`, `/bagan?pilih=${id}`, klienKeluarga, 'Keterangan Pribadi']),

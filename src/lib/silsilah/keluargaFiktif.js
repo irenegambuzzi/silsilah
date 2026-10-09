@@ -18,6 +18,16 @@
 //         Anak: Rinzo, Nala (di bawah umur), Ragil (jenis kelamin tidak
 //         diketahui). Dara = pasangan khusus B (istri anak Eka).
 //   Lintang: pasangan tidak diketahui, satu anak (Arya).
+//   Kirana: berpisah dari suami ke-1 (Danuarta) tanpa jalur resmi, lalu
+//         menikah lagi (Harvel). Anak: Celvia (2001, dari suami ke-1),
+//         Elvina (anak sambung, anak Harvel, 2006: LEBIH MUDA dari Celvia
+//         dan LEBIH TUA dari Fajrin), Fajrin (2010, tanggal lengkap, di
+//         bawah umur).
+//   Qori: menikah lagi (Ravela) tanpa pernikahan pertamanya (Nadira)
+//         ditandai berakhir: keduanya tetap "menikah".
+//   Putri: memilih sendiri "Belum menikah". Oka: dewasa tanpa data
+//         pernikahan (status "-") dan banyak kolom kosong.
+//   Vino: anak sambung LEBIH TUA dari anak kandung (Wati).
 //   Tanggal kabur: tahun saja, "sekitar", bulan dan tahun, tanggal lengkap.
 //
 //   Pohon keluarga asal Eka ("T1"): orang tuanya, saudaranya, Mbah, Mbah
@@ -63,6 +73,7 @@ export function bangunKeluargaFiktif() {
       death_d: null,
       death_approx: false,
       death_place: null,
+      marital_choice: null,
       deleted_at: null,
       created_at: stempel(),
       ...tambahan,
@@ -215,6 +226,34 @@ export function bangunKeluargaFiktif() {
   nikah('u13', 'lintang', null, { status: 'tidak_diketahui' })
   orang('arya', 'Arya', 'L', 2005)
   anak('u13', 'arya')
+
+  // Berpisah tanpa jalur resmi, lalu menikah lagi; anak sambung yang lebih
+  // muda dari anak kandung pertama dan lebih tua dari anak kandung kedua.
+  orang('danuarta', 'Danuarta', 'L', 1975)
+  nikah('u14', 'kirana', 'danuarta', {
+    marriage_y: 2000, status: 'cerai', end_y: 2004,
+    notes: 'Berpisah tanpa jalur resmi.',
+  })
+  orang('celvia', 'Celvia', 'P', 2001)
+  anak('u14', 'celvia')
+  orang('harvel', 'Harvel', 'L', 1972, { occupation: 'Penjahit' })
+  nikah('u15', 'kirana', 'harvel', { marriage_y: 2008 })
+  orang('elvina', 'Elvina', 'P', 2006)
+  anak('u15', 'elvina', 'sambung')
+  orang('fajrin', 'Fajrin', 'L', 2010, { birth_m: 7, birth_d: 4, birth_place: 'Kota Contoh' })
+  anak('u15', 'fajrin')
+
+  // Pernikahan baru tanpa pernikahan sebelumnya ditandai berakhir.
+  orang('nadira', 'Nadira', 'P', 1994)
+  nikah('u16', 'qori', 'nadira', { marriage_y: 2015 })
+  orang('ravela', 'Ravela', 'P', 1996)
+  nikah('u17', 'qori', 'ravela', { marriage_y: 2020 })
+
+  // "Belum menikah" yang dipilih orangnya sendiri.
+  data.people.find((p) => p.id === 'putri').marital_choice = 'belum_menikah'
+
+  // Anak di bawah umur dengan tanggal lahir lengkap.
+  Object.assign(data.people.find((p) => p.id === 'hasna'), { birth_m: 3, birth_d: 15 })
 
   // ── Pohon keluarga asal Eka ─────────────────────────────────────
   asal('karto', 'Karto', 'L', 1860)

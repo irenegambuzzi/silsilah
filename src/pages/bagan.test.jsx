@@ -55,7 +55,7 @@ describe('Bagan: isi kartu', () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('eka').textContent).not.toContain('GEN')
-    expect(screen.getAllByText('Istri ke-1')).toHaveLength(2) // Eka, dan Eka lagi (menikah kembali)
+    expect(screen.getAllByText('Istri ke-1')).toHaveLength(3) // Eka, Eka lagi (menikah kembali), dan istri ke-1 Qori
     expect(screen.getByText('Istri ke-3')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Istri ke-2: Fitri' })).toBe(k('fitri'))
   })
