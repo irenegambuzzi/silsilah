@@ -4,6 +4,8 @@
 // dan tidak membingungkan. Diperiksa di semua teks (teks/id.js), di layar
 // yang tampil, dan di label silsilah untuk SETIAP orang di keluarga fiktif.
 import 'fake-indexeddb/auto'
+import fs from 'node:fs'
+import path from 'node:path'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { configure, screen } from '@testing-library/react'
@@ -29,6 +31,7 @@ const TERLARANG = [
   /Pernikahan ke-\d/,
   /Anak ke-\d/, // harus "Putra ke-n" / "Putri ke-n"
   /cerai/i, // pernikahan yang berakhir selalu ditulis "Berpisah"
+  /tempat sampah/i, // istilahnya "Disisihkan" / "Data yang disisihkan"
   /Urutan lahir:/, // cukup kalimat "Putri ke-3 dari 11 bersaudara"
   /Informasi Anggota/i, // judulnya "Keterangan Pribadi"
   /Pasangan: Tidak ada/,
@@ -147,6 +150,16 @@ describe('label silsilah untuk SETIAP orang di keluarga fiktif', () => {
   })
 })
 
+describe('pesan dari database (SQL) juga mengikuti aturan tulisan', () => {
+  const folder = path.join(import.meta.dirname, '..', 'supabase')
+  const pesan = fs.readdirSync(folder).filter((f) => /^\d{3}_.*\.sql$/.test(f)).flatMap((f) =>
+    [...fs.readFileSync(path.join(folder, f), 'utf8').matchAll(/private\.fail\('[A-Z]{2}\d{3}',\s*'([^']+)'/g)].map((m) => [f, m[1]]))
+  it('ada banyak pesan yang diperiksa', () => expect(pesan.length).toBeGreaterThan(30))
+  it.each(pesan)('%s: %s', (_f, isi) => {
+    expect(isi).not.toMatch(/tempat sampah|cerai|Anak ke-\d/i)
+  })
+})
+
 describe('tulisan di layar', () => {
   const LAYAR = [
     ['Masuk', '/masuk', () => buatKlienTiruan({}), 'Silsilah Keluarga'],
@@ -169,6 +182,16 @@ describe('tulisan di layar', () => {
     for (const t of tulisan) {
       expect(t.match(KATA_GANDA)?.[0] ?? null, t).toBeNull()
       for (const re of TERLARANG) expect(t).not.toMatch(re)
+    }
+    // Keterangan orang: tidak ada baris "Wafat" (juga bukan "Wafat: -") untuk
+    // yang masih hidup, dan tidak ada "Belum menikah" yang tidak dipilih
+    // orangnya sendiri.
+    const id = /\/orang\/([^/?]+)|pilih=([^&]+)/.exec(url)
+    if (id) {
+      const o = s.graf.orang.get(id[1] ?? id[2])
+      const isi = document.body.textContent
+      if (!o.is_deceased) expect(isi).not.toMatch(/Wafat:/)
+      if (o.marital_choice !== 'belum_menikah') expect(isi).not.toMatch(/Belum menikah/)
     }
   })
 })

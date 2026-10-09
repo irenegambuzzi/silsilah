@@ -1210,7 +1210,8 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 4 | 1.19 | Opus 5.5 · high | – (selesai) |
 | ✅ 5 | 1.20 | Opus 5.5 · high | – (selesai) |
 | ✅ 6 | 1.21 + 1.22 | Sonnet 5.5 · high | – (selesai; opsional: lihat lewat mode contoh) |
-| ✅ 6b | perbaikan tampilan menurut tinjauan Anda (identitas visual lama, warna kartu, isi kartu, garis, antarsepupu, panel, tulisan, mode contoh lengkap) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
+| ✅ 6b | perbaikan tampilan menurut tinjauan Anda (identitas visual lama, warna kartu, isi kartu, garis, antarsepupu, panel, tulisan, mode contoh lengkap) | Opus 5.5 | – (selesai) |
+| ✅ 6c | perbaikan putaran kedua menurut tinjauan Anda (A panel keterangan, B bagan, C fokus cabang, D mode contoh, E tes; lihat "Putaran kedua tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
 | 9 | 1.26 | Sonnet 5.5 · high | – |
@@ -1223,6 +1224,19 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | – | 1.32 | manual | pilot 3–5 anggota |
 
 Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Supabase pada langkah 1.29** (kelompok 12).
+
+**Putaran kedua tinjauan tampilan (kelompok 6c, Oktober 2026)**, ringkasan keputusan (rinciannya di bagian yang disebut):
+
+- **Panel keterangan** (15.1): judul "KETERANGAN PRIBADI"; baris wajib ditulis "-" kalau kosong; "Wafat" hanya untuk yang sudah wafat; "Status pernikahan" dan "Pasangan" sesuai aturan.
+- **Urutan anak** (5.4, 15.1): "Putra ke-n"/"Putri ke-n" (tidak pernah "Anak ke-n"), "Putri ke-3 dari 11 bersaudara"; hanya anak **kandung** yang bernomor dan dihitung (mengubah keputusan lama). SQL 003 (`private.is_birth_parent`) dan data contoh mengikuti.
+- **Anak sambung/angkat** (15.1): tanpa nomor; "Anak sambung/angkat [nama]" di panelnya sendiri; di panel orang tua dengan keterangan kecil (mengubah aturan lama "hanya di panel anak itu").
+- **Status pernikahan** (5.4): pilihan tetap; "Belum menikah" hanya pilihan orangnya sendiri (`people.marital_choice`, SL011).
+- **"Berpisah"** menggantikan "cerai"/"bercerai" di semua tulisan; status berpisah hanya oleh salah satu pasangan, admin utama, atau izin `status_pernikahan` (SL010); pernikahan baru tidak pernah diblokir.
+- **Bagan** (15.1): pernikahan berulang kiri ke kanan dengan "menikah kembali"; nomor urut di pojok; anak menurut umur; hati patah untuk berpisah; tunas daun untuk belum dewasa; legenda dinamis; tampilan awal laptop/HP.
+- **Fokus cabang** (15.1, 15.3): "Hitung dari pangkal utama" atau "Hitung dari [nama]" (PANGKAL CABANG GEN.0), juga untuk PDF nanti.
+- **"Disisihkan"** menggantikan "tempat sampah" (8.4): izin `sisihkan`, SQL `007_disisihkan_laporan.sql`.
+- **Migrasi** (16.2, 16.3): laporan wajib mendaftar nama yang jenis kelaminnya belum diketahui; tidak pernah diisi asal.
+- **Tes**: `src/tulisan.test.jsx` (tanpa "Anak ke-", "cerai", "tempat sampah", "Wafat: -" untuk yang masih hidup, "Belum menikah" otomatis; juga pesan SQL), `src/lib/silsilah/{anak,status,umur}.test.js`, `src/lib/bagan/cabang.test.js`, SQL 003/005, dan `src/contoh/kelengkapan.test.js`.
 
 ### Langkah Darurat
 
