@@ -1,12 +1,20 @@
-// Urutan: "ke-n", urutan pernikahan seseorang, dan urutan pasangan
+// Urutan: "ke-n", urutan anak kandung ("Putra ke-2", "Putri ke-3 dari 11
+// bersaudara"), urutan pernikahan seseorang, dan urutan pasangan
 // ("istri ke-2", "suami ke-1").
 import { bandingkanKabur, tanggalDari } from './tanggal.js'
-import { teks } from '../../teks/id.js'
+import { isiTeks, teks } from '../../teks/id.js'
 
 const KATA = teks.silsilah
 
 export const keN = (n) => `ke-${n}`
-export const teksAnakKe = (n) => `${KATA.anakKe}${n}`
+const kunciSex = (sex) => (sex === 'L' || sex === 'P' ? sex : 'x')
+// "Putra ke-2" / "Putri ke-2" / "Putra/Putri ke-2" (jenis kelamin belum diketahui).
+export const teksUrutanKe = (sex, n) => isiTeks(KATA.urutanKe[kunciSex(sex)], { n })
+// "Putri ke-3 dari 11 bersaudara"; satu-satunya anak kandung: "Putri tunggal".
+export const teksBersaudara = (sex, n, jumlah) =>
+  jumlah === 1 && n === 1
+    ? KATA.tunggal[kunciSex(sex)]
+    : isiTeks(KATA.bersaudara, { urutan: teksUrutanKe(sex, n), n: jumlah })
 export const teksPasanganKe = (jenis, n) => `${jenis} ${keN(n)}`
 
 const bandingkanTeks = (a, b) => ((a ?? '') < (b ?? '') ? -1 : (a ?? '') > (b ?? '') ? 1 : 0)

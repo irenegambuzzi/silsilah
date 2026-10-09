@@ -25,6 +25,8 @@
 //   yang urutan lahirnya tidak diketahui.
 //   Pohon keluarga asal Dara ("T2"): orang tua, adik, Mbah, dan Pakdhe.
 
+import { kandungUntuk } from './anak.js'
+
 export function bangunKeluargaFiktif() {
   const data = {
     people: [],
@@ -281,9 +283,11 @@ export function bangunKeluargaFiktif() {
 }
 
 // Mengisi birth_ranks seperti trigger database (003): per orang tua, di
-// antara semua anaknya lintas pernikahan, menurut tahun lahir (yang tidak
-// diketahui di akhir). Orang tua yang mendapat urutan: partner1 selalu;
-// partner2 hanya kalau keturunan (silsilah utama) atau di pohon asal.
+// antara semua anak KANDUNGnya lintas pernikahan, menurut tahun lahir (yang
+// tidak diketahui di akhir). Anak sambung/angkat tidak bernomor, kecuali
+// anak sambung yang orang tua darahnya adalah orang itu. Orang tua yang
+// mendapat urutan: partner1 selalu; partner2 hanya kalau keturunan
+// (silsilah utama) atau di pohon asal.
 function hitungUrutanLahir(data, tanpaUrutan) {
   const orang = new Map(data.people.map((p) => [p.id, p]))
   const pangkal = data.unions.find((u) => u.id === data.root_union_id)
@@ -296,6 +300,7 @@ function hitungUrutanLahir(data, tanpaUrutan) {
     const ortu = [u.partner1_id]
     if (u.partner2_id && (u.tree_id !== null || keturunan.has(u.partner2_id))) ortu.push(u.partner2_id)
     for (const p of ortu) {
+      if (!kandungUntuk(c, u, p)) continue
       if (!perOrangTua.has(p)) perOrangTua.set(p, [])
       perOrangTua.get(p).push({ child: c.child_id, tree: u.tree_id })
     }

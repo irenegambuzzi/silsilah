@@ -27,7 +27,7 @@ function Simpul({ simpul, tata, terpilih, saatKetuk, saatLompat }) {
         return (
           <div key={kunci}>
             <span className="sr-only">
-              {isiTeks(k.cerai ? T.pasanganDariCerai : T.pasanganDari, { nama: simpul.kartu.nama })}
+              {isiTeks(k.berpisah ? T.pasanganDariBerpisah : T.pasanganDari, { nama: simpul.kartu.nama })}
             </span>
             {k.label && lLabel && (
               <span

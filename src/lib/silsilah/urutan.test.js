@@ -3,8 +3,9 @@ import {
   jenisPasangan,
   keN,
   pasanganBerurutan,
-  teksAnakKe,
+  teksBersaudara,
   teksPasanganKe,
+  teksUrutanKe,
   urutkanPernikahan,
 } from './urutan.js'
 
@@ -21,8 +22,22 @@ const u = (id, p1, p2, tahun, tambahan = {}) => ({
 describe('teks ke-n', () => {
   it('menulis ke-n', () => {
     expect(keN(3)).toBe('ke-3')
-    expect(teksAnakKe(6)).toBe('Anak ke-6')
     expect(teksPasanganKe('istri', 2)).toBe('istri ke-2')
+  })
+
+  it('"Putra ke-n" / "Putri ke-n", tidak pernah "Anak ke-n"', () => {
+    expect(teksUrutanKe('L', 6)).toBe('Putra ke-6')
+    expect(teksUrutanKe('P', 3)).toBe('Putri ke-3')
+    expect(teksUrutanKe(null, 2)).toBe('Putra/Putri ke-2')
+    for (const sex of ['L', 'P', null]) expect(teksUrutanKe(sex, 1)).not.toMatch(/Anak ke-/)
+  })
+
+  it('"Putri ke-3 dari 11 bersaudara"; anak kandung satu-satunya: "Putri tunggal"', () => {
+    expect(teksBersaudara('P', 3, 11)).toBe('Putri ke-3 dari 11 bersaudara')
+    expect(teksBersaudara('L', 1, 2)).toBe('Putra ke-1 dari 2 bersaudara')
+    expect(teksBersaudara('P', 1, 1)).toBe('Putri tunggal')
+    expect(teksBersaudara('L', 1, 1)).toBe('Putra tunggal')
+    expect(teksBersaudara(null, 1, 1)).toBe('Anak tunggal')
   })
 })
 

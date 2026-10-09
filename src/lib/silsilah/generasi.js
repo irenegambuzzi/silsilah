@@ -5,7 +5,8 @@
 // keturunan (pernikahan antarsepupu), GEN mengikuti jalur yang paling dekat
 // ke pangkal; kedua jalur tetap dicatat di `jalur`.
 import { teks } from '../../teks/id.js'
-import { orangTuaUnion, pasanganDi, urutanLahir } from './graf.js'
+import { orangTuaUnion, pasanganDi } from './graf.js'
+import { anakOrangTua, kandungUntuk } from './anak.js'
 import { jenisPasangan, pasanganBerurutan } from './urutan.js'
 
 const KATA = teks.silsilah
@@ -30,7 +31,9 @@ export function teksGenerasi(gen, daftar = DAFTAR_GENERASI) {
 //   gen    Map orang → GEN (hanya keturunan, termasuk pasangan pangkal)
 //   jalur  Map orang → daftar jalur, yang paling dekat ke pangkal DI DEPAN:
 //          { orangTuaId, unionId, kind, gen (GEN orang itu lewat jalur ini),
-//            anakKe (urutan lahir di antara anak orang tua itu, atau null),
+//            kandung (orang tua ini orang tua kandungnya),
+//            anakKe (urutan lahir di antara anak KANDUNG orang tua itu;
+//                    null untuk anak sambung/angkat),
 //            pasanganKe: { ke, jumlah, jenis } (pasangan orang tua yang mana) }
 export function hitungGenerasi(graf) {
   const gen = new Map()
@@ -66,12 +69,14 @@ export function hitungGenerasi(graf) {
       const u = graf.unions.get(t.union_id)
       for (const p of orangTuaUnion(u)) {
         if (!gen.has(p)) continue
+        const kandung = kandungUntuk(t, u, p)
         daftar.push({
           orangTuaId: p,
           unionId: u.id,
           kind: t.kind,
           gen: gen.get(p) + 1,
-          anakKe: urutanLahir(graf, p, id),
+          kandung,
+          anakKe: kandung ? (anakOrangTua(graf, p).ke.get(id) ?? null) : null,
           pasanganKe: infoPasangan(graf, p, u),
         })
       }

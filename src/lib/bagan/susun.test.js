@@ -89,9 +89,9 @@ describe('susunBagan', () => {
     ])
   })
 
-  it('status cerai menurut pernikahan terakhir dengan pasangan itu', () => {
-    expect(bagan.simpul.get('bima').pasangan.map((k) => k.cerai)).toEqual([true, true, false])
-    expect(bagan.simpul.get('cahya').pasangan[0].cerai).toBe(false)
+  it('status berpisah menurut pernikahan terakhir dengan pasangan itu', () => {
+    expect(bagan.simpul.get('bima').pasangan.map((k) => k.berpisah)).toEqual([true, true, false])
+    expect(bagan.simpul.get('cahya').pasangan[0].berpisah).toBe(false)
   })
 
   it('pasangan yang juga keturunan (antarsepupu) ditandai; pasangan pangkal tidak', () => {

@@ -1,34 +1,21 @@
 // Nomor silsilah otomatis untuk tampilan Daftar, misalnya "1.6.2":
 // pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2.
-// Nomor mengikuti urutan lahir ("Anak ke-n"), jadi selalu sama dengan kartu.
-// Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal.
-// Anak yang belum punya urutan lahir mendapat nomor sesudah yang terbesar,
-// diurutkan menurut tanggal lahir. Pasangan yang bukan keturunan tidak bernomor.
-import { bandingkanKabur, tanggalDari } from './tanggal.js'
+// Untuk anak kandung, angka terakhir selalu sama dengan "Putra/Putri ke-n".
+// Anak sambung dan anak angkat tidak punya "Putra/Putri ke-n", tetapi tetap
+// bernomor (supaya keturunannya juga bernomor): sesudah semua anak kandung
+// orang tua itu, menurut umur. Anak dari pasangan sepupu dinomori lewat
+// jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak
+// bernomor.
+import { anakOrangTua } from './anak.js'
 
 export function hitungNomor(graf, { gen, jalur }) {
-  // Urutan cadangan untuk anak tanpa urutan lahir.
-  const cadangan = new Map()
-  const tanpaUrutan = new Map() // orang tua → anak tanpa urutan lahir
-  const terbesar = new Map() // orang tua → urutan terbesar yang ada
-  for (const [id, daftar] of jalur) {
-    const utama = daftar[0]
-    if (!utama) continue
-    const p = utama.orangTuaId
-    if (utama.anakKe == null) {
-      if (!tanpaUrutan.has(p)) tanpaUrutan.set(p, [])
-      tanpaUrutan.get(p).push(id)
-    } else {
-      terbesar.set(p, Math.max(terbesar.get(p) ?? 0, utama.anakKe))
-    }
-  }
-  for (const [p, anak] of tanpaUrutan) {
-    anak.sort(
-      (a, b) =>
-        bandingkanKabur(tanggalDari(graf.orang.get(a), 'birth'), tanggalDari(graf.orang.get(b), 'birth')) ||
-        (a < b ? -1 : 1)
-    )
-    anak.forEach((id, i) => cadangan.set(id, (terbesar.get(p) ?? 0) + i + 1))
+  // Angka terakhir setiap anak di bawah orang tua jalur utamanya.
+  const angka = (id, utama) => {
+    const { ke, kandung, semua } = anakOrangTua(graf, utama.orangTuaId)
+    if (ke.has(id)) return ke.get(id)
+    const lain = semua.filter((a) => !a.kandung).map((a) => a.id)
+    const i = lain.indexOf(id)
+    return i < 0 ? null : kandung.length + i + 1
   }
 
   const nomor = new Map()
@@ -43,7 +30,8 @@ export function hitungNomor(graf, { gen, jalur }) {
       ditempuh.add(id)
       const induk = hitung(utama.orangTuaId, ditempuh)
       ditempuh.delete(id)
-      if (induk) hasil = `${induk}.${utama.anakKe ?? cadangan.get(id)}`
+      const n = angka(id, utama)
+      if (induk && n != null) hasil = `${induk}.${n}`
     }
     if (hasil) nomor.set(id, hasil)
     return hasil

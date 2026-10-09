@@ -10,7 +10,8 @@
 --                 boleh muncul lebih dari sekali (menikah lagi).
 --   children      hubungan anak ke satu pernikahan: kandung, sambung,
 --                 atau angkat.
---   birth_ranks   urutan lahir PER ORANG TUA, lintas semua pernikahannya.
+--   birth_ranks   urutan lahir anak kandung PER ORANG TUA, lintas semua
+--                 pernikahannya.
 --                 Kalau kedua orang tua sama-sama keturunan, anak punya
 --                 dua baris (satu per orang tua).
 --   origin_trees  pohon keluarga asal milik seorang pasangan khusus.
@@ -80,6 +81,12 @@ create table if not exists public.people (
 
   occupation text check (length(occupation) between 1 and 200),
   notes text check (length(notes) <= 10000),
+  -- Status pernikahan yang dipilih ORANGNYA SENDIRI. Satu-satunya pilihan
+  -- yang disimpan adalah 'belum_menikah'; "Menikah", "Berpisah", dan
+  -- "Ditinggal wafat pasangan" selalu dihitung dari data pernikahan
+  -- (unions). Kosong = belum dipilih (tampil "-"). Aplikasi tidak pernah
+  -- mengisinya sendiri; hanya orang itu yang boleh (aturan di 005).
+  marital_choice text check (marital_choice in ('belum_menikah')),
 
   -- Id dari data lama, untuk menelusuri hasil migrasi.
   legacy_id text,
@@ -140,6 +147,11 @@ create table if not exists public.unions (
   partner1_id uuid not null references public.people (id) on delete restrict,
   partner2_id uuid references public.people (id) on delete restrict,
   -- "Wafat" tidak disimpan di sini: dihitung dari is_deceased.
+  -- 'cerai' = pernikahan berakhir karena berpisah, apa pun caranya (cerai
+  -- resmi, cerai agama/adat, atau ditinggal tanpa kabar). Tampilan selalu
+  -- menulisnya "Berpisah". Siapa yang boleh mengisinya: aturan di 005.
+  -- Pernikahan baru tetap boleh dicatat walaupun pernikahan sebelumnya
+  -- belum ditandai berakhir (tidak ada aturan yang melarangnya).
   status text not null default 'menikah'
     check (status in ('menikah', 'cerai', 'tidak_diketahui')),
 
@@ -214,10 +226,11 @@ create unique index if not exists children_one_biological_active
   on public.children (child_id) where kind = 'kandung' and deleted_at is null;
 
 -- ── birth_ranks: urutan lahir per orang tua ───────────────────────
--- "Anak ke-n" dihitung di antara SEMUA anak orang tua itu, lintas semua
--- pernikahannya (termasuk menikah lagi dengan pasangan yang sama). Anak
--- yang wafat saat bayi tetap dihitung. Diisi otomatis dari tanggal lahir
--- (003) dan bisa diatur manual.
+-- "Putra/Putri ke-n" dihitung di antara semua ANAK KANDUNG orang tua itu,
+-- lintas semua pernikahannya (termasuk menikah lagi dengan pasangan yang
+-- sama). Anak sambung dan anak angkat tidak bernomor. Anak yang wafat saat
+-- bayi tetap dihitung. Diisi otomatis dari tanggal lahir (003) dan bisa
+-- diatur manual.
 create table if not exists public.birth_ranks (
   tree_id uuid references public.origin_trees (id) on delete restrict,
   parent_id uuid not null references public.people (id) on delete restrict,

@@ -326,7 +326,7 @@ html[data-kontras='tinggi'] .kartu-orang {
 
 /* Garis bagan: garis ke anak cokelat keemasan; garis pernikahan dan hati
    berwarna mawar seperti aplikasi lama. Putus-putus HANYA untuk pernikahan
-   yang bercerai. */
+   yang berakhir karena berpisah. */
 .bagan-garis {
   fill: none;
   stroke-width: 0.1;

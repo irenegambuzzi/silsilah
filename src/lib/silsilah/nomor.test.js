@@ -19,9 +19,10 @@ describe('nomor silsilah', () => {
     expect(s.nomor.get('hasna')).toBe('1.1.11.1')
   })
 
-  it('anak sambung dan anak angkat bernomor seperti saudaranya', () => {
-    expect(s.nomor.get('vino')).toBe('1.2.1')
-    expect(s.nomor.get('wati')).toBe('1.2.2')
+  it('angka terakhir anak kandung = "Putra/Putri ke-n"; anak sambung/angkat sesudah semua anak kandung', () => {
+    expect(s.nomor.get('wati')).toBe('1.2.1')
+    expect(s.nomor.get('vino')).toBe('1.2.2') // anak sambung, walaupun lebih tua
+    expect(s.nomor.get('kelvan')).toBe('1.3.1')
     expect(s.nomor.get('yoga')).toBe('1.3.2')
   })
 
@@ -40,11 +41,13 @@ describe('nomor silsilah', () => {
     expect(new Set(semua).size).toBe(semua.length)
   })
 
-  it('anak tanpa urutan lahir mendapat nomor sesudah yang terbesar, menurut tanggal lahir', () => {
+  it('anak kandung tanpa urutan lahir mendapat nomor sesudah yang bernomor, menurut tanggal lahir', () => {
     const d = bangunKeluargaFiktif()
-    d.birth_ranks = d.birth_ranks.filter((r) => !(r.parent_id === 'cahya'))
+    d.birth_ranks = d.birth_ranks.filter((r) => !(r.parent_id === 'bima' && ['tamran', 'ika'].includes(r.child_id)))
     const t = susunSilsilah(d)
-    expect(t.nomor.get('vino')).toBe('1.2.1')
-    expect(t.nomor.get('wati')).toBe('1.2.2')
+    expect(t.nomor.get('tirwan')).toBe('1.1.1')
+    expect(t.nomor.get('rangga')).toBe('1.1.9')
+    expect(t.nomor.get('tamran')).toBe('1.1.10')
+    expect(t.nomor.get('ika')).toBe('1.1.11')
   })
 })

@@ -69,7 +69,7 @@ describe('hitungGenerasi', () => {
     expect(jalur.get('nirvo').map((j) => j.orangTuaId)).toEqual(['tamran', 'wati'])
   })
 
-  it('anak ke-n dan pasangan ke-n per jalur', () => {
+  it('urutan ke-n dan pasangan ke-n per jalur', () => {
     const j = jalur.get('hasna')
     expect(j.map((x) => x.anakKe)).toEqual([1, 1])
     // Dua orang tua, masing-masing hanya punya satu pasangan.
@@ -91,10 +91,11 @@ describe('hitungGenerasi', () => {
     expect(jalur.get('tamran')[0].pasanganKe.jumlah).toBe(3)
   })
 
-  it('urutan lahir dihitung lintas pernikahan per orang tua, termasuk anak sambung', () => {
-    expect(jalur.get('vino')[0].anakKe).toBe(1)
-    expect(jalur.get('wati')[0].anakKe).toBe(2)
-    expect(jalur.get('yoga')[0].anakKe).toBe(2)
+  it('urutan lahir hanya untuk anak kandung: anak sambung dan anak angkat tidak bernomor', () => {
+    expect(jalur.get('vino')[0]).toMatchObject({ kandung: false, anakKe: null })
+    expect(jalur.get('wati')[0]).toMatchObject({ kandung: true, anakKe: 1 })
+    expect(jalur.get('yoga')[0]).toMatchObject({ kandung: false, anakKe: null })
+    expect(jalur.get('kelvan')[0]).toMatchObject({ kandung: true, anakKe: 1 })
   })
 
   it('pasangan pangkal tidak punya jalur', () => {

@@ -69,16 +69,16 @@ describe('tataBagan', () => {
     })
   })
 
-  it('garis putus-putus HANYA untuk pernikahan yang bercerai', () => {
+  it('garis putus-putus HANYA untuk pernikahan yang berakhir karena berpisah', () => {
     const putus = t.garis.filter((g) => g.putus)
     expect(putus.length).toBeGreaterThan(0)
     for (const g of putus) expect(g.jenis).toBe('nikah')
-    // Bima: Eka (cerai) dan Fitri (cerai) putus-putus; Gita (menikah) tidak.
+    // Bima: Eka (berpisah) dan Fitri (berpisah) putus-putus; Gita (menikah) tidak.
     const nikahBima = (i) => t.garis.filter((g) => g.kunci.startsWith(`n:bima:${i}:`))
     expect(nikahBima(0).every((g) => g.putus)).toBe(true)
     expect(nikahBima(1).every((g) => g.putus)).toBe(true)
     expect(nikahBima(2).some((g) => g.putus)).toBe(false)
-    // Pasangan pangkal (sama-sama sudah wafat, tidak bercerai): garis biasa.
+    // Pasangan pangkal (sama-sama sudah wafat, tidak berpisah): garis biasa.
     expect(t.garis.filter((g) => g.kunci.startsWith('n:raksa:')).some((g) => g.putus)).toBe(false)
     expect(t.garis.filter((g) => g.jenis === 'anak').some((g) => g.putus)).toBe(false)
   })

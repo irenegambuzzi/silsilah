@@ -191,6 +191,8 @@ Keterangan: ✓ = boleh, ✗ = tidak, **izin** = hanya asisten yang dicentang iz
 | Konfirmasi, sematkan, sembunyikan kabar; menerapkan kabar wafat ke silsilah | ✗ | ✗ | izin "Konfirmasi kabar" | ✓ |
 | Mengisi kehadiran Kumpul Keluarga | ✓ | ✓ | ✓ | ✓ |
 | Kelola jadwal Kumpul Keluarga | ✗ | ✗ | izin "Kelola jadwal" | ✓ |
+| Menandai pernikahan berakhir karena berpisah (atau membatalkan tanda itu) | ✗ | hanya kalau ia salah satu dari kedua pasangan itu | izin "Status pernikahan" (atau salah satu pasangan) | ✓ |
+| Memilih status "Belum menikah" | ✗ | hanya untuk dirinya sendiri | hanya untuk dirinya sendiri | hanya untuk dirinya sendiri |
 | Kas dan sedekah (mencatat) | ✗ | ✗ | izin "Bendahara" | ✓ |
 | Melihat kas: total pemasukan, pengeluaran, saldo, total per kategori, dan daftar pengeluaran (tanggal, keperluan, jumlah) | ✓ | ✓ | ✓ | ✓ |
 | Melihat foto bukti kas | ✗ | ✗ | izin "Bendahara" | ✓ |
@@ -207,7 +209,7 @@ Keterangan: ✓ = boleh, ✗ = tidak, **izin** = hanya asisten yang dicentang iz
 
 **Daftar izin asisten** (kolom `members.permissions`, berupa centang):
 
-`batalkan_orang_lain`, `tindak_laporan`, `tempat_sampah`, `buat_undangan`, `lihat_anggota`, `akses_sementara`, `tambah_kuota_kontak`, `unduh_kontak`, `kelola_jadwal`, `bendahara`, `konfirmasi_kabar`, `bagikan_whatsapp`.
+`batalkan_orang_lain`, `tindak_laporan`, `tempat_sampah`, `buat_undangan`, `lihat_anggota`, `akses_sementara`, `tambah_kuota_kontak`, `unduh_kontak`, `kelola_jadwal`, `bendahara`, `konfirmasi_kabar`, `bagikan_whatsapp`, `status_pernikahan` (menandai pernikahan orang lain berakhir karena berpisah; ditambahkan Oktober 2026).
 
 **Aturan tambahan:**
 
@@ -256,6 +258,7 @@ Setiap tanggal disimpan sebagai `*_y`, `*_m`, `*_d`, dan `*_approx`. Contoh: "12
 | `is_deceased`, `death_*`, `death_place` | Tampilan menambahkan **"Alm."** (laki-laki) atau **"Almh."** (perempuan) di depan nama secara otomatis. |
 | `occupation` | pekerjaan; tanpa tulisan "opsional", tidak wajib |
 | `notes` | catatan |
+| `marital_choice` | status pernikahan yang dipilih **orangnya sendiri**; satu-satunya nilai: `'belum_menikah'`. Kosong = belum dipilih. Hanya orang itu yang boleh mengubahnya (trigger, SQL 005, kode SL011); aplikasi tidak pernah mengisinya sendiri. |
 | `legacy_id` | id dari data lama, untuk menelusuri hasil migrasi |
 | + kolom bersama | |
 
@@ -268,13 +271,19 @@ Alamat dan nomor HP **tidak** ada di sini, tetapi di `private.contacts` (bagian 
 | `tree_id` | |
 | `partner1_id` | pihak garis keturunan |
 | `partner2_id` | pasangan, boleh null ("tidak diketahui") |
-| `status` | `'menikah' \| 'cerai' \| 'tidak_diketahui'`. "Wafat" dihitung dari `is_deceased`. |
+| `status` | `'menikah' \| 'cerai' \| 'tidak_diketahui'`. "Wafat" dihitung dari `is_deceased`. Nilai `'cerai'` berarti pernikahan **berakhir karena berpisah** apa pun caranya (cerai resmi, cerai agama/adat, atau ditinggal tanpa kabar); tampilan **selalu** menulisnya "Berpisah", tidak pernah "cerai"/"bercerai". Mengubah status ke/dari `'cerai'` hanya oleh salah satu dari kedua pasangan (kalau anggota), admin utama, atau asisten dengan izin `status_pernikahan` (trigger, SQL 005, kode SL010). |
 | `marriage_*`, `end_*` | |
 | `sort_order` | urutan pernikahan ke-n |
 | `notes` | |
 | + kolom bersama | |
 
-Pasangan yang sama **boleh** muncul di lebih dari satu baris, misalnya menikah lagi dengan istri ke-1. Tidak ada constraint unik untuk pasangan suami-istri.
+Pasangan yang sama **boleh** muncul di lebih dari satu baris, misalnya menikah lagi dengan istri ke-1. Tidak ada constraint unik untuk pasangan suami-istri. **Pernikahan baru tidak pernah ditolak** walaupun pernikahan sebelumnya belum ditandai berakhir (diperiksa ulang Oktober 2026: tidak ada aturan di SQL 003 dan sesudahnya yang memblokirnya; dijaga tes).
+
+**Status pernikahan** di panel keterangan adalah **pilihan tetap** (bukan teks bebas): "Belum menikah", "Menikah", "Berpisah", "Ditinggal wafat pasangan" (`src/lib/silsilah/status.js`).
+
+- Diturunkan otomatis dari data pernikahan: ada pernikahan yang masih berjalan → Menikah; kalau tidak, menurut pernikahan **terakhir**: berakhir karena berpisah → Berpisah; pasangannya wafat → Ditinggal wafat pasangan (kalau keduanya wafat, hanya yang pasangannya pasti wafat lebih dulu).
+- Tanpa data pernikahan sama sekali → "-", **sampai orangnya sendiri memilih "Belum menikah"** (`marital_choice`). Aplikasi **tidak pernah** menulis "Belum menikah" secara otomatis. Data pernikahan selalu mengalahkan pilihan itu.
+- Pilihan "Belum menikah" di form dibuat bersama form orang (langkah 1.23).
 
 **`children`** (hubungan orang tua–anak)
 
@@ -286,7 +295,7 @@ Pasangan yang sama **boleh** muncul di lebih dari satu baris, misalnya menikah l
 | `biological_parent` | `'keduanya' \| 'partner1' \| 'partner2' \| null`. Kandung = keduanya; anak sambung = salah satu (biasanya anak dari pasangan); angkat = null. Dipakai untuk menentukan "keturunan darah" (akses pohon keluarga asal). |
 | + kolom bersama | |
 
-**`birth_ranks`** (urutan lahir **per orang tua**)
+**`birth_ranks`** (urutan lahir anak **kandung**, **per orang tua**)
 
 | Kolom | Keterangan |
 |---|---|
@@ -294,12 +303,12 @@ Pasangan yang sama **boleh** muncul di lebih dari satu baris, misalnya menikah l
 | `child_id` | |
 | `rank` | urutan lahir |
 
-Aturan urutan lahir:
+Aturan urutan lahir (**diubah Oktober 2026**: sebelumnya anak sambung/angkat ikut dihitung):
 
-- Dihitung di antara **SEMUA** anak orang tua itu, lintas semua pernikahan.
-- Terisi otomatis berdasarkan tanggal lahir saat anak ditambahkan, dan bisa diatur manual kalau tanggal tidak diketahui (geser naik/turun).
+- Dihitung **hanya di antara ANAK KANDUNG** orang tua itu, lintas semua pernikahan. Anak kandung = hubungan `kandung`, atau anak `sambung` yang `biological_parent`-nya adalah orang tua itu (misalnya anak seorang keturunan dari hubungan sebelumnya). **Anak sambung (dari pasangan) dan anak angkat tidak bernomor** dan tidak ikut jumlah "bersaudara" (`private.is_birth_parent` di SQL 003, `kandungUntuk` di `src/lib/silsilah/anak.js`).
+- Terisi otomatis berdasarkan tanggal lahir saat anak ditambahkan, dan bisa diatur manual kalau tanggal tidak diketahui (geser naik/turun). Mengubah anak kandung menjadi anak angkat menghapus urutannya dan merapikan nomor saudaranya.
 - Anak yang wafat saat bayi atau kecil tetap dihitung.
-- Kalau **kedua** orang tua adalah keturunan (pernikahan antarsepupu), setiap anak punya **dua** baris, satu per orang tua. "Anak ke-n" pun dihitung untuk masing-masing orang tua.
+- Kalau **kedua** orang tua adalah keturunan (pernikahan antarsepupu), setiap anak punya **dua** baris, satu per orang tua. "Putra/Putri ke-n" pun dihitung untuk masing-masing orang tua.
 
 *Constraint dan trigger* untuk silsilah:
 
@@ -570,7 +579,7 @@ Rinciannya ada di bagian 7.
 
 | Data | Baca | Tulis |
 |---|---|---|
-| Silsilah utama (`tree_id` null) | `current_member()` | `can_edit()`. Hapus = RPC tempat sampah (izin). Hapus permanen = RPC admin utama. |
+| Silsilah utama (`tree_id` null) | `current_member()` | `can_edit()`. Hapus = RPC tempat sampah (izin). Hapus permanen = RPC admin utama. Tambahan (trigger SQL 005): status pernikahan berakhir karena berpisah hanya oleh salah satu pasangan, admin utama, atau izin `status_pernikahan`; `marital_choice` hanya oleh orangnya sendiri. |
 | Pohon keluarga asal | `can_view_origin()` | admin utama |
 | `change_log` | anggota, asisten, admin (bukan "lihat") | hanya trigger |
 | `members` | baris sendiri; daftar lengkap: izin `lihat_anggota`; nama tampilan lewat fungsi `member_names()` | admin utama (undangan: izin `buat_undangan`, lewat RPC) |
@@ -1000,8 +1009,8 @@ Tempat semua anggota keluarga cepat mengetahui kabar penting.
 | 3 | **Selamat datang** | "Apakah ini Anda?", tips huruf, notifikasi, layar utama, dan tambah perangkat |
 | 4 | **Bagan** (silsilah utama) | Kartu seperti aplikasi lama, geser/zoom, mode fokus cabang, *breadcrumb*, "Tampilkan saya", serta "+ Anak / + Pasangan" di kartu (untuk yang bisa mengedit) |
 | 5 | **Daftar** | Teks berjenjang dengan nomor silsilah, istilah generasi, dan GEN |
-| 6 | **Detail orang** | Format panel aplikasi lama (bagian 15.1): avatar, nama, "Putu · Generasi ke-2", Informasi Anggota (orang tua, urutan lahir, pasangan berurutan; antarsepupu: "Anak ke-n" dari masing-masing orang tua), Riwayat Hidup, anak, pekerjaan, catatan, "Anak sambung"/"Anak angkat" (kata lembut, hanya di keterangan anak itu), kontak (Tampilkan), kabar terkait, riwayat, dan Laporkan kesalahan |
-| 7 | **Form orang / pernikahan / anak** | Gelar "(opsional)", pekerjaan, alamat, dan HP (tidak wajib, tanpa tulisan opsional), tanggal kabur, jenis anak, dan urutan lahir |
+| 6 | **Detail orang** | Format panel aplikasi lama (bagian 15.1): avatar, nama, "Putu · Generasi ke-2", Keterangan Pribadi ("Putri ke-3 dari 11 bersaudara"; antarsepupu: satu kalimat per orang tua; panggilan, jenis kelamin, orang tua, status pernikahan, pasangan berurutan, pekerjaan, nomor silsilah), Riwayat Hidup (lahir, wafat, catatan), anak (anak kandung bernomor; anak sambung/angkat tanpa nomor dengan keterangan kecil), "Anak sambung [nama]"/"Anak angkat [nama]" di keterangan anak itu, kontak (Tampilkan), kabar terkait, riwayat, dan Laporkan kesalahan |
+| 7 | **Form orang / pernikahan / anak** | Gelar "(opsional)", pekerjaan, alamat, dan HP (tidak wajib, tanpa tulisan opsional), tanggal kabur, jenis anak, urutan lahir (hanya anak kandung), pilihan "Belum menikah" (hanya di data diri sendiri), dan "Berpisah" (hanya untuk yang berhak, SL010) |
 | 8 | **Pohon keluarga asal** | Untuk yang diberi akses. Pohon terpisah dengan warna latar berbeda dan istilah dari sudut pandang pasangan khusus (Bapak, Mbah, Pakdhe, …). Hanya admin yang bisa mengedit. |
 | 9 | **Pencarian** | Semua hasil yang cocok + toleran ejaan; pencarian wilayah/nomor (yang berwenang) |
 | 10 | **Kabar Keluarga** | Daftar (yang disematkan di atas), saringan jenis, arsip per tahun |
@@ -1037,13 +1046,13 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
   - **Keturunan**: lingkaran simbol ♂/♀, NAMA (dengan "Alm./Almh." otomatis dan gelar), istilah Jawa kapital kecil (misalnya "PUTU"), dan "GEN.n" kecil di **pojok** kartu.
   - **Pangkal**: lingkaran simbol, NAMA, dan label "PANGKAL" (tanpa GEN).
   - **Pasangan**: **hanya** lingkaran simbol dan NAMA, tanpa label dan tanpa GEN; warnanya sudah menandakan pasangan.
-  - Tahun lahir–wafat, nama panggilan, "Anak ke-n", "dari istri ke-n", dan "Pasangan dari … · bercerai" **tidak** di kartu, tetapi di panel keterangan.
+  - Tahun lahir–wafat, nama panggilan, "Putra/Putri ke-n · dari istri ke-n", dan "Pasangan dari … · berpisah" **tidak** di kartu, tetapi di panel keterangan.
   - Label "Istri ke-n"/"Suami ke-n" di atas kartu pasangan **hanya** kalau orang itu menikah dengan lebih dari satu orang.
 - **Warna kartu** (latar lembut + strip atas + lingkaran simbol), semuanya lolos tes kontras biasa dan kontras tinggi (`src/kontras.test.js`):
   - keturunan laki-laki biru, keturunan perempuan pink, pasangan laki-laki hijau sage, pasangan perempuan peach, jenis kelamin tidak diketahui abu;
   - **kedua** kartu pasangan pangkal emas (latar krem keemasan, bingkai emas); kalau wafat tetap emas, tanda wafat cukup strip atas dan lingkaran simbol hitam arang, ditambah "Alm./Almh.";
   - keturunan wafat: seluruh kartu hitam arang tua dengan tulisan terang; pasangan wafat: hitam arang yang lebih muda dengan tulisan putih; simbol ♂/♀ tetap berwarna sesuai jenis kelamin.
-- **Garis**: setiap pernikahan punya ikon hati di antara kedua pasangan; garis ke anak keluar dari hati itu (turun lurus, lalu bercabang siku-siku ke setiap anak). **Garis putus-putus hanya untuk pernikahan yang bercerai**; ditinggal wafat atau masih menikah memakai garis biasa.
+- **Garis**: setiap pernikahan punya ikon hati di antara kedua pasangan; garis ke anak keluar dari hati itu (turun lurus, lalu bercabang siku-siku ke setiap anak). **Garis putus-putus hanya untuk pernikahan yang berakhir karena berpisah**; ditinggal wafat atau masih menikah memakai garis biasa.
 - **Istilah generasi Jawa** tampil jelas, dengan label kecil **"GEN.n"**:
   - GEN.0 Pangkal, GEN.1 Anak, GEN.2 Putu, GEN.3 Buyut, GEN.4 Canggah, GEN.5 Wareng;
   - GEN.6 Udheg-udheg, GEN.7 Gantung siwur, GEN.8 Gropak senthe, GEN.9 Debog bosok, GEN.10 Galih asem;
@@ -1051,21 +1060,27 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 - **Kedua orang tua sama-sama keturunan** (pernikahan antarsepupu):
   - GEN mengikuti **jalur yang paling dekat ke pangkal**.
   - Di bagan, anak tampil **sekali**, di bawah orang tua di jalur itu. Di samping setiap keturunan, pasangannya dari cabang lain tampil sebagai **kartu rujukan** yang dihubungkan dengan ikon hati: warna keturunan sesuai jenis kelaminnya, keterangan kecil "Dari cabang lain" dan tanda ↗; mengetuknya melompat ke kartu utamanya. Di tempat orang tua yang tidak memuat anaknya ada catatan kecil "Anak mereka ada di cabang …" yang bisa diketuk.
-  - Panel keterangan menampilkan "Anak ke-n dari …" untuk masing-masing orang tua, dan satu baris singkat "Lewat …: Canggah · Generasi ke-4" hanya kalau GEN kedua jalur berbeda. Tanpa kalimat penjelasan teknis.
-- **Urutan lahir** di panel keterangan, misalnya **"Anak ke-6 · dari istri ke-1"**:
-  - "Anak ke-n" adalah urutan lahir lintas semua pernikahan orang tua keturunan.
-  - "istri/suami ke-n" adalah urutan **pasangan yang berbeda**, menurut pernikahan pertama dengan pasangan itu. Contoh: istri ke-1 → anak 1–3, istri ke-2 → anak 4–5, kembali ke istri ke-1 → anak 6–7 ("dari istri ke-1"), istri ke-3 → anak 8–11.
-  - Bagian "· dari istri ke-n" hanya muncul kalau orang tua itu pernah punya lebih dari satu pasangan.
-- **Anak sambung dan anak angkat**: kartu **sama persis**, istilah dan GEN sama dengan saudaranya, dan ikut urutan keluarga itu. Keterangan "Anak sambung"/"Anak angkat" (kata lembut) **hanya** ada di panel keterangan anak itu sendiri, tidak di daftar anak milik orang tuanya dan tidak di Daftar.
-- **Pasangan**: di panel, "Pasangan dari [nama]" di bawah nama, tanpa istilah generasi. Kalau bercerai, tertulis "· bercerai".
+  - Panel keterangan menampilkan satu kalimat urutan per orang tua, misalnya "Putri ke-2 dari 3 bersaudara (pihak Gendis)", dan satu baris singkat "Lewat …: Canggah · Generasi ke-4" hanya kalau GEN kedua jalur berbeda. Tanpa kalimat penjelasan teknis.
+- **Urutan lahir** (ditetapkan ulang Oktober 2026, putaran kedua tinjauan):
+  - **"Putra ke-n"** (laki-laki) atau **"Putri ke-n"** (perempuan); kalau jenis kelamin belum diketahui "Putra/Putri ke-n". Kata **"Anak ke-n" tidak dipakai di mana pun** (kartu, panel, daftar anak, Daftar).
+  - Hanya **anak kandung** orang tua itu yang bernomor, lintas semua pernikahannya (bagian 5.4). Anak sambung dan anak angkat **tidak bernomor**.
+  - Di panel anak itu: satu kalimat tanpa label di bawah judul KETERANGAN PRIBADI, misalnya **"Putri ke-3 dari 11 bersaudara"** ("bersaudara" = jumlah anak kandung orang tua itu; anak kandung satu-satunya: "Putri tunggal"). Antarsepupu: satu kalimat per orang tua ("… (pihak Rangga)").
+  - Di Daftar: **"Putra ke-6 · dari istri ke-1"**. "istri/suami ke-n" adalah urutan **pasangan yang berbeda**, menurut pernikahan pertama dengan pasangan itu. Contoh: istri ke-1 → anak 1–3, istri ke-2 → anak 4–5, kembali ke istri ke-1 → anak 6–7 ("dari istri ke-1"), istri ke-3 → anak 8–11. Bagian "· dari istri ke-n" hanya muncul kalau orang tua itu pernah punya lebih dari satu pasangan.
+- **Anak sambung dan anak angkat** (diubah Oktober 2026; sebelumnya keterangannya hanya di panel anak itu sendiri):
+  - Kartu di Bagan sama dengan saudaranya (istilah dan GEN sama), tetapi **tanpa nomor urut**.
+  - Di panel anak itu: **"Anak sambung [nama orang tua sambungnya]"** atau **"Anak angkat [nama orang tua angkatnya]"** (kata lembut).
+  - Di panel orang tuanya, bagian **ANAK**: anak kandung bernomor ("1. Nama", "2. Nama", …) dengan keterangan kecil "· dari istri ke-n"/"· dari suami ke-n" kalau orang tua itu menikah dengan lebih dari satu orang; anak sambung/angkat **tanpa nomor** dengan keterangan kecil "anak sambung"/"anak angkat". Semuanya disusun menurut umur (aturan yang sama dengan Bagan, bagian 15.1 "Bagan").
+  - Di Daftar tidak ada kata "sambung"/"angkat"; anak sambung/angkat tampil tanpa keterangan urutan.
+- **Pasangan**: di panel, "Pasangan dari [nama]" di bawah nama, tanpa istilah generasi. Kalau pernikahan itu berakhir karena berpisah, tertulis "· berpisah".
+- **Kata "cerai"/"bercerai" tidak pernah tampil.** Pernikahan yang berakhir (cerai resmi, cerai agama/adat, atau ditinggal tanpa kabar) ditulis dengan kata netral **"Berpisah"**, tanpa menyebut caranya. Nilai di database tetap `'cerai'`.
 - **Panel keterangan** (format aplikasi lama; di layar lebar di sisi kanan, di HP dari bawah):
   - atas: avatar dalam lingkaran berbingkai emas (sementara emoji sesuai jenis kelamin; komponen `Avatar` sudah siap menampilkan foto untuk Fase 3), NAMA, lalu **"Putu · Generasi ke-2"** (istilah Jawa dulu, bukan "Generasi ke-2 (Putu)");
-  - **INFORMASI ANGGOTA**: jenis kelamin, panggilan, orang tua dalam satu baris ("Bima & Eka", keduanya bisa diketuk), urutan lahir, pasangan ("Tidak ada" kalau tidak ada; baris ini tidak tampil untuk anak di bawah umur atau yang wafat semasa kecil), nomor silsilah. Lebih dari satu pasangan: "Istri ke-1: … (bercerai)", dst.;
-  - **RIWAYAT HIDUP**: Lahir (tempat, tanggal), Wafat (kalau ada);
-  - **ANAK**: nama-nama yang bisa diketuk, urut kelahiran; lalu **PEKERJAAN** dan **CATATAN** kalau ada; lalu tempat tombol aksi (gaya tombol aplikasi lama).
-- **Aturan tulisan** (dijaga `src/tulisan.test.jsx`): satu pernikahan tanpa "ke-1"; "Menikah tahun 1974" (bukan "Menikah · Menikah 1974"); tanpa kata ganda, penomoran yang tidak perlu, istilah teknis, atau kalimat yang bisa menyinggung.
+  - **KETERANGAN PRIBADI** (dulu "Informasi Anggota"): kalimat urutan ("Putri ke-3 dari 11 bersaudara", atau "Anak sambung …"), lalu baris-baris. **Selalu tampil, ditulis "-" kalau belum diisi**: Panggilan, Jenis kelamin, Orang tua (satu baris, "Bima & Eka", keduanya bisa diketuk), Pekerjaan, Nomor silsilah. **Hanya kalau berlaku**: Status pernikahan (pilihan tetap, bagian 5.4; tidak tampil untuk anak di bawah umur atau yang wafat semasa kecil, kecuali ada data pernikahannya), Pasangan (hanya kalau ada data pernikahan; lebih dari satu pasangan: "Istri ke-1: … (berpisah)", dst.);
+  - **RIWAYAT HIDUP**: Lahir (tempat, tanggal; selalu, "-" kalau belum diisi), Wafat (**hanya** untuk yang sudah wafat; tidak pernah "Wafat: -" untuk yang masih hidup), Catatan (selalu, "-" kalau kosong);
+  - **ANAK** (kalau ada): lihat "Anak sambung dan anak angkat" di atas; lalu tempat tombol aksi (gaya tombol aplikasi lama).
+- **Aturan tulisan** (dijaga `src/tulisan.test.jsx`): satu pernikahan tanpa "ke-1"; "Menikah tahun 1974" (bukan "Menikah · Menikah 1974"); tanpa kata ganda, penomoran yang tidak perlu, istilah teknis, atau kalimat yang bisa menyinggung; tanpa "Anak ke-", "cerai"/"bercerai", "Wafat: -" untuk yang masih hidup, dan "Belum menikah" yang tidak dipilih orangnya sendiri.
 - **Nomor silsilah otomatis** di tampilan Daftar (misalnya 1.6.2).
-  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Angka terakhir selalu sama dengan "Anak ke-n" di panel keterangan. Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak bernomor.
+  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Untuk anak kandung, angka terakhir selalu sama dengan "Putra/Putri ke-n" di panel keterangan. **Anak sambung/angkat** tetap bernomor supaya keturunannya juga bernomor: sesudah semua anak kandung orang tua itu, menurut umur (Oktober 2026). Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak bernomor ("-").
 - **Nama di kartu** memuat gelar religius di depan dan gelar pendidikan di belakang: "Alm. KH. Nama, S.Ag.".
 
 ### 15.2 Pencarian
@@ -1107,7 +1122,7 @@ Aturan tetap (prinsip 10): tampilan mengikuti aplikasi lama. Perubahan besar har
 - Saat dibuka, **bagan tampil utuh** (diperkecil supaya seluruh pohon terlihat), lalu bisa diperbesar.
 - **Kartu**: strip warna tipis di tepi atas, lingkaran kecil berisi simbol ♂/♀ menempel di tengah atas, NAMA kapital Cinzel (boleh dua baris), dan di bawahnya satu label kecil kapital (istilah). Kartu terpilih/hover: bingkai emas.
 - **Pasangan** duduk tepat di samping keturunannya, dengan ikon **hati** di dalam lingkaran kecil di antara keduanya. Garis ke anak keluar dari ikon hati: turun lurus, lalu bercabang siku-siku ke setiap anak; garis tipis cokelat keemasan.
-- **Panel detail** di sisi kanan, berlatar putih (di HP: lembar dari bawah atau layar penuh): avatar emoji di dalam lingkaran berbingkai emas, NAMA (Cinzel), istilah di bawahnya, lalu bagian "INFORMASI ANGGOTA" dan "RIWAYAT HIDUP" dengan judul kecil kapital berwarna emas. Tombol utama emas berbentuk kotak membulat; tombol hapus bergaris merah.
+- **Panel detail** di sisi kanan, berlatar putih (di HP: lembar dari bawah atau layar penuh): avatar emoji di dalam lingkaran berbingkai emas, NAMA (Cinzel), istilah di bawahnya, lalu bagian "INFORMASI ANGGOTA" (sejak Oktober 2026 bernama "KETERANGAN PRIBADI") dan "RIWAYAT HIDUP" dengan judul kecil kapital berwarna emas. Tombol utama emas berbentuk kotak membulat; tombol hapus bergaris merah.
 
 ---
 
@@ -1140,7 +1155,7 @@ Satu objek JSON bersarang berisi `id`, `name`, `gender`, `relation` (teks manual
 | `spouse`, `marriages[]` | `unions` + `people` pasangan, satu baris per pernikahan sesuai urutan |
 | `children` | `children` ke pernikahan yang sesuai. Tanpa pasangan → pernikahan dengan pasangan "tidak diketahui". |
 | urutan anak di data lama + `relation` | `birth_ranks`. Selisih antara urutan data lama, teks `relation`, dan tanggal lahir dilaporkan. |
-| status "Bercerai" | `cerai` |
+| status "Bercerai" | `cerai` (tampil "Berpisah") |
 | status "Almarhum/ah", atau ada `deathDate`/`deathPlace` | `is_deceased = true` pada orang yang sesuai (ditandai "perlu dicek") |
 | `birthDate`, `deathDate` (teks bebas) | `birth_*` / `death_*` (tanggal lengkap, bulan + tahun, tahun saja, atau "sekitar"). Teks yang gagal dibaca: tanggal dikosongkan, teks aslinya ditambahkan ke catatan dengan awalan "Tanggal dari data lama:", lalu ditandai "perlu dicek". |
 | `birthPlace`, `deathPlace` | `birth_place`, `death_place` (apa adanya, hanya spasi berlebih yang dirapikan) |
@@ -1419,7 +1434,8 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 **Tidak ada pertanyaan terbuka.** Semua keputusan sudah tercatat di bagian-bagian terkait:
 
 - Migrasi: struktur, tanggal/tempat, dan "bio" → catatan (16.2).
-- Pernikahan antarsepupu: GEN mengikuti jalur yang paling dekat ke pangkal, kedua jalur ditampilkan, dan "Anak ke-n" dihitung per orang tua (5.4, 15.1).
+- Pernikahan antarsepupu: GEN mengikuti jalur yang paling dekat ke pangkal, kedua jalur ditampilkan, dan "Putra/Putri ke-n" dihitung per orang tua (5.4, 15.1).
+- Putaran kedua tinjauan tampilan (Oktober 2026): "Putra/Putri ke-n" hanya untuk anak kandung; status pernikahan sebagai pilihan tetap ("Belum menikah" hanya pilihan sendiri); kata "Berpisah" menggantikan "cerai"; siapa yang boleh menandai pernikahan berakhir (5.4, 15.1).
 - GEN.11 dan seterusnya tanpa istilah (5.4, 15.1).
 - Pohon keluarga asal: akses dinamis untuk keturunan yang lahir nanti, istilah dari sudut pandang pasangan khusus (5.4).
 - Undangan: 18 tahun ke atas atau sudah menikah; kalau tanggal lahir tidak diketahui, admin/asisten yang memutuskan (6.1).

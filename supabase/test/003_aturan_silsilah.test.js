@@ -191,6 +191,60 @@ describe('urutan lahir otomatis', () => {
   })
 })
 
+describe('urutan lahir hanya untuk anak kandung', () => {
+  let ayah, ibu, u, ibuBaru, uBaru, kKandung, kSambungIbu, kSambungAyah, kAngkat, kKedua
+  beforeAll(async () => {
+    ayah = await h.orang('Ayah Kandung Contoh', { sex: 'L', birth_y: 1955 })
+    await h.anak(ub, ayah)
+    ibu = await h.orang('Ibu Kandung Contoh', { sex: 'P' })
+    u = await h.nikah(ayah, ibu)
+    kSambungIbu = await h.orang('Sambung Ibu Contoh', { birth_y: 1975 }) // anak ibu dari sebelumnya, LEBIH TUA
+    kKandung = await h.orang('Kandung Contoh', { birth_y: 1980 })
+    kAngkat = await h.orang('Angkat Contoh', { birth_y: 1982 })
+    kKedua = await h.orang('Kandung Kedua Contoh', { birth_y: 1985 })
+    await h.anak(u, kSambungIbu, 'sambung', 'partner2')
+    await h.anak(u, kKandung)
+    await h.anak(u, kAngkat, 'angkat')
+    await h.anak(u, kKedua)
+    // Anak ayah sendiri dari hubungan sebelumnya, dicatat sebagai anak sambung di pernikahan baru.
+    ibuBaru = await h.orang('Ibu Baru Contoh', { sex: 'P' })
+    uBaru = await h.nikah(ayah, ibuBaru)
+    kSambungAyah = await h.orang('Sambung Ayah Contoh', { birth_y: 1990 })
+    await h.anak(uBaru, kSambungAyah, 'sambung', 'partner1')
+  })
+
+  it('anak sambung (dari pasangan) dan anak angkat tidak bernomor; nomor hanya anak kandung', async () => {
+    expect(await h.urutan(ayah)).toEqual([
+      { child_id: kKandung, rank: 1 },
+      { child_id: kKedua, rank: 2 },
+      { child_id: kSambungAyah, rank: 3 }, // anak kandung ayah walaupun dicatat sebagai anak sambung ibu baru
+    ])
+  })
+
+  it('urutan lahir untuk anak sambung atau angkat ditolak', async () => {
+    await ditolak(db.query(`insert into public.birth_ranks (parent_id, child_id, rank) values ($1, $2, 9)`, [ayah, kSambungIbu]), 'SL007')
+    await ditolak(db.query(`insert into public.birth_ranks (parent_id, child_id, rank) values ($1, $2, 9)`, [ayah, kAngkat]), 'SL007')
+  })
+
+  it('diubah menjadi anak angkat → urutannya hilang dan dirapikan; dikembalikan → bernomor lagi', async () => {
+    await db.query(`update public.children set kind = 'angkat', biological_parent = null where child_id = $1`, [kKandung])
+    expect(await h.urutan(ayah)).toEqual([{ child_id: kKedua, rank: 1 }, { child_id: kSambungAyah, rank: 2 }])
+    await db.query(`update public.children set kind = 'kandung', biological_parent = 'keduanya' where child_id = $1`, [kKandung])
+    expect((await h.urutan(ayah)).map((r) => r.child_id)).toEqual([kKandung, kKedua, kSambungAyah])
+  })
+})
+
+describe('pernikahan baru tanpa menandai pernikahan sebelumnya berakhir', () => {
+  it('diterima: tidak ada aturan yang melarang', async () => {
+    const suami = await h.orang('Suami Dua Istri Contoh', { sex: 'L' })
+    await h.anak(ub, suami)
+    const u1 = await h.nikah(suami, await h.orang('Istri Pertama Contoh', { sex: 'P' }), { marriage_y: 1990 })
+    const u2 = await h.nikah(suami, await h.orang('Istri Kedua Contoh', { sex: 'P' }), { marriage_y: 1995 })
+    const r = await baris(db, `select status from public.unions where id in ($1, $2)`, [u1, u2])
+    expect(r.map((x) => x.status)).toEqual(['menikah', 'menikah'])
+  })
+})
+
 describe('pernikahan antarsepupu', () => {
   it('anak mendapat urutan untuk kedua orang tua', async () => {
     const uc = await h.nikah(c1, c2)

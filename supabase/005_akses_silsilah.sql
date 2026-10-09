@@ -24,6 +24,19 @@
 --                         ubah: label/zona waktu/terakhir aktif sendiri
 --   Tamu (anon)           tidak bisa apa pun.
 --
+-- Dua aturan tambahan untuk silsilah utama (trigger, berlaku juga kalau
+-- aplikasi dilewati; SQL Editor tidak dibatasi):
+--   Pernikahan berakhir   status 'cerai' (tampil "Berpisah") hanya boleh
+--   karena berpisah       dicatat atau dibatalkan oleh salah satu dari kedua
+--                         orang dalam pernikahan itu (kalau mereka anggota),
+--                         admin utama, atau asisten dengan izin
+--                         "status_pernikahan" (SL010). Pernikahan baru tetap
+--                         boleh dicatat walaupun pernikahan sebelumnya belum
+--                         ditandai berakhir.
+--   "Belum menikah"       people.marital_choice hanya boleh diubah oleh
+--                         orangnya sendiri (SL011). Aplikasi tidak pernah
+--                         mengisinya otomatis.
+--
 -- Kolom yang diatur sistem (version, created_*, updated_*, deleted_*,
 -- legacy_id) tidak bisa ditulis langsung oleh aplikasi.
 --
@@ -143,6 +156,82 @@ begin
   end loop;
 end $$;
 
+-- ── Aturan: status pernikahan ─────────────────────────────────────
+-- true kalau pemanggil adalah orang `p` itu sendiri (anggotanya tertaut ke p).
+create or replace function private.is_self(p uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p is not null and exists (
+    select 1 from public.members m
+    where m.id = public.current_member_id() and m.person_id = p)
+$$;
+revoke all on function private.is_self(uuid) from public, anon, authenticated;
+
+-- Menandai sebuah pernikahan berakhir karena berpisah (atau membatalkan
+-- tanda itu) adalah keputusan yang peka: hanya salah satu dari kedua orang
+-- dalam pernikahan itu, admin utama, atau asisten dengan izin
+-- "status_pernikahan". Berlaku saat mengubah status, dan saat mencatat
+-- pernikahan baru yang langsung berstatus berpisah.
+create or replace function private.trg_unions_status_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  berubah boolean;
+begin
+  if private.is_maintenance() or new.tree_id is not null then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    berubah := new.status = 'cerai';
+  else
+    berubah := (new.status = 'cerai') is distinct from (old.status = 'cerai');
+  end if;
+  if berubah
+     and not public.has_perm('status_pernikahan')
+     and not private.is_self(new.partner1_id)
+     and not private.is_self(new.partner2_id) then
+    perform private.fail('SL010',
+      'Status berpisah sebuah pernikahan hanya bisa diubah oleh salah satu dari kedua pasangan itu, admin utama, atau asisten yang diberi izin.');
+  end if;
+  return new;
+end $$;
+revoke all on function private.trg_unions_status_guard() from public, anon, authenticated;
+
+drop trigger if exists b_status on public.unions;
+create trigger b_status before insert or update of status on public.unions
+  for each row execute function private.trg_unions_status_guard();
+
+-- "Belum menikah" hanya dipilih oleh orangnya sendiri.
+create or replace function private.trg_people_marital_choice_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if private.is_maintenance() then
+    return new;
+  end if;
+  if (tg_op = 'INSERT' and new.marital_choice is not null)
+     or (tg_op = 'UPDATE' and new.marital_choice is distinct from old.marital_choice
+         and not private.is_self(new.id)) then
+    perform private.fail('SL011', 'Status "Belum menikah" hanya bisa dipilih oleh orangnya sendiri.');
+  end if;
+  return new;
+end $$;
+revoke all on function private.trg_people_marital_choice_guard() from public, anon, authenticated;
+
+drop trigger if exists b_marital_choice on public.people;
+create trigger b_marital_choice before insert or update of marital_choice on public.people
+  for each row execute function private.trg_people_marital_choice_guard();
+
 -- ── Policy: urutan lahir ──────────────────────────────────────────
 -- Dibuat otomatis oleh trigger; aplikasi hanya menggeser (rank).
 drop policy if exists baca on public.birth_ranks;
@@ -230,7 +319,7 @@ grant insert (tree_id, full_name, nickname, religious_title, academic_title, sex
 grant update (full_name, nickname, religious_title, academic_title, sex,
               birth_y, birth_m, birth_d, birth_approx, birth_place,
               is_deceased, death_y, death_m, death_d, death_approx, death_place,
-              occupation, notes)
+              occupation, notes, marital_choice)
   on public.people to authenticated;
 
 grant insert (partner1_id, partner2_id, status, marriage_y, marriage_m, marriage_d, marriage_approx,
@@ -312,6 +401,12 @@ select 'Fungsi di public/private yang bisa dijalankan anon',
                    and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
                    and has_function_privilege('anon', p.oid, 'execute')), 'tidak ada'),
        'tidak ada'
+union all
+select 'Penjaga status berpisah dan "Belum menikah" terpasang (dari 2)',
+       (select count(*)::text from pg_trigger t join pg_class c on c.oid = t.tgrelid
+        where c.relnamespace = 'public'::regnamespace and not t.tgisinternal
+          and (c.relname, t.tgname) in (('unions', 'b_status'), ('people', 'b_marital_choice'))),
+       '2'
 union all
 select 'View di schema public (harus tidak ada; Security Advisor)',
        coalesce((select string_agg(viewname, ', ') from pg_views where schemaname = 'public'), 'tidak ada'),

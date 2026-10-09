@@ -4,37 +4,41 @@
 // gelar) dan SATU label kecil, yaitu istilah Jawa ("Putu") untuk keturunan
 // dengan "GEN.n" di pojok, "Pangkal" untuk pasangan pangkal, dan TANPA label
 // untuk pasangan (warnanya sudah menandakan pasangan). Tahun lahir–wafat,
-// "Anak ke-n", "dari istri ke-n", dan "Pasangan dari …" ada di panel
-// keterangan dan Daftar. Anak sambung dan anak angkat tampil SAMA PERSIS
-// dengan saudaranya; keterangan "Anak sambung"/"Anak angkat" hanya ada di
-// keterangan anak itu sendiri.
+// "Putra/Putri ke-n", "dari istri ke-n", dan "Pasangan dari …" ada di panel
+// keterangan dan Daftar. Anak sambung dan anak angkat memakai kartu yang
+// sama dengan saudaranya, tetapi tidak bernomor (hanya anak kandung yang
+// punya "Putra/Putri ke-n").
 import { isiTeks, teks } from '../../teks/id.js'
 import { namaTampil } from './nama.js'
-import { bandingkanKabur, tahunHidup, tanggalDari, teksPeristiwa, teksWaktu } from './tanggal.js'
+import { tahunHidup, tanggalDari, teksPeristiwa, teksWaktu } from './tanggal.js'
 import { istilahGenerasi, labelGen, teksGenerasi } from './generasi.js'
-import { jenisPasangan, pasanganBerurutan, teksAnakKe, teksPasanganKe } from './urutan.js'
-import { orangTuaUnion, pasanganDi, urutanLahir } from './graf.js'
+import { jenisPasangan, pasanganBerurutan, teksBersaudara, teksPasanganKe, teksUrutanKe } from './urutan.js'
+import { orangTuaUnion, pasanganDi } from './graf.js'
+import { anakOrangTua } from './anak.js'
+import { statusPernikahan } from './status.js'
+import { masihAnak } from './umur.js'
 
 const KATA = teks.silsilah
 
 const hurufBesarAwal = (teks) => teks.charAt(0).toUpperCase() + teks.slice(1)
 
-// "Anak ke-6 · dari istri ke-1". Bagian "dari …" hanya muncul kalau orang
-// tua itu pernah punya lebih dari satu pasangan.
-export function teksJalur(jalur) {
-  const bagian = []
-  if (jalur.anakKe != null) bagian.push(teksAnakKe(jalur.anakKe))
-  if (jalur.pasanganKe && jalur.pasanganKe.jumlah > 1) {
-    bagian.push(`${KATA.dari} ${teksPasanganKe(jalur.pasanganKe.jenis, jalur.pasanganKe.ke)}`)
-  }
-  return hurufBesarAwal(bagian.join(' · '))
+// "dari istri ke-1": hanya kalau orang tua itu pernah punya lebih dari satu pasangan.
+function teksDariPasangan(pasanganKe) {
+  return pasanganKe && pasanganKe.jumlah > 1 ? `${KATA.dari} ${teksPasanganKe(pasanganKe.jenis, pasanganKe.ke)}` : null
+}
+
+// Untuk Daftar: "Putra ke-6 · dari istri ke-1". Kosong untuk anak
+// sambung/angkat (tidak bernomor).
+export function teksJalur(jalur, sex) {
+  if (jalur.anakKe == null) return ''
+  return [teksUrutanKe(sex, jalur.anakKe), teksDariPasangan(jalur.pasanganKe)].filter(Boolean).join(' · ')
 }
 
 const gabungNama = (nama) =>
   nama.length < 2 ? nama.join('') : `${nama.slice(0, -1).join(', ')} ${KATA.dan} ${nama.at(-1)}`
 
-// "Pasangan dari [nama]" untuk orang yang bukan keturunan; "· bercerai" kalau
-// pernikahan terakhirnya dengan setiap keturunan itu berakhir cerai.
+// "Pasangan dari [nama]" untuk orang yang bukan keturunan; "· berpisah" kalau
+// pernikahan terakhirnya dengan setiap keturunan itu berakhir karena berpisah.
 export function keteranganPasangan(s, id) {
   const terakhir = new Map() // keturunan → pernikahan terakhir dengan orang ini
   for (const u of s.graf.pernikahan.get(id) ?? []) {
@@ -46,8 +50,8 @@ export function keteranganPasangan(s, id) {
   }
   if (terakhir.size === 0) return ''
   const nama = [...terakhir.keys()].map((p) => namaTampil(s.graf.orang.get(p)))
-  const bercerai = [...terakhir.values()].every((u) => u.status === 'cerai')
-  return `${KATA.pasanganDari} ${gabungNama(nama)}${bercerai ? ` · ${KATA.bercerai}` : ''}`
+  const berpisah = [...terakhir.values()].every((u) => u.status === 'cerai')
+  return `${KATA.pasanganDari} ${gabungNama(nama)}${berpisah ? ` · ${KATA.berpisah}` : ''}`
 }
 
 // jenis: 'pangkal' (GEN.0) | 'keturunan' | 'pasangan' (bukan keturunan).
@@ -74,60 +78,79 @@ export function labelKartu(s, id) {
   }
 }
 
-// Untuk Daftar: tahun lahir–wafat dan keterangan singkat ("Anak ke-6 · dari
-// istri ke-1", atau "Pasangan dari …").
+// Untuk Daftar: tahun lahir–wafat dan keterangan singkat ("Putra ke-6 ·
+// dari istri ke-1", atau "Pasangan dari …").
 export function keteranganDaftar(s, id) {
   const orang = s.graf.orang.get(id)
   const utama = s.jalur.get(id)?.[0]
   return {
     tahun: tahunHidup(orang),
-    keterangan: !s.gen.has(id) ? keteranganPasangan(s, id) : utama ? teksJalur(utama) : '',
+    keterangan: !s.gen.has(id) ? keteranganPasangan(s, id) : utama ? teksJalur(utama, orang.sex) : '',
   }
 }
 
-// Panel keterangan (format aplikasi lama). Semua teks sudah jadi, siap tampil:
+// Panel keterangan (format aplikasi lama). Semua teks sudah jadi, siap
+// tampil; isian yang kosong (null) ditulis "-" oleh layar:
 //   subjudul     "Putu · Generasi ke-2" (istilah Jawa dulu), "Pangkal",
-//                atau "Pasangan dari Bima · bercerai"
+//                atau "Pasangan dari Bima · berpisah"
 //   jenisKelamin "Laki-laki" / "Perempuan" / "Tidak diketahui"
-//   orangTua     [{ orang: [{ id, nama }], jenis }]: satu baris per pasangan
-//                orang tua ("Bima & Eka"); jenis = "Anak sambung Cahya" /
-//                "Anak angkat" (kata lembut, HANYA di keterangan anak itu)
-//   urutan       ["Anak ke-6 · dari istri ke-1"]; antarsepupu: satu baris per
-//                orang tua ("Anak ke-1 dari Rangga")
+//   panggilan, pekerjaan, catatan, nomor   (null kalau kosong)
+//   orangTua     [{ unionId, orang: [{ id, nama }] }]: satu baris per
+//                pasangan orang tua ("Bima & Eka")
+//   urutan       kalimat di bawah judul KETERANGAN PRIBADI, tanpa label:
+//                "Putri ke-3 dari 11 bersaudara"; antarsepupu: satu kalimat
+//                per orang tua ("… (pihak Rangga)"); anak sambung/angkat:
+//                "Anak sambung Cahya" / "Anak angkat Lorvan & Sinta"
 //   lewat        antarsepupu dengan GEN berbeda: "Lewat Gendis: Canggah · Generasi ke-4"
-//   pasangan     [{ id, nama, ke ("Istri ke-1" kalau lebih dari satu), cerai,
-//                   waktu ("Menikah tahun 1970, bercerai tahun 1976") }]
-//   lahir, wafat "Kota, 12 Maret 1950"
-//   anak         [{ id, nama }] urut lahir, lintas semua pernikahan
-//   masihAnak    belum 18 tahun, atau wafat sebelum 18 tahun: baris
-//                "Pasangan: Tidak ada" tidak perlu ditampilkan
-export function labelDetail(s, id, { tahunIni = new Date().getFullYear() } = {}) {
+//   tampilStatus baris "Status pernikahan" tampil (tidak untuk anak di bawah
+//                umur tanpa data pernikahan)
+//   statusPernikahan "Menikah" / "Berpisah" / "Ditinggal wafat pasangan" /
+//                "Belum menikah" (hanya pilihan orangnya sendiri) / null ("-")
+//   pasangan     [{ id, nama, ke ("Istri ke-1" kalau lebih dari satu), berpisah,
+//                   waktu ("Menikah tahun 1970, berpisah tahun 1976") }]; baris
+//                "Pasangan" hanya tampil kalau ada data pernikahan
+//   lahir        "Kota, 12 Maret 1950" (null kalau tidak diketahui)
+//   sudahWafat, wafat   baris "Wafat" hanya untuk yang sudah wafat
+//   anak         [{ id, nama, ke (null untuk anak sambung/angkat), jenis
+//                   ("anak sambung"/"anak angkat"), dari ("dari istri ke-2") }]
+//                menurut umur: anak kandung bernomor, anak sambung/angkat
+//                disisipkan menurut tanggal lahirnya
+//   masihAnak    belum 18 tahun, atau wafat sebelum 18 tahun
+export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const gen = s.gen.get(id) ?? null
   const nama = (pid) => namaTampil(s.graf.orang.get(pid))
+  const gabungOrangTua = (u) => orangTuaUnion(u).map(nama).join(' & ')
 
   // Orang tua: satu baris per hubungan anak (biasanya satu).
-  const orangTua = (s.graf.tautan.get(id) ?? []).map((t) => {
+  const tautan = s.graf.tautan.get(id) ?? []
+  const orangTua = tautan.map((t) => {
     const u = s.graf.unions.get(t.union_id)
-    const ids = orangTuaUnion(u)
-    let jenis = KATA.jenisAnak[t.kind] ?? null
+    return { unionId: u.id, orang: orangTuaUnion(u).map((pid) => ({ id: pid, nama: nama(pid) })) }
+  })
+
+  // Urutan lahir: dari orang tua keturunan, hanya kalau ia anak KANDUNG orang
+  // tua itu. Kalau kedua orang tua keturunan (antarsepupu), satu kalimat untuk
+  // masing-masing. Anak pasangan pangkal BUKAN antarsepupu walaupun kedua
+  // pangkal ber-GEN.0: cukup satu kalimat.
+  const jalur = (s.jalur.get(id) ?? []).filter((j, i) => i === 0 || s.gen.get(j.orangTuaId) !== 0)
+  const bernomor = jalur.filter((j) => j.anakKe != null)
+  const urutan = bernomor.map((j) => {
+    const kalimat = teksBersaudara(orang.sex, j.anakKe, anakOrangTua(s.graf, j.orangTuaId).kandung.length)
+    return bernomor.length > 1 ? isiTeks(KATA.pihak, { isi: kalimat, nama: nama(j.orangTuaId) }) : kalimat
+  })
+  // Anak sambung / anak angkat (kata lembut).
+  for (const t of tautan) {
+    const u = s.graf.unions.get(t.union_id)
     if (t.kind === 'sambung') {
       // Anak sambung dari orang tua yang BUKAN orang tua kandungnya.
       const sambung = t.biological_parent === 'partner2' ? u.partner1_id : t.biological_parent === 'partner1' ? u.partner2_id : null
-      if (sambung) jenis = isiTeks(KATA.anakSambungDari, { nama: nama(sambung) })
+      if (sambung) urutan.push(isiTeks(KATA.anakSambungDari, { nama: nama(sambung) }))
+    } else if (t.kind === 'angkat') {
+      urutan.push(isiTeks(KATA.anakAngkatDari, { nama: gabungOrangTua(u) }))
     }
-    return { unionId: u.id, orang: ids.map((pid) => ({ id: pid, nama: nama(pid) })), jenis }
-  })
-
-  // Urutan lahir: dari orang tua keturunan. Kalau kedua orang tua keturunan
-  // (antarsepupu), satu baris untuk masing-masing. Anak pasangan pangkal
-  // BUKAN antarsepupu walaupun kedua pangkal ber-GEN.0: cukup satu baris.
-  const jalur = (s.jalur.get(id) ?? []).filter((j, i) => i === 0 || s.gen.get(j.orangTuaId) !== 0)
-  const urutan =
-    jalur.length > 1
-      ? jalur.filter((j) => j.anakKe != null).map((j) => isiTeks(KATA.anakKeDari, { n: j.anakKe, nama: nama(j.orangTuaId) }))
-      : jalur.map(teksJalur).filter(Boolean)
+  }
   const lain = jalur.find((j) => j.gen !== gen)
   const lewat =
     jalur.length > 1 && lain
@@ -145,7 +168,7 @@ export function labelDetail(s, id, { tahunIni = new Date().getFullYear() } = {})
       const kalimat = []
       if (menikah) kalimat.push(`${j === 0 ? KATA.menikahPertama : KATA.menikahLagi} ${menikah}`)
       else if (j > 0) kalimat.push(KATA.menikahLagi)
-      if (u.status === 'cerai' && akhir) kalimat.push(`${KATA.bercerai} ${akhir}`)
+      if (u.status === 'cerai' && akhir) kalimat.push(`${KATA.berpisah} ${akhir}`)
       return kalimat.join(', ')
     })
     const waktu = bagian.filter(Boolean).join('; ')
@@ -153,20 +176,27 @@ export function labelDetail(s, id, { tahunIni = new Date().getFullYear() } = {})
       id: p.pasanganId,
       nama: p.pasanganId ? nama(p.pasanganId) : null,
       ke: berurutan.length > 1 ? hurufBesarAwal(teksPasanganKe(jenisPasangan(p.pasanganId ? s.graf.orang.get(p.pasanganId) : null), i + 1)) : null,
-      cerai: daftar.at(-1).status === 'cerai',
+      berpisah: daftar.at(-1).status === 'cerai',
       waktu: waktu ? hurufBesarAwal(waktu) : '',
     }
   })
 
-  // Anak dari semua pernikahan, urut lahir.
-  const anakId = [...new Set(unions.flatMap((u) => (s.graf.anakUnion.get(u.id) ?? []).map((c) => c.child_id)))]
-  const rank = (c) => urutanLahir(s.graf, id, c) ?? Infinity
-  anakId.sort(
-    (a, b) =>
-      rank(a) - rank(b) ||
-      bandingkanKabur(tanggalDari(s.graf.orang.get(a), 'birth'), tanggalDari(s.graf.orang.get(b), 'birth')) ||
-      (a < b ? -1 : 1)
-  )
+  // Anak dari semua pernikahan, menurut umur. Anak kandung bernomor; "dari
+  // istri ke-n" hanya kalau orang tua ini pernah punya lebih dari satu pasangan.
+  const { ke, semua } = anakOrangTua(s.graf, id)
+  const pasanganKe = new Map()
+  berurutan.forEach((p, i) => {
+    for (const uid of p.unionIds) {
+      pasanganKe.set(uid, { ke: i + 1, jumlah: berurutan.length, jenis: jenisPasangan(p.pasanganId ? s.graf.orang.get(p.pasanganId) : null) })
+    }
+  })
+  const anak = semua.map((a) => ({
+    id: a.id,
+    nama: nama(a.id),
+    ke: a.kandung ? ke.get(a.id) : null,
+    jenis: a.kandung ? null : (KATA.jenisAnakKecil[a.kind] ?? null),
+    dari: teksDariPasangan(pasanganKe.get(a.unionId)),
+  }))
 
   const subjudul =
     gen === null
@@ -175,6 +205,8 @@ export function labelDetail(s, id, { tahunIni = new Date().getFullYear() } = {})
         ? (istilahGenerasi(0, s.daftarGenerasi) ?? teksGenerasi(0, s.daftarGenerasi))
         : teksGenerasi(gen, s.daftarGenerasi)
 
+  const anakKecil = masihAnak(orang, hariIni)
+  const status = statusPernikahan(s, id)
   return {
     id,
     nama: namaTampil(orang),
@@ -185,13 +217,16 @@ export function labelDetail(s, id, { tahunIni = new Date().getFullYear() } = {})
     orangTua,
     urutan,
     lewat,
+    tampilStatus: !anakKecil || unions.length > 0,
+    statusPernikahan: status ? KATA.statusPernikahan[status] : null,
     pasangan,
     nomor: s.nomor.get(id) ?? null,
-    lahir: teksPeristiwa(orang, 'birth'),
-    wafat: teksPeristiwa(orang, 'death'),
-    anak: anakId.map((c) => ({ id: c, nama: nama(c) })),
+    lahir: teksPeristiwa(orang, 'birth') || null,
+    sudahWafat: Boolean(orang.is_deceased),
+    wafat: orang.is_deceased ? teksPeristiwa(orang, 'death') || null : null,
+    anak,
     pekerjaan: orang.occupation ?? null,
     catatan: orang.notes ?? null,
-    masihAnak: orang.birth_y != null && (orang.is_deceased ? orang.death_y ?? orang.birth_y : tahunIni) - orang.birth_y < 18,
+    masihAnak: anakKecil,
   }
 }

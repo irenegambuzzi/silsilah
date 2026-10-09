@@ -16,9 +16,11 @@
 --   6. Konsistensi pohon: orang, pernikahan, dan hubungan anak harus di
 --      pohon yang sama, kecuali satu sambungan resmi: pasangan khusus
 --      menjadi "anak" di pohon keluarga asalnya.
---   7. Urutan lahir otomatis: setiap anak baru diberi urutan untuk setiap
---      orang tuanya yang tergolong garis keturunan, disisipkan menurut
---      tanggal lahir (kalau tidak ada tanggal, di urutan terakhir). Urutan
+--   7. Urutan lahir otomatis: setiap ANAK KANDUNG baru diberi urutan untuk
+--      setiap orang tua kandungnya yang tergolong garis keturunan,
+--      disisipkan menurut tanggal lahir (kalau tidak ada tanggal, di urutan
+--      terakhir). Anak sambung dan anak angkat TIDAK bernomor ("Putra/Putri
+--      ke-n" hanya menghitung anak kandung orang tua itu). Urutan
 --      dirapikan otomatis kalau hubungan dibuang ke tempat sampah atau
 --      dipindah. Urutan yang bertentangan dengan tanggal lahir tidak
 --      ditolak, tetapi muncul di birth_rank_warnings().
@@ -27,7 +29,7 @@
 --   SL001 siklus · SL002 pangkal punya orang tua · SL003 pohon tidak cocok
 --   SL004 pasangan diberi orang tua · SL005 pihak garis keturunan bukan
 --   keturunan pangkal · SL006 kolom tidak boleh diubah · SL007 urutan lahir
---   bukan untuk anak orang tua itu · SL008 data di tempat sampah
+--   bukan untuk anak kandung orang tua itu · SL008 data di tempat sampah
 --   SL009 pohon keluarga asal bukan untuk pasangan di silsilah utama
 --
 -- Catatan untuk impor data (migrasi): atur pasangan pangkal lebih dulu,
@@ -157,6 +159,25 @@ as $$
 $$;
 revoke all on function private.rank_parents(uuid) from public, anon, authenticated;
 
+-- true kalau hubungan anak ini menjadikan p orang tua KANDUNG anak itu:
+-- anak kandung kedua orang tua, atau anak sambung yang orang tua darahnya p
+-- (misalnya anak seorang keturunan dari hubungan sebelumnya). Anak angkat
+-- tidak pernah. Hanya anak kandung yang mendapat urutan lahir.
+create or replace function private.is_birth_parent(
+  p uuid, p_biological text, p_partner1 uuid, p_partner2 uuid
+)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select p is not null and coalesce(
+    (p_biological = 'keduanya' and p in (p_partner1, p_partner2))
+    or (p_biological = 'partner1' and p = p_partner1)
+    or (p_biological = 'partner2' and p = p_partner2), false)
+$$;
+revoke all on function private.is_birth_parent(uuid, text, uuid, uuid) from public, anon, authenticated;
+
 -- Memberi urutan lahir untuk anak c di bawah orang tua p, disisipkan
 -- sebelum saudara pertama yang PASTI lahir sesudahnya; kalau tidak ada
 -- (atau tanggal lahir c tidak diketahui), di urutan terakhir.
@@ -191,8 +212,9 @@ begin
 end $$;
 revoke all on function private.add_rank(uuid, uuid) from public, anon, authenticated;
 
--- Membuang urutan yang tidak lagi sah untuk orang tua p (hubungan dibuang
--- atau dipindah), lalu merapikan nomornya menjadi 1, 2, 3, … tanpa celah.
+-- Membuang urutan yang tidak lagi sah untuk orang tua p (hubungan dibuang,
+-- dipindah, atau diubah menjadi anak sambung/angkat), lalu merapikan
+-- nomornya menjadi 1, 2, 3, … tanpa celah.
 create or replace function private.cleanup_ranks(p uuid)
 returns void
 language plpgsql
@@ -209,7 +231,8 @@ begin
       select 1 from public.children c
       join public.unions u on u.id = c.union_id
       where c.child_id = br.child_id and c.deleted_at is null and u.deleted_at is null
-        and p = any (private.rank_parents(u.id)));
+        and p = any (private.rank_parents(u.id))
+        and private.is_birth_parent(p, c.biological_parent, u.partner1_id, u.partner2_id));
 
   with urut as (
     select child_id, row_number() over (order by rank) as baru
@@ -221,7 +244,8 @@ begin
 end $$;
 revoke all on function private.cleanup_ranks(uuid) from public, anon, authenticated;
 
--- Menyamakan urutan lahir dengan isi sebuah pernikahan.
+-- Menyamakan urutan lahir dengan isi sebuah pernikahan (hanya anak kandung
+-- setiap orang tua).
 create or replace function private.sync_union_ranks(p_union uuid)
 returns void
 language plpgsql
@@ -243,6 +267,7 @@ begin
       from public.children ch
       join public.people pe on pe.id = ch.child_id
       where ch.union_id = p_union and ch.deleted_at is null
+        and private.is_birth_parent(p, ch.biological_parent, u.partner1_id, u.partner2_id)
       order by pe.birth_y nulls last, pe.birth_m nulls last, pe.birth_d nulls last, ch.created_at
     loop
       perform private.add_rank(p, c.child_id);
@@ -491,8 +516,8 @@ begin
     select 1 from public.children c
     join public.unions u on u.id = c.union_id
     where c.child_id = new.child_id and c.deleted_at is null and u.deleted_at is null
-      and new.parent_id in (u.partner1_id, u.partner2_id)) then
-    perform private.fail('SL007', 'Urutan lahir hanya bisa dicatat untuk anak dari orang tua tersebut.');
+      and private.is_birth_parent(new.parent_id, c.biological_parent, u.partner1_id, u.partner2_id)) then
+    perform private.fail('SL007', 'Urutan lahir hanya bisa dicatat untuk anak kandung orang tua tersebut.');
   end if;
   return new;
 end $$;
@@ -602,7 +627,7 @@ declare
 begin
   select rank into sekarang from public.birth_ranks where parent_id = p_parent and child_id = p_child;
   if sekarang is null then
-    perform private.fail('SL007', 'Urutan lahir hanya bisa diatur untuk anak dari orang tua tersebut.');
+    perform private.fail('SL007', 'Urutan lahir hanya bisa diatur untuk anak kandung orang tua tersebut.');
   end if;
   select count(*) into jumlah from public.birth_ranks where parent_id = p_parent;
   tujuan := least(greatest(p_rank, 1), jumlah);

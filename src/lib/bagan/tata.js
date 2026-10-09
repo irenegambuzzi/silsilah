@@ -9,7 +9,7 @@
 //   hatinya sendiri), dan anak setiap pernikahan turun dari hatinya sendiri.
 // - Tanpa pasangan yang diketahui: anak turun langsung dari kartu.
 // Garis ke anak: turun lurus, lalu bercabang siku-siku ke setiap anak.
-// Garis pernikahan putus-putus hanya untuk yang bercerai.
+// Garis pernikahan putus-putus hanya untuk yang berakhir karena berpisah.
 //
 // Keluaran:
 //   lebar, tinggi
@@ -131,8 +131,8 @@ function tataSimpul(simpul) {
     b.letak.push({ kunci: `p:${simpul.id}:0`, x: W + U.jarakHati, y: 0 })
     b.hati.push({ kunci: `h:${simpul.id}:0`, x: hx, y: hy })
     b.garis.push(
-      { kunci: `n:${simpul.id}:0:a`, jenis: 'nikah', putus: k.cerai, titik: [[W, hy], [hx - r, hy]] },
-      { kunci: `n:${simpul.id}:0:b`, jenis: 'nikah', putus: k.cerai, titik: [[hx + r, hy], [W + U.jarakHati, hy]] }
+      { kunci: `n:${simpul.id}:0:a`, jenis: 'nikah', putus: k.berpisah, titik: [[W, hy], [hx - r, hy]] },
+      { kunci: `n:${simpul.id}:0:b`, jenis: 'nikah', putus: k.berpisah, titik: [[hx + r, hy], [W + U.jarakHati, hy]] }
     )
     b.masukX = W / 2
     pasangCatatan(b, simpul, 0, k, { hx, y: H + 0.75 })
@@ -151,7 +151,7 @@ function tataSimpul(simpul) {
     g.letak.push({ kunci: `p:${simpul.id}:${i}`, x: U.kolomHati, y: kartuY })
     if (k.label) g.letak.push({ kunci: `l:${simpul.id}:${i}`, x: U.kolomHati, y: 0, lebar: W, tinggi: U.tinggiLabel })
     g.hati.push({ kunci: `h:${simpul.id}:${i}`, x: hx, y: hy })
-    g.garis.push({ kunci: `n:${simpul.id}:${i}:b`, jenis: 'nikah', putus: k.cerai, titik: [[hx + r, hy], [U.kolomHati, hy]] })
+    g.garis.push({ kunci: `n:${simpul.id}:${i}:b`, jenis: 'nikah', putus: k.berpisah, titik: [[hx + r, hy], [U.kolomHati, hy]] })
     g.masukX = hx
     pasangCatatan(g, simpul, i, k, { hx: U.kolomHati + W / 2, y: kartuY + H + 0.75 })
     pasangAnak(g, k.anak, {
@@ -169,7 +169,7 @@ function tataSimpul(simpul) {
     const g = geser(blok, x, atasBaris)
     gabung(b, g)
     x += blok.lebar + U.jarakKelompok
-    return { x: g.masukX, atasHati: atasBaris + hy - U.jariHati, putus: k.cerai, i }
+    return { x: g.masukX, atasHati: atasBaris + hy - U.jariHati, putus: k.berpisah, i }
   })
   const tengah = (masuk[0].x + masuk.at(-1).x) / 2
   const bus = H + U.busKipas

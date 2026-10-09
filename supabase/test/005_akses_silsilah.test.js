@@ -12,6 +12,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { baris, buatDatabase, buatPengguna, jalankanFileDanPeriksa, klaimUntuk, sebagai } from './tiruan-supabase.js'
 import { pembantuSilsilah } from './pembantu-silsilah.js'
+import { ditolak } from './pembantu-akses.js'
 
 let db, h
 let kakek, nenek, akar, a, m, w, uAM, uAW, b, n, uBN
@@ -74,6 +75,7 @@ beforeAll(async () => {
   await jadikanAnggota('memberAngkat', cAngkat)
   await jadikanAnggota('ditahan', cDitahan)
   await db.query(`update public.members set hold_until = 'infinity' where id = $1`, [akun.ditahan.memberId])
+  await jadikanAnggota('asistenStatus', cicit, { role: 'asisten', permissions: ['status_pernikahan'] })
   await jadikanAnggota('dicabut', nenek)
   await db.query(`update public.devices set revoked_at = now() where id = $1`, [akun.dicabut.deviceId])
   akun.tanpaPerangkat = await buatPengguna(db)
@@ -264,5 +266,68 @@ describe('pengaturan, anggota, perangkat', () => {
     expect(await q('anggotaA', `update public.devices set label = 'HP saya' where id = $1 returning id`, [akun.anggotaA.deviceId])).toHaveLength(1)
     expect(await q('anggotaA', `update public.devices set label = 'x' where id = $1 returning id`, [akun.lihatAW.deviceId])).toEqual([])
     await ditolakHak(q('anggotaA', `update public.devices set revoked_at = now() where id = $1`, [akun.anggotaA.deviceId]))
+  })
+})
+
+describe('status pernikahan', () => {
+  const statusUAW = async () => (await h.satu(`select status from public.unions where id = $1`, [uAW])).status
+  const ubahUAW = (siapa, status, aal) => q(siapa, `update public.unions set status = $1 where id = $2 returning id`, [status, uAW], aal)
+
+  it('menandai berpisah: anggota yang bukan salah satu pasangan ditolak, termasuk anaknya sendiri', async () => {
+    await ditolak(ubahUAW('memberAM', 'cerai'), 'SL010')
+    await ditolak(ubahUAW('asistenSampah', 'cerai'), 'SL010') // asisten tanpa izin "status_pernikahan"
+    await ditolak(ubahUAW('pemilik', 'cerai', 'aal1'), 'SL010') // admin utama tanpa verifikasi dua langkah
+    expect(await statusUAW()).toBe('menikah')
+  })
+
+  it('salah satu dari kedua pasangan boleh menandai dan membatalkan', async () => {
+    expect(await ubahUAW('anggotaA', 'cerai')).toHaveLength(1)
+    expect(await statusUAW()).toBe('cerai')
+    await ditolak(ubahUAW('memberAM', 'menikah'), 'SL010') // membatalkan juga dijaga
+    expect(await ubahUAW('anggotaA', 'menikah')).toHaveLength(1)
+  })
+
+  it('admin utama (aal2) dan asisten dengan izin "status_pernikahan" boleh', async () => {
+    expect(await ubahUAW('pemilik', 'cerai', 'aal2')).toHaveLength(1)
+    expect(await ubahUAW('asistenStatus', 'menikah')).toHaveLength(1)
+    expect(await statusUAW()).toBe('menikah')
+  })
+
+  it('kolom lain di pernikahan tetap bisa diubah anggota biasa', async () => {
+    expect(await q('memberAM', `update public.unions set notes = 'Catatan' where id = $1 returning id`, [uAW])).toHaveLength(1)
+  })
+
+  it('mencatat pernikahan baru yang langsung berstatus berpisah juga dijaga', async () => {
+    const [p] = await q('anggotaA', `insert into public.people (full_name) values ('Calon Contoh') returning id`)
+    await ditolak(q('memberAM', `insert into public.unions (partner1_id, partner2_id, status) values ($1, $2, 'cerai')`, [b, p.id]), 'SL010')
+    expect(await q('anggotaA', `insert into public.unions (partner1_id, partner2_id, status) values ($1, $2, 'cerai') returning id`, [a, p.id])).toHaveLength(1)
+  })
+
+  it('pernikahan baru boleh dicatat walaupun pernikahan sebelumnya belum ditandai berakhir', async () => {
+    expect((await h.satu(`select status from public.unions where id = $1`, [uBN])).status).toBe('menikah')
+    const [p] = await q('anggotaA', `insert into public.people (full_name) values ('Pasangan Baru Contoh') returning id`)
+    expect(await q('memberAM', `insert into public.unions (partner1_id, partner2_id) values ($1, $2) returning id`, [b, p.id])).toHaveLength(1)
+  })
+})
+
+describe('"Belum menikah" hanya dipilih orangnya sendiri', () => {
+  const pilihan = async (id) => (await h.satu(`select marital_choice from public.people where id = $1`, [id])).marital_choice
+
+  it('orangnya sendiri boleh memilih dan menghapus pilihannya', async () => {
+    expect(await q('memberAM', `update public.people set marital_choice = 'belum_menikah' where id = $1 returning id`, [cAM])).toHaveLength(1)
+    expect(await pilihan(cAM)).toBe('belum_menikah')
+    expect(await q('memberAM', `update public.people set marital_choice = null where id = $1 returning id`, [cAM])).toHaveLength(1)
+    expect(await pilihan(cAM)).toBeNull()
+  })
+
+  it('orang lain ditolak, termasuk orang tuanya dan admin utama', async () => {
+    await ditolak(q('anggotaA', `update public.people set marital_choice = 'belum_menikah' where id = $1`, [cAM]), 'SL011')
+    await ditolak(q('pemilik', `update public.people set marital_choice = 'belum_menikah' where id = $1`, [cAM], 'aal2'), 'SL011')
+    await ditolakHak(q('anggotaA', `insert into public.people (full_name, marital_choice) values ('x', 'belum_menikah')`))
+    expect(await pilihan(cAM)).toBeNull()
+  })
+
+  it('hanya pilihan tetap: teks bebas ditolak', async () => {
+    await expect(q('memberAM', `update public.people set marital_choice = 'jomblo' where id = $1`, [cAM])).rejects.toThrow(/check constraint/)
   })
 })

@@ -21,7 +21,7 @@ describe('susunDaftar', () => {
     expect(urut.slice(0, 2).sort()).toEqual(['Alm. Raksa', 'Almh. Selara'])
     const bima = urut.indexOf('Bima')
     expect(urut.slice(bima + 1, bima + 12)).toContain('Tamran')
-    // anak ke-1 Bima (Tamran) sebelum anak ke-1 Cahya
+    // putra ke-1 Bima (Tamran) sebelum anak ke-2 pangkal (Cahya)
     expect(urut.indexOf('Tamran')).toBeLessThan(urut.indexOf('Cahya'))
   })
 
@@ -41,7 +41,8 @@ describe('susunDaftar', () => {
   it('setiap baris membawa GEN, istilah Jawa, tahun, dan keterangan kartu', () => {
     const tamran = daftar.keturunan.find((b) => b.nama === 'Tamran')
     expect(tamran).toMatchObject({ labelGen: 'GEN.2', istilahGen: 'Putu', tahun: '1971' })
-    expect(tamran.keterangan).toContain('Anak ke-1')
+    expect(tamran.keterangan).toBe('Putra ke-1 · dari istri ke-1')
+    expect(JSON.stringify(daftar)).not.toMatch(/Anak ke-/)
   })
 })
 
@@ -66,10 +67,11 @@ describe('labelDetail: orang tua', () => {
   it('kedua orang tua dalam satu baris, juga yang bukan keturunan', () => {
     expect(nama(labelDetail(s, 'tamran'))).toEqual(['Bima & Eka'])
   })
-  it('anak sambung: keterangan lembut menyebut orang tua sambungnya', () => {
+  it('anak sambung: orang tua satu baris, keterangan lembut menyebut orang tua sambungnya', () => {
     expect(labelDetail(s, 'vino').orangTua).toEqual([
-      { unionId: 'u5', orang: [{ id: 'cahya', nama: 'Cahya' }, { id: 'umar', nama: 'Umar' }], jenis: 'Anak sambung Cahya' },
+      { unionId: 'u5', orang: [{ id: 'cahya', nama: 'Cahya' }, { id: 'umar', nama: 'Umar' }] },
     ])
+    expect(labelDetail(s, 'vino').urutan).toEqual(['Anak sambung Cahya'])
   })
   it('pernikahan antarsepupu: kedua orang tua dalam satu baris', () => {
     expect(nama(labelDetail(s, 'nirvo'))).toEqual(['Tamran & Wati'])

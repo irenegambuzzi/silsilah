@@ -11,7 +11,7 @@ export const KOLOM = {
     'id', 'tree_id', 'full_name', 'nickname', 'religious_title', 'academic_title', 'sex',
     'birth_y', 'birth_m', 'birth_d', 'birth_approx', 'birth_place',
     'is_deceased', 'death_y', 'death_m', 'death_d', 'death_approx', 'death_place',
-    'occupation', 'notes', ...BERSAMA,
+    'occupation', 'notes', 'marital_choice', ...BERSAMA,
   ],
   unions: [
     'id', 'tree_id', 'partner1_id', 'partner2_id', 'status',

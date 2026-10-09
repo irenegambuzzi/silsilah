@@ -79,7 +79,8 @@ create table if not exists public.members (
   constraint members_permissions_known check (permissions <@ array[
     'batalkan_orang_lain', 'tindak_laporan', 'tempat_sampah', 'buat_undangan',
     'lihat_anggota', 'akses_sementara', 'tambah_kuota_kontak', 'unduh_kontak',
-    'kelola_jadwal', 'bendahara', 'konfirmasi_kabar', 'bagikan_whatsapp']::text[]),
+    'kelola_jadwal', 'bendahara', 'konfirmasi_kabar', 'bagikan_whatsapp',
+    'status_pernikahan']::text[]),
   constraint members_permissions_only_assistant check (role = 'asisten' or permissions = '{}'),
   constraint members_owner_is_member check (not is_owner or (role = 'anggota' and permissions = '{}')),
   constraint members_revoked_consistent check ((status = 'dicabut') = (revoked_at is not null))

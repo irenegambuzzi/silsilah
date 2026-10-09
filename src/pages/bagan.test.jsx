@@ -105,20 +105,21 @@ describe('Bagan: isi kartu', () => {
     expect(k('raksa').dataset.warna).toBe('pangkal')
     expect(k('raksa').dataset.wafat).toBe('true')
     const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
-    for (const nama of ['Keturunan laki-laki', 'Keturunan perempuan', 'Pasangan laki-laki', 'Pasangan perempuan', 'Pangkal', 'Wafat (keturunan)', 'Wafat (pasangan)', 'Bercerai']) {
+    for (const nama of ['Keturunan laki-laki', 'Keturunan perempuan', 'Pasangan laki-laki', 'Pasangan perempuan', 'Pangkal', 'Wafat (keturunan)', 'Wafat (pasangan)', 'Berpisah']) {
       expect(within(legenda).getByText(nama)).toBeTruthy()
     }
   })
 
-  it('ikon hati untuk setiap pasangan dan garis bercerai putus-putus', async () => {
+  it('ikon hati untuk setiap pasangan dan garis berpisah putus-putus', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(document.querySelector('[data-hati="h:cahya:0"]')).toBeTruthy()
     expect(document.querySelectorAll('[data-hati^="h:bima:"]')).toHaveLength(3)
     expect(document.querySelectorAll('path[data-putus]').length).toBeGreaterThan(0)
     for (const p of document.querySelectorAll('path[data-putus]')) expect(p.getAttribute('data-garis')).toBe('nikah')
-    // pembaca layar tetap mendengar status perceraian
-    expect(screen.getAllByText('Pasangan Bima (bercerai)')).toHaveLength(2)
+    // pembaca layar tetap mendengar bahwa pernikahan itu berakhir karena berpisah
+    expect(screen.getAllByText('Pasangan Bima (berpisah)')).toHaveLength(2)
+    expect(document.body.textContent).not.toMatch(/cerai/i)
   })
 })
 
@@ -216,7 +217,7 @@ describe('Bagan: bilah atas dan legenda', () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
-    expect(within(legenda).getByText('Bercerai')).toBeTruthy()
+    expect(within(legenda).getByText('Berpisah')).toBeTruthy()
     await aksi.click(screen.getByRole('button', { name: 'Sembunyikan keterangan' }))
     expect(screen.queryByRole('region', { name: 'Keterangan warna' })).toBeNull()
     await aksi.click(screen.getByRole('button', { name: 'Tampilkan keterangan warna' }))
@@ -232,7 +233,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     const panel = screen.getByRole('region', { name: 'Orang terpilih' })
     expect(within(panel).getByRole('heading', { name: 'Cahya', level: 2 })).toBeTruthy()
     expect(within(panel).getByText('Anak · Generasi ke-1')).toBeTruthy()
-    expect(within(panel).getByRole('heading', { name: 'Informasi Anggota' })).toBeTruthy()
+    expect(within(panel).getByRole('heading', { name: 'Keterangan Pribadi' })).toBeTruthy()
     expect(within(panel).getByRole('heading', { name: 'Riwayat Hidup' })).toBeTruthy()
     expect(panel.textContent).toContain('Menikah tahun 1974')
     await aksi.click(within(panel).getByRole('button', { name: 'Tutup' }))

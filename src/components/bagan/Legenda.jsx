@@ -43,7 +43,7 @@ export function Legenda({ bingkai, tombolBulat, warnaAda }) {
         ))}
         <li className="flex items-center gap-2.5">
           <span aria-hidden="true" className="legenda-garis" />
-          {T.cerai}
+          {T.berpisah}
         </li>
       </ul>
       <p className="mt-2 text-redup">{T.petunjuk}</p>

@@ -27,6 +27,11 @@ const KATA_GANDA = /(?<![\p{L}\p{N}])(\p{L}+)[\s·:,]+\1(?![\p{L}\p{N}])/iu
 // Penomoran, istilah teknis, dan kalimat lama yang tidak boleh tampil lagi.
 const TERLARANG = [
   /Pernikahan ke-\d/,
+  /Anak ke-\d/, // harus "Putra ke-n" / "Putri ke-n"
+  /cerai/i, // pernikahan yang berakhir selalu ditulis "Berpisah"
+  /Urutan lahir:/, // cukup kalimat "Putri ke-3 dari 11 bersaudara"
+  /Informasi Anggota/i, // judulnya "Keterangan Pribadi"
+  /Pasangan: Tidak ada/,
   /Generasi ke-\d+ \(/, // harus "Putu · Generasi ke-2", bukan "Generasi ke-2 (Putu)"
   /Menikah · Menikah/,
   /Kedua orang tua adalah keturunan/,
@@ -94,21 +99,42 @@ describe('label silsilah untuk SETIAP orang di keluarga fiktif', () => {
     }
   })
 
-  it('"Anak sambung"/"Anak angkat" hanya di keterangan anak itu, tidak di keterangan orang tuanya dan tidak di Daftar', () => {
+  it('anak sambung/angkat: "Anak sambung/angkat [nama]" di keterangannya sendiri, tanpa nomor di keterangan orang tuanya, dan tidak di Daftar', () => {
     let diperiksa = 0
     for (const c of s.graf.tautan.values()) {
       for (const t of c) {
         if (t.kind === 'kandung') continue
         diperiksa++
-        expect(labelDetail(s, t.child_id).orangTua.some((o) => /sambung|angkat/i.test(o.jenis ?? ''))).toBe(true)
+        const d = labelDetail(s, t.child_id)
+        expect(d.urutan.some((u) => /^Anak (sambung|angkat) \S/.test(u)), t.child_id).toBe(true)
         const u = s.graf.unions.get(t.union_id)
-        for (const p of [u.partner1_id, u.partner2_id].filter(Boolean)) {
-          expect(JSON.stringify(labelDetail(s, p)), p).not.toMatch(/sambung|angkat/i)
+        // Di keterangan orang tua yang bukan orang tua kandungnya: tanpa nomor, dengan kata lembut.
+        const bukanKandung = t.kind === 'angkat' ? [u.partner1_id, u.partner2_id] : [t.biological_parent === 'partner2' ? u.partner1_id : u.partner2_id]
+        for (const p of bukanKandung.filter(Boolean)) {
+          const a = labelDetail(s, p).anak.find((x) => x.id === t.child_id)
+          expect(a, p).toMatchObject({ ke: null, jenis: `anak ${t.kind}` })
         }
       }
     }
     expect(diperiksa).toBeGreaterThan(0)
     expect(JSON.stringify(susunDaftar(s))).not.toMatch(/sambung|angkat/i)
+  })
+
+  it('tidak ada "Wafat" untuk yang masih hidup, dan "Belum menikah" hanya kalau dipilih sendiri', () => {
+    for (const id of utama) {
+      const d = labelDetail(s, id)
+      const o = s.graf.orang.get(id)
+      if (!o.is_deceased) expect(d.sudahWafat, id).toBe(false)
+      if (o.marital_choice !== 'belum_menikah') expect(d.statusPernikahan, id).not.toBe('Belum menikah')
+    }
+  })
+
+  it('"Putra/Putri ke-n" hanya untuk anak kandung, dan tidak pernah "Anak ke-n"', () => {
+    for (const id of utama) {
+      const d = labelDetail(s, id)
+      expect(JSON.stringify(d), id).not.toMatch(/Anak ke-/)
+      for (const a of d.anak) if (a.ke == null) expect(a.jenis, `${id} → ${a.id}`).toMatch(/^anak (sambung|angkat)$/)
+    }
   })
 
   it('kartu tidak memuat tahun atau "anak ke-n"; kartu pasangan tanpa label', () => {
@@ -130,9 +156,9 @@ describe('tulisan di layar', () => {
     ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
     ['Saya', '/saya', klienKeluarga, 'Ukuran huruf'],
     ...['bima', 'cahya', 'eka', 'vino', 'yoga', 'hasna', 'nirvo', 'raksa', 'gendis', 'oka', 'ika', 'tirwan', 'lintang', 'sekar', 'dara', 'halvin', 'ragil'].map((id) => [
-      `Keterangan ${id}`, `/orang/${id}`, klienKeluarga, 'Informasi Anggota',
+      `Keterangan ${id}`, `/orang/${id}`, klienKeluarga, 'Keterangan Pribadi',
     ]),
-    ...['bima', 'eka', 'hasna'].map((id) => [`Panel bagan ${id}`, `/bagan?pilih=${id}`, klienKeluarga, 'Informasi Anggota']),
+    ...['bima', 'eka', 'hasna'].map((id) => [`Panel bagan ${id}`, `/bagan?pilih=${id}`, klienKeluarga, 'Keterangan Pribadi']),
   ]
   it.each(LAYAR)('%s: tanpa kata ganda, penomoran yang tidak perlu, atau istilah teknis', async (_nama, url, klien, jangkar) => {
     pasang(url, klien())

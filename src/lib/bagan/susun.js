@@ -25,7 +25,7 @@ const hurufBesarAwal = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 //   id        pasangan (null = tidak diketahui)
 //   kartu     kartu pasangan (null kalau tidak diketahui)
 //   label     "Istri ke-2" (hanya kalau menikah dengan lebih dari satu orang)
-//   cerai     pernikahan terakhir dengan pasangan ini berakhir cerai
+//   berpisah  pernikahan terakhir dengan pasangan ini berakhir karena berpisah
 //   keturunan pasangan ini juga keturunan dengan tempatnya sendiri (antarsepupu)
 //   anak      anak dari pernikahan ini yang tampil di sini, urut lahir
 //   anakDi    { id, nama } kalau anak mereka tampil di tempat pasangan itu
@@ -66,7 +66,7 @@ export function susunBagan(s) {
         id: p.pasanganId,
         kartu: p.pasanganId ? labelKartu(s, p.pasanganId) : null,
         label: jumlahDikenal > 1 ? hurufBesarAwal(teksPasanganKe(jenisPasangan(orang), i + 1)) : null,
-        cerai: unions.at(-1).status === 'cerai',
+        berpisah: unions.at(-1).status === 'cerai',
         keturunan: Boolean(p.pasanganId && punyaTempat(p.pasanganId)),
         anakId: milikSini,
         anakDi: milikPasangan && milikSini.length === 0 ? { id: p.pasanganId, nama: namaTampil(orang) } : null,
