@@ -49,9 +49,9 @@ describe('susunBagan', () => {
     expect(bagan.akar.kartu.urut).toBeNull() // pangkal
   })
 
-  it('di bawah setiap pernikahan semua anak menurut umur: anak sambung yang lebih tua di kiri, anak angkat yang lebih muda di kanan', () => {
+  it('di bawah setiap pernikahan semua anak menurut umur: anak sambung yang lebih tua di kiri, anak angkat di antara anak kandung menurut umur', () => {
     expect(bagan.simpul.get('cahya').pasangan[0].anak.map(nama)).toEqual(['Vino', 'Wati'])
-    expect(bagan.simpul.get('lorvan').pasangan[0].anak.map(nama)).toEqual(['Kelvan', 'Yoga'])
+    expect(bagan.simpul.get('lorvan').pasangan[0].anak.map(nama)).toEqual(['Kelvan', 'Yoga', 'Arum'])
   })
 
   it('anak sambung/angkat tanpa tanggal lahir di paling kanan; anak kandung tanpa tanggal tetap menurut nomornya', () => {
@@ -80,16 +80,26 @@ describe('susunBagan', () => {
     expect(bagan.tempat.get('tamran')).toBe('tamran')
   })
 
-  it('pernikahan antarsepupu: anak muncul SEKALI, di bawah orang tua di jalur terdekat', () => {
+  it('pernikahan antarsepupu: anak muncul SEKALI, SELALU di bawah pihak laki-laki', () => {
     const jumlah = (id) => semuaSimpul(bagan.akar).filter((n) => n.id === id).length
     expect(jumlah('nirvo')).toBe(1)
     expect(jumlah('hasna')).toBe(1)
-    // Hasna: Rangga (GEN.2) lebih dekat daripada Gendis (GEN.3)
+    expect(jumlah('bintang')).toBe(1)
+    // Hasna: di bawah Rangga (ayah)
     expect(bagan.induk.get('hasna')).toBe('rangga')
     expect(bagan.simpul.get('rangga').anak.map(nama)).toEqual(['Hasna'])
     expect(bagan.simpul.get('gendis').anak).toEqual([])
-    // Sama dekat: pihak partner1 (Tamran) yang memilikinya
+    // Generasi sama: di bawah Tamran (ayah)
     expect(bagan.induk.get('nirvo')).toBe('tamran')
+    // Jalur ibu (Arum GEN.2) lebih dekat daripada jalur ayah (Dorvi GEN.3): tetap di bawah Dorvi
+    expect(bagan.induk.get('bintang')).toBe('dorvi')
+    expect(bagan.simpul.get('dorvi').anak.map(nama)).toEqual(['Bintang'])
+    expect(bagan.simpul.get('arum').anak).toEqual([])
+    expect(bagan.simpul.get('arum').pasangan.find((p) => p.id === 'dorvi').anakDi).toEqual({ id: 'dorvi', nama: 'Dorvi, S.Kom.' })
+    // Posisi di bagan cocok dengan GEN: kedalaman simpul = GEN.
+    const kedalaman = (id) => { let d = 0; for (let x = id; bagan.induk.has(x); x = bagan.induk.get(x)) d++; return d }
+    for (const id of ['nirvo', 'hasna', 'bintang']) expect(kedalaman(id), id).toBe(s.gen.get(id))
+    expect(bagan.simpul.get('bintang').kartu).toMatchObject({ pojok: 'GEN.4', label: 'Canggah' })
   })
 
   it('kartu pasangan yang juga keturunan mencatat di mana anak mereka berada', () => {

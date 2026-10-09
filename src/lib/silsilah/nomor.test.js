@@ -23,12 +23,14 @@ describe('nomor silsilah', () => {
     expect(s.nomor.get('wati')).toBe('1.2.1')
     expect(s.nomor.get('vino')).toBe('1.2.2') // anak sambung, walaupun lebih tua
     expect(s.nomor.get('kelvan')).toBe('1.3.1')
-    expect(s.nomor.get('yoga')).toBe('1.3.2')
+    expect(s.nomor.get('yoga')).toBe('1.3.3') // sesudah anak kandung Kelvan dan Arum
   })
 
-  it('anak pasangan sepupu dinomori lewat jalur terdekat', () => {
+  it('anak pasangan sepupu dinomori lewat pihak laki-laki (sama dengan letaknya di bagan)', () => {
     expect(s.nomor.get('nirvo')).toBe('1.1.1.1')
     expect(s.nomor.get('gendis')).toBe('1.3.1.1')
+    expect(s.nomor.get('hasna')).toBe('1.1.11.1')
+    expect(s.nomor.get('bintang')).toBe('1.1.2.1.1') // lewat Dorvi, bukan lewat Arum (1.3.2.1)
   })
 
   it('pasangan yang bukan keturunan tidak bernomor', () => {

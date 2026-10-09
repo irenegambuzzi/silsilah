@@ -4,8 +4,8 @@
 // Anak sambung dan anak angkat tidak punya "Putra/Putri ke-n", tetapi tetap
 // bernomor (supaya keturunannya juga bernomor): sesudah semua anak kandung
 // orang tua itu, menurut umur. Anak dari pasangan sepupu dinomori lewat
-// jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak
-// bernomor.
+// jalur pertamanya (pihak laki-laki, sama dengan letaknya di bagan).
+// Pasangan yang bukan keturunan tidak bernomor.
 import { anakOrangTua } from './anak.js'
 
 export function hitungNomor(graf, { gen, jalur }) {

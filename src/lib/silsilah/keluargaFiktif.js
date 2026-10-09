@@ -10,7 +10,12 @@
 //   Lorvan + Sinta: Yoga anak angkat. Anak Lorvan, Kelvan, punya Gendis.
 //   Tamran + Wati: pernikahan antarsepupu, kedua orang tua sama GEN-nya.
 //   Rangga + Gendis: pernikahan antarsepupu, GEN orang tuanya berbeda
-//         (Rangga GEN.2, Gendis GEN.3), jadi anak mereka mengikuti Rangga.
+//         (Rangga GEN.2, Gendis GEN.3); anak mereka mengikuti Rangga.
+//   Arum + Dorvi: pernikahan antarsepupu, jalur IBU lebih dekat ke pangkal
+//         (Arum, putri Lorvan, GEN.2) daripada jalur ayah (Dorvi, cucu
+//         Bima, GEN.3). Anak mereka (Bintang) tetap mengikuti pihak
+//         laki-laki: GEN.4 di bawah Dorvi. Pernikahannya sengaja dicatat
+//         dengan Arum sebagai partner1.
 //   Ika: ditinggal wafat suami ke-1 (H. Halvin), lalu menikah lagi (Joval).
 //         Anak: Dorvi (gelar, panggilan, tanggal lengkap), Sekar (wafat saat
 //         bayi), Laras, dan Bayu (di bawah umur, dari suami ke-2).
@@ -177,6 +182,8 @@ export function bangunKeluargaFiktif() {
   orang('yoga', 'Yoga', 'L', 1983)
   anak('u6', 'kelvan')
   anak('u6', 'yoga', 'angkat')
+  orang('arum', 'Arum', 'P', 1993)
+  anak('u6', 'arum')
   orang('laila', 'Laila', 'P', 1978)
   nikah('u7', 'kelvan', 'laila', { marriage_y: 1998 })
   orang('gendis', 'Gendis', 'P', 2000)
@@ -210,6 +217,12 @@ export function bangunKeluargaFiktif() {
   nikah('u11', 'ika', 'joval', { marriage_y: 2012, marriage_m: 2 })
   orang('bayu', 'Bayu', 'L', 2013, { birth_place: 'Kota Contoh' })
   anak('u11', 'bayu')
+
+  // Pernikahan antarsepupu: jalur ibu (Arum GEN.2) lebih dekat ke pangkal
+  // daripada jalur ayah (Dorvi GEN.3); anaknya tetap di pihak laki-laki.
+  nikah('u18', 'arum', 'dorvi', { marriage_y: 2020 })
+  orang('bintang', 'Bintang', 'L', 2022)
+  anak('u18', 'bintang')
 
   // Keturunan yang sudah wafat, dengan istri yang ditinggal wafat.
   Object.assign(data.people.find((p) => p.id === 'tirwan'), {

@@ -1067,14 +1067,15 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
   - GEN.0 Pangkal, GEN.1 Anak, GEN.2 Putu, GEN.3 Buyut, GEN.4 Canggah, GEN.5 Wareng;
   - GEN.6 Udheg-udheg, GEN.7 Gantung siwur, GEN.8 Gropak senthe, GEN.9 Debog bosok, GEN.10 Galih asem;
   - mulai GEN.11, hanya "GEN.11", "GEN.12", dst., tanpa istilah.
-- **Kedua orang tua sama-sama keturunan** (pernikahan antarsepupu):
-  - GEN mengikuti **jalur yang paling dekat ke pangkal**.
-  - Di bagan, anak tampil **sekali**, di bawah orang tua di jalur itu. Di samping setiap keturunan, pasangannya dari cabang lain tampil sebagai **kartu rujukan** yang dihubungkan dengan ikon hati: warna keturunan sesuai jenis kelaminnya, keterangan kecil "Dari cabang lain" dan tanda ↗; mengetuknya melompat ke kartu utamanya. Di tempat orang tua yang tidak memuat anaknya ada catatan kecil "Anak mereka ada di cabang …" yang bisa diketuk.
-  - Panel keterangan menampilkan satu kalimat urutan per orang tua, misalnya "Putri ke-2 dari 3 bersaudara (pihak Gendis)", dan satu baris singkat "Lewat …: Canggah · Generasi ke-4" hanya kalau GEN kedua jalur berbeda. Tanpa kalimat penjelasan teknis.
+- **Kedua orang tua sama-sama keturunan** (pernikahan antarsepupu; diubah di putaran ketiga tinjauan, Oktober 2026):
+  - Anak **selalu** mengikuti pihak **LAKI-LAKI**, beda atau sama generasi: tampil di bawah bagan pihak laki-laki, dan **GEN serta istilah Jawa-nya juga dihitung lewat ayahnya** (bukan lagi "jalur yang paling dekat ke pangkal"), supaya letak di bagan dan GEN selalu cocok. Keturunannya ikut. Berlaku juga kalau jalur ibu lebih dekat ke pangkal (contoh: Arum GEN.2 ♥ Dorvi GEN.3 → Bintang GEN.4 · Canggah di bawah Dorvi). Urutan pencatatan pernikahan (partner1/partner2) tidak berpengaruh (`src/lib/silsilah/generasi.js`, `pihakIbu`).
+  - **Kalau jenis kelamin salah satu pihak belum diketahui**: aturan lama, jalur yang paling dekat ke pangkal (kalau sama dekat, pihak yang dicatat lebih dulu). Laporan migrasi mendaftar pernikahan seperti ini (16.3) supaya jenis kelaminnya dilengkapi.
+  - Di bagan, anak tampil **sekali**, di bawah pihak laki-laki. Di samping setiap keturunan, pasangannya dari cabang lain tampil sebagai **kartu rujukan** yang dihubungkan dengan ikon hati: warna keturunan sesuai jenis kelaminnya, keterangan kecil "Dari cabang lain" dan tanda ↗; mengetuknya melompat ke kartu utamanya. Di tempat orang tua yang tidak memuat anaknya ada catatan kecil "Anak mereka ada di cabang …" yang bisa diketuk.
+  - Panel keterangan: kalimat urutan **sekali** kalau hasilnya sama bagi kedua orang tua (misalnya Nirvo: "Putra tunggal"); satu kalimat per orang tua **hanya kalau hasilnya berbeda**, misalnya "Putri ke-2 dari 2 bersaudara (pihak Rangga)" dan "Putri tunggal (pihak Gendis)", pihak ayah dulu. Jalur pihak ibu disebut singkat dan netral: "Lewat Arum: Buyut · Generasi ke-3", hanya kalau GEN kedua jalur berbeda. Tanpa kalimat penjelasan teknis.
 - **Urutan lahir** (ditetapkan ulang Oktober 2026, putaran kedua tinjauan):
   - **"Putra ke-n"** (laki-laki) atau **"Putri ke-n"** (perempuan); kalau jenis kelamin belum diketahui "Putra/Putri ke-n". Kata **"Anak ke-n" tidak dipakai di mana pun** (kartu, panel, daftar anak, Daftar).
   - Hanya **anak kandung** orang tua itu yang bernomor, lintas semua pernikahannya (bagian 5.4). Anak sambung dan anak angkat **tidak bernomor**.
-  - Di panel anak itu: satu kalimat tanpa label di bawah judul KETERANGAN PRIBADI, misalnya **"Putri ke-3 dari 11 bersaudara"** ("bersaudara" = jumlah anak kandung orang tua itu; anak kandung satu-satunya: "Putri tunggal"). Antarsepupu: satu kalimat per orang tua ("… (pihak Rangga)").
+  - Di panel anak itu: satu kalimat tanpa label di bawah judul KETERANGAN PRIBADI, misalnya **"Putri ke-3 dari 11 bersaudara"** ("bersaudara" = jumlah anak kandung orang tua itu; anak kandung satu-satunya: "Putri tunggal"). Antarsepupu: sekali kalau sama bagi kedua orang tua; per orang tua ("… (pihak Rangga)") hanya kalau berbeda.
   - Di Daftar: **"Putra ke-6 · dari istri ke-1"**. "istri/suami ke-n" adalah urutan **pasangan yang berbeda**, menurut pernikahan pertama dengan pasangan itu. Contoh: istri ke-1 → anak 1–3, istri ke-2 → anak 4–5, kembali ke istri ke-1 → anak 6–7 ("dari istri ke-1"), istri ke-3 → anak 8–11. Bagian "· dari istri ke-n" hanya muncul kalau orang tua itu pernah punya lebih dari satu pasangan.
 - **Anak sambung dan anak angkat** (diubah Oktober 2026; sebelumnya keterangannya hanya di panel anak itu sendiri):
   - Kartu di Bagan sama dengan saudaranya (istilah dan GEN sama), tetapi **tanpa nomor urut**.
@@ -1092,7 +1093,7 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
   - **ANAK** (kalau ada): lihat "Anak sambung dan anak angkat" di atas; lalu tempat tombol aksi (gaya tombol aplikasi lama).
 - **Aturan tulisan** (dijaga `src/tulisan.test.jsx`): satu pernikahan tanpa "ke-1"; "Menikah tahun 1974" (bukan "Menikah · Menikah 1974"); tanpa kata ganda, penomoran yang tidak perlu, istilah teknis, atau kalimat yang bisa menyinggung; tanpa "Anak ke-", "cerai"/"bercerai", "Wafat: -" untuk yang masih hidup, dan "Belum menikah" yang tidak dipilih orangnya sendiri.
 - **Nomor silsilah otomatis** di tampilan Daftar (misalnya 1.6.2).
-  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Untuk anak kandung, angka terakhir selalu sama dengan "Putra/Putri ke-n" di panel keterangan. **Anak sambung/angkat** tetap bernomor supaya keturunannya juga bernomor: sesudah semua anak kandung orang tua itu, menurut umur (Oktober 2026). Anak dari pasangan sepupu dinomori lewat jalur yang paling dekat ke pangkal. Pasangan yang bukan keturunan tidak bernomor ("-").
+  - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Untuk anak kandung, angka terakhir selalu sama dengan "Putra/Putri ke-n" di panel keterangan. **Anak sambung/angkat** tetap bernomor supaya keturunannya juga bernomor: sesudah semua anak kandung orang tua itu, menurut umur (Oktober 2026). Anak dari pasangan sepupu dinomori lewat pihak laki-laki (sama dengan letaknya di bagan). Pasangan yang bukan keturunan tidak bernomor ("-").
 - **Nama di kartu** memuat gelar religius di depan dan gelar pendidikan di belakang: "Alm. KH. Nama, S.Ag.".
 
 ### 15.2 Pencarian
@@ -1181,7 +1182,7 @@ Satu objek JSON bersarang berisi `id`, `name`, `gender`, `relation` (teks manual
 ### 16.3 Langkah
 
 1. CSV backup 5 Oktober 2026 diletakkan di `data-pribadi/lama/`. Ini dilakukan **setelah** `.gitignore` dan pemindai aktif.
-2. Skrip `scripts/migrasi-lama/ubah.js` (dites dengan data fiktif yang meniru bentuk lama) menghasilkan `data-pribadi/migrasi/hasil.json` dan `laporan.md`. Laporan berisi jumlah data, daftar "perlu dicek", selisih urutan anak, dan **daftar semua nama yang jenis kelaminnya belum diketahui** (wajib; tidak pernah diisi asal).
+2. Skrip `scripts/migrasi-lama/ubah.js` (dites dengan data fiktif yang meniru bentuk lama) menghasilkan `data-pribadi/migrasi/hasil.json` dan `laporan.md`. Laporan berisi jumlah data, daftar "perlu dicek", selisih urutan anak, **daftar semua nama yang jenis kelaminnya belum diketahui** (wajib; tidak pernah diisi asal), dan **pernikahan antarsepupu yang jenis kelamin salah satu pihaknya belum diketahui** (anaknya sementara memakai jalur terdekat ke pangkal, bukan pihak laki-laki).
 3. Anda meninjau laporan. Koreksi ditulis di `data-pribadi/migrasi/koreksi.json`, lalu skrip dijalankan ulang. Data sumber tidak diedit tangan.
 4. **Uji di PGlite**: hasil diimpor ke database tes lengkap dengan semua file SQL. Skrip verifikasi membangun ulang pohon dan membandingkannya 100% dengan JSON lama (nama, pasangan orang tua–anak, pernikahan, status, jumlah).
 5. Anda menelusuri hasilnya di **mode contoh** yang memuat file hasil lokal (tidak pernah di-*deploy*).
@@ -1267,7 +1268,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 | 1.10 | SQL 006: `change_log`, undo (sendiri vs izin), deteksi aktivitas tidak wajar + penahanan | PGlite: anggota tidak bisa undo milik orang lain; penahanan aktif setelah ambang. |
 | 1.11 | SQL 007: `reports`, menyisihkan data (izin), pulihkan, hapus permanen satu kelompok/semuanya (admin utama), "pindahkan ke orang tua lain" | PGlite. |
 | 1.12 | SQL 008: `snapshots` (berdasarkan perubahan, bertingkat, khusus) + file jadwal `pg_cron` | PGlite: tanpa perubahan → tidak ada snapshot baru; perapian sesuai 30/12/12. |
-| 1.13 | Logika murni: tanggal, "ke-n", graf, GEN + istilah Jawa (GEN.11+ tanpa istilah), jalur terdekat untuk pasangan sepupu, urutan lahir lintas pernikahan per orang tua, "istri/suami ke-n", label kartu dan detail, Alm./Almh., nomor silsilah, istilah kerabat pohon keluarga asal (`kerabat.js`) | Vitest dengan keluarga fiktif, termasuk contoh 1–3/4–5/6–7/8–11, pernikahan antarsepupu, dan Pakdhe/Paklik. |
+| 1.13 | Logika murni: tanggal, "ke-n", graf, GEN + istilah Jawa (GEN.11+ tanpa istilah), pasangan sepupu (sejak putaran ketiga: pihak laki-laki; jalur terdekat kalau jenis kelamin belum diketahui), urutan lahir lintas pernikahan per orang tua, "istri/suami ke-n", label kartu dan detail, Alm./Almh., nomor silsilah, istilah kerabat pohon keluarga asal (`kerabat.js`) | Vitest dengan keluarga fiktif, termasuk contoh 1–3/4–5/6–7/8–11, pernikahan antarsepupu, dan Pakdhe/Paklik. |
 | 1.14 | `teks/id.js` + pemetaan error + deteksi "sedang dipulihkan" dan "database belum diperbarui" | Tes: tidak ada pesan bahasa Inggris yang lolos. |
 | ✅ | **Pengingat A: ganti kunci API** (bagian 2.4). **SELESAI 7 Oktober 2026:** publishable `aplikasi_silsilah`, secret `server_silsilah`, kunci lama dihapus, JWT-based dimatikan. Tersisa: uji `curl` dengan kunci lama dan Security Advisor (paling lambat di 1.29). | Kunci lama → error. |
 | 1.15 | Edge Functions `pakai-undangan`, `pakai-kode` + RPC buat undangan/kode + klaim perangkat | Unit test + uji manual di HP. Link sekali pakai, 7 hari, kode 10 menit. |
@@ -1463,7 +1464,7 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 **Tidak ada pertanyaan terbuka.** Semua keputusan sudah tercatat di bagian-bagian terkait:
 
 - Migrasi: struktur, tanggal/tempat, dan "bio" → catatan (16.2).
-- Pernikahan antarsepupu: GEN mengikuti jalur yang paling dekat ke pangkal, kedua jalur ditampilkan, dan "Putra/Putri ke-n" dihitung per orang tua (5.4, 15.1).
+- Pernikahan antarsepupu: anak selalu di pihak laki-laki, GEN juga lewat ayah (jalur terdekat hanya kalau jenis kelamin belum diketahui); jalur ibu disebut singkat; "Putra/Putri ke-n" dihitung per orang tua, ditulis sekali kalau sama (5.4, 15.1; putaran ketiga).
 - Putaran kedua tinjauan tampilan (Oktober 2026): "Putra/Putri ke-n" hanya untuk anak kandung; status pernikahan sebagai pilihan tetap ("Belum menikah" hanya pilihan sendiri); kata "Berpisah" menggantikan "cerai"; siapa yang boleh menandai pernikahan berakhir (5.4, 15.1).
 - GEN.11 dan seterusnya tanpa istilah (5.4, 15.1).
 - Pohon keluarga asal: akses dinamis untuk keturunan yang lahir nanti, istilah dari sudut pandang pasangan khusus (5.4).

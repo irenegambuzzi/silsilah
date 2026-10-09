@@ -116,6 +116,16 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(sepupu.some((u) => s.gen.get(u.partner1_id) !== s.gen.get(u.partner2_id))).toBe(true)
   })
 
+  it('pernikahan antarsepupu dengan jalur IBU lebih dekat ke pangkal daripada jalur ayah (aturan pihak laki-laki terlihat)', () => {
+    const sepupu = nikahUtama.filter((u) => u !== pangkal && keturunan(u.partner1_id) && keturunan(u.partner2_id))
+    const ada = sepupu.some((u) => {
+      const [ayah, ibu] = [u.partner1_id, u.partner2_id].sort((a) => (orang.get(a).sex === 'L' ? -1 : 1))
+      return orang.get(ayah).sex === 'L' && orang.get(ibu).sex === 'P' && s.gen.get(ibu) < s.gen.get(ayah) &&
+        data.children.some((c) => c.union_id === u.id)
+    })
+    expect(ada).toBe(true)
+  })
+
   it('pasangan tidak diketahui dan jenis kelamin tidak diketahui', () => {
     expect(nikahUtama.some((u) => u.partner2_id === null)).toBe(true)
     expect(utama.some((p) => p.sex === null)).toBe(true)

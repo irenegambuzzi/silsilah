@@ -13,11 +13,12 @@
 // menurut umur, dari yang paling tua di kiri (anak.js). Hanya anak kandung
 // yang diberi nomor urut di pojok kartunya.
 //
-// Seorang anak ditaruh di bawah orang tua di jalur terdekat ke pangkal
-// (jalur pertama; kalau sama dekat, pihak partner1), di bawah pernikahan
-// orang tuanya. Jadi anak dari pernikahan antarsepupu muncul sekali saja; di
-// tempat orang tua yang lain, kelompok pernikahan itu mencatat di mana anak
-// mereka berada (`anakDi`).
+// Seorang anak ditaruh di bawah orang tua di jalur pertamanya (generasi.js):
+// untuk anak dari pernikahan antarsepupu SELALU pihak laki-laki (sama dengan
+// GEN-nya); kalau jenis kelamin belum diketahui, jalur terdekat ke pangkal.
+// Jadi anak itu muncul sekali saja; di tempat orang tua yang lain (pihak
+// perempuan), kelompok pernikahan itu mencatat di mana anak mereka berada
+// (`anakDi`).
 import { labelKartu } from '../silsilah/kartu.js'
 import { jenisPasangan, pasanganBerurutan, teksPasanganKe } from '../silsilah/urutan.js'
 import { namaTampil } from '../silsilah/nama.js'

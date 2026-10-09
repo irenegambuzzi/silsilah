@@ -118,17 +118,17 @@ describe('Keterangan orang (halaman sendiri)', () => {
     pasang('/orang/lorvan', klienKeluarga())
     await screen.findByRole('heading', { name: 'Lorvan', level: 1 })
     expect(within(bagian('Anak')).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      '1.Kelvan', 'Yoga · anak angkat',
+      '1.Kelvan', 'Yoga · anak angkat', '2.Arum',
     ])
   })
 
-  it('pernikahan antarsepupu: orang tua satu baris, urutan untuk masing-masing orang tua, tanpa kalimat teknis', async () => {
+  it('pernikahan antarsepupu: orang tua satu baris, urutan sekali kalau sama bagi kedua pihak, tanpa kalimat teknis', async () => {
     pasang('/orang/hasna', klienKeluarga())
     expect(await screen.findByRole('heading', { name: 'Hasna', level: 1 })).toBeTruthy()
     const info = bagian('Keterangan Pribadi')
     expect(info.textContent).toContain('Orang tua: Rangga & Gendis')
-    expect(info.textContent).toContain('Putri tunggal (pihak Rangga)')
-    expect(info.textContent).toContain('Putri tunggal (pihak Gendis)')
+    expect(info.textContent).toContain('Putri tunggal')
+    expect(info.textContent).not.toContain('(pihak')
     expect(within(info).getByRole('link', { name: 'Rangga' })).toBeTruthy()
     expect(document.body.textContent).not.toMatch(/Kedua orang tua adalah keturunan|Jalur terdekat|Lewat jalur ini/)
   })

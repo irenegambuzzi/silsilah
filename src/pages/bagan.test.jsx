@@ -220,6 +220,17 @@ describe('Bagan: pernikahan antarsepupu', () => {
     expect(k('tamran').getAttribute('aria-pressed')).toBe('true')
   })
 
+  it('anak antarsepupu SELALU di bawah pihak laki-laki, juga kalau jalur ibu lebih dekat ke pangkal; GEN ikut ayah', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    // Arum (GEN.2, ibu) ♥ Dorvi (GEN.3, ayah): Bintang GEN.4 · Canggah, di bawah Dorvi.
+    expect(screen.getByRole('list', { name: 'Anak Dorvi, S.Kom. dan Arum' })).toBeTruthy()
+    expect(screen.queryByRole('list', { name: 'Anak Arum dan Dorvi, S.Kom.' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Anak mereka ada di cabang Dorvi, S.Kom.' })).toBeTruthy()
+    expect(k('bintang').querySelector('.kartu-gen').textContent).toBe('GEN.4')
+    expect(k('bintang').querySelector('.kartu-label').textContent).toBe('Canggah')
+  })
+
   it('dari cabang yang difokuskan: kartu utama di luar cabang → seluruh bagan ditampilkan lagi', async () => {
     const { aksi } = pasang('/bagan?fokus=kelvan', klienKeluarga())
     expect(await screen.findByText('Menampilkan satu cabang: Kelvan')).toBeTruthy()

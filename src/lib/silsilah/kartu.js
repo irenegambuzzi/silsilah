@@ -108,10 +108,12 @@ export function keteranganDaftar(s, id) {
 //                "Umar & Cahya (ibu sambung)". Anak angkat (angkat: true):
 //                barisnya "Orang tua angkat: Lorvan & Sinta".
 //   urutan       kalimat di bawah judul KETERANGAN PRIBADI, tanpa label:
-//                "Putri ke-3 dari 11 bersaudara"; antarsepupu: satu kalimat
-//                per orang tua ("… (pihak Rangga)"); anak sambung/angkat:
+//                "Putri ke-3 dari 11 bersaudara"; antarsepupu: sekali kalau
+//                sama bagi kedua orang tua ("Putra tunggal"), selain itu satu
+//                kalimat per orang tua ("… (pihak Rangga)"); anak sambung/angkat:
 //                "Anak sambung Cahya" / "Anak angkat Lorvan & Sinta"
-//   lewat        antarsepupu dengan GEN berbeda: "Lewat Gendis: Canggah · Generasi ke-4"
+//   lewat        antarsepupu dengan GEN berbeda: jalur pihak ibu, singkat dan
+//                netral: "Lewat Gendis: Canggah · Generasi ke-4"
 //   tampilStatus baris "Status pernikahan" tampil (tidak untuk anak di bawah
 //                umur tanpa data pernikahan)
 //   statusPernikahan "Menikah" / "Berpisah" / "Ditinggal wafat pasangan" /
@@ -153,11 +155,14 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   // masing-masing. Anak pasangan pangkal BUKAN antarsepupu walaupun kedua
   // pangkal ber-GEN.0: cukup satu kalimat.
   const jalur = (s.jalur.get(id) ?? []).filter((j, i) => i === 0 || s.gen.get(j.orangTuaId) !== 0)
+  // Kalau hasilnya SAMA untuk kedua pihak (misalnya "Putra tunggal" bagi ayah
+  // dan bagi ibunya), cukup ditulis sekali tanpa "(pihak …)".
   const bernomor = jalur.filter((j) => j.anakKe != null)
-  const urutan = bernomor.map((j) => {
-    const kalimat = teksBersaudara(orang.sex, j.anakKe, anakOrangTua(s.graf, j.orangTuaId).kandung.length)
-    return bernomor.length > 1 ? isiTeks(KATA.pihak, { isi: kalimat, nama: nama(j.orangTuaId) }) : kalimat
-  })
+  const kalimatPihak = bernomor.map((j) => teksBersaudara(orang.sex, j.anakKe, anakOrangTua(s.graf, j.orangTuaId).kandung.length))
+  const urutan =
+    new Set(kalimatPihak).size <= 1
+      ? kalimatPihak.slice(0, 1)
+      : kalimatPihak.map((kalimat, i) => isiTeks(KATA.pihak, { isi: kalimat, nama: nama(bernomor[i].orangTuaId) }))
   // Anak sambung / anak angkat (kata lembut).
   for (const t of tautan) {
     const u = s.graf.unions.get(t.union_id)

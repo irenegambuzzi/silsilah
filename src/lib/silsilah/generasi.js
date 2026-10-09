@@ -1,9 +1,15 @@
 // Generasi (GEN), jalur ke pangkal, dan istilah generasi Jawa.
 //
 // GEN.0 = pasangan pangkal. Anak seorang keturunan = GEN orang tuanya + 1.
-// Pasangan yang bukan keturunan tidak punya GEN. Kalau KEDUA orang tua
-// keturunan (pernikahan antarsepupu), GEN mengikuti jalur yang paling dekat
-// ke pangkal; kedua jalur tetap dicatat di `jalur`.
+// Pasangan yang bukan keturunan tidak punya GEN.
+//
+// Kalau KEDUA orang tua keturunan (pernikahan antarsepupu, beda atau sama
+// generasi), anak SELALU mengikuti pihak LAKI-LAKI: GEN, istilah Jawa, dan
+// letaknya di bagan (susun.js memakai jalur pertama), supaya posisi di bagan
+// dan GEN selalu cocok (putaran ketiga tinjauan, Oktober 2026). Jalur pihak
+// ibu tetap dicatat di `jalur` (pihakIbu: true). Kalau jenis kelamin salah
+// satu orang tua belum diketahui, berlaku aturan lama: jalur yang paling
+// dekat ke pangkal (kalau sama dekat, pihak partner1).
 import { teks } from '../../teks/id.js'
 import { orangTuaUnion, pasanganDi } from './graf.js'
 import { anakOrangTua, kandungUntuk } from './anak.js'
@@ -29,8 +35,11 @@ export function teksGenerasi(gen, daftar = DAFTAR_GENERASI) {
 
 // Mengembalikan:
 //   gen    Map orang → GEN (hanya keturunan, termasuk pasangan pangkal)
-//   jalur  Map orang → daftar jalur, yang paling dekat ke pangkal DI DEPAN:
+//   jalur  Map orang → daftar jalur, jalur yang menentukan GEN DI DEPAN
+//          (pihak ayah untuk anak antarsepupu, selain itu yang paling dekat):
 //          { orangTuaId, unionId, kind, gen (GEN orang itu lewat jalur ini),
+//            pihakIbu (jalur ibu di pernikahan antarsepupu: tidak dipakai
+//                      untuk GEN dan letak di bagan),
 //            kandung (orang tua ini orang tua kandungnya),
 //            anakKe (urutan lahir di antara anak KANDUNG orang tua itu;
 //                    null untuk anak sambung/angkat),
@@ -50,9 +59,11 @@ export function hitungGenerasi(graf) {
     diproses.add(id)
     let terbaik = null
     for (const t of graf.tautan.get(id) ?? []) {
-      for (const p of orangTuaUnion(graf.unions.get(t.union_id))) {
-        const g = hitung(p)
-        if (g != null && (terbaik === null || g + 1 < terbaik)) terbaik = g + 1
+      const u = graf.unions.get(t.union_id)
+      const ortu = orangTuaUnion(u).map((p) => [p, hitung(p)]).filter(([, g]) => g != null)
+      const ibu = ortu.length === 2 ? pihakIbu(graf, u) : null
+      for (const [p, g] of ortu) {
+        if (p !== ibu && (terbaik === null || g + 1 < terbaik)) terbaik = g + 1
       }
     }
     diproses.delete(id)
@@ -67,6 +78,7 @@ export function hitungGenerasi(graf) {
     const daftar = []
     for (const t of graf.tautan.get(id) ?? []) {
       const u = graf.unions.get(t.union_id)
+      const ibu = orangTuaUnion(u).every((p) => gen.has(p)) ? pihakIbu(graf, u) : null
       for (const p of orangTuaUnion(u)) {
         if (!gen.has(p)) continue
         const kandung = kandungUntuk(t, u, p)
@@ -75,18 +87,31 @@ export function hitungGenerasi(graf) {
           unionId: u.id,
           kind: t.kind,
           gen: gen.get(p) + 1,
+          pihakIbu: p === ibu,
           kandung,
           anakKe: kandung ? (anakOrangTua(graf, p).ke.get(id) ?? null) : null,
           pasanganKe: infoPasangan(graf, p, u),
         })
       }
     }
+    // Pihak ibu antarsepupu di belakang; selain itu yang paling dekat dulu.
     // Sort stabil: jalur yang sama dekatnya tetap menurut urutan data
     // (pihak partner1 lebih dulu).
-    daftar.sort((a, b) => a.gen - b.gen)
+    daftar.sort((a, b) => Number(a.pihakIbu) - Number(b.pihakIbu) || a.gen - b.gen)
     jalur.set(id, daftar)
   }
   return { gen, jalur }
+}
+
+// Pernikahan `u` antara dua keturunan: id pihak perempuan kalau jenis
+// kelamin KEDUA orang tua diketahui (laki-laki dan perempuan); null kalau
+// belum diketahui (aturan lama: jalur terdekat).
+export function pihakIbu(graf, u) {
+  const [a, b] = [u.partner1_id, u.partner2_id].map((id) => (id ? graf.orang.get(id) : null))
+  if (!a || !b) return null
+  if (a.sex === 'L' && b.sex === 'P') return b.id
+  if (a.sex === 'P' && b.sex === 'L') return a.id
+  return null
 }
 
 // Orang tua `p` di pernikahan `u`: pasangan keberapa (menurut pernikahan

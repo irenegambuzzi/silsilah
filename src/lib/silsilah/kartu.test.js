@@ -86,7 +86,8 @@ describe('kartu keturunan', () => {
     expect(vino).toEqual(wati)
   })
 
-  it('pernikahan antarsepupu: GEN dan "Putra/Putri ke-n" mengikuti jalur terdekat', () => {
+  it('pernikahan antarsepupu: GEN dan "Putra/Putri ke-n" mengikuti pihak laki-laki', () => {
+    expect(info('bintang')).toMatchObject({ gen: 4, labelGen: 'GEN.4', istilahGen: 'Canggah', keterangan: 'Putra ke-1' })
     expect(info('hasna')).toMatchObject({
       gen: 3,
       labelGen: 'GEN.3',
@@ -221,7 +222,8 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     expect(labelDetail(s, 'rangga').urutan).toEqual(['Putra ke-11 dari 11 bersaudara'])
     // Cahya: Vino anak sambung (tidak dihitung), jadi Wati anak kandung satu-satunya.
     expect(labelDetail(s, 'wati').urutan).toEqual(['Putri tunggal'])
-    expect(labelDetail(s, 'kelvan').urutan).toEqual(['Putra tunggal'])
+    expect(labelDetail(s, 'gendis').urutan).toEqual(['Putri tunggal'])
+    expect(labelDetail(s, 'kelvan').urutan).toEqual(['Putra ke-1 dari 2 bersaudara'])
   })
 
   it('anak pasangan pangkal: satu kalimat urutan, bukan dua jalur', () => {
@@ -247,6 +249,7 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     expect(labelDetail(s, 'lorvan').anak).toEqual([
       { id: 'kelvan', nama: 'Kelvan', ke: 1, jenis: null, dari: null },
       { id: 'yoga', nama: 'Yoga', ke: null, jenis: 'anak angkat', dari: null },
+      { id: 'arum', nama: 'Arum', ke: 2, jenis: null, dari: null },
     ])
     // Umar: Vino anak kandungnya (anak sambung bagi Cahya) dari pernikahan sebelumnya.
     expect(labelDetail(s, 'umar').anak.map((a) => [a.nama, a.ke, a.jenis, a.dari])).toEqual([
@@ -254,14 +257,29 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     ])
   })
 
-  it('antarsepupu: orang tua satu baris, "Putri ke-n" untuk masing-masing (pihak …), satu baris singkat kalau GEN berbeda', () => {
+  it('antarsepupu: orang tua satu baris; urutan SEKALI kalau sama bagi kedua pihak; jalur ibu singkat kalau GEN berbeda', () => {
     const d = labelDetail(s, 'hasna')
     expect(d.orangTua[0].orang.map((o) => o.nama)).toEqual(['Rangga', 'Gendis'])
-    expect(d.urutan).toEqual(['Putri tunggal (pihak Rangga)', 'Putri tunggal (pihak Gendis)'])
+    expect(d.urutan).toEqual(['Putri tunggal'])
     expect(d.subjudul).toBe('Buyut · Generasi ke-3')
     expect(d.lewat).toBe('Lewat Gendis: Canggah · Generasi ke-4')
-    // GEN sama: tidak perlu baris tambahan.
-    expect(labelDetail(s, 'nirvo').lewat).toBeNull()
+    // Generasi sama, putra tunggal bagi ayah dan ibunya: sekali, tanpa "(pihak …)", tanpa baris tambahan.
+    expect(labelDetail(s, 'nirvo')).toMatchObject({ urutan: ['Putra tunggal'], lewat: null })
+    // Jalur ibu lebih dekat: GEN dari ayah, jalur ibu disebut singkat.
+    expect(labelDetail(s, 'bintang')).toMatchObject({
+      subjudul: 'Canggah · Generasi ke-4', urutan: ['Putra tunggal'], lewat: 'Lewat Arum: Buyut · Generasi ke-3',
+    })
+  })
+
+  it('antarsepupu: per pihak hanya kalau hasilnya berbeda, pihak ayah dulu', () => {
+    const d = bangunKeluargaFiktif()
+    // Rangga punya anak lebih dulu dari pernikahan lain: bagi Rangga Hasna putri ke-2, bagi Gendis putri tunggal.
+    d.unions.push({ id: 'ux', tree_id: null, partner1_id: 'rangga', partner2_id: null, status: 'cerai', marriage_y: 2015, deleted_at: null, created_at: '2026-03-01T00:00:00Z' })
+    d.people.push({ ...d.people.find((p) => p.id === 'hasna'), id: 'sulung', full_name: 'Sulung', birth_y: 2016, birth_m: null, birth_d: null })
+    d.children.push({ id: 'c-ux', tree_id: null, union_id: 'ux', child_id: 'sulung', kind: 'kandung', biological_parent: 'keduanya', deleted_at: null })
+    d.birth_ranks = d.birth_ranks.filter((r) => r.parent_id !== 'rangga')
+    d.birth_ranks.push({ tree_id: null, parent_id: 'rangga', child_id: 'sulung', rank: 1 }, { tree_id: null, parent_id: 'rangga', child_id: 'hasna', rank: 2 })
+    expect(labelDetail(susunSilsilah(d), 'hasna').urutan).toEqual(['Putri ke-2 dari 2 bersaudara (pihak Rangga)', 'Putri tunggal (pihak Gendis)'])
   })
 
   it('satu pernikahan: tanpa "ke-1", tanpa kata ganda; "Menikah tahun 1974"', () => {

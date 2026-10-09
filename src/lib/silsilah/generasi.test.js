@@ -55,18 +55,48 @@ describe('hitungGenerasi', () => {
     expect(gen.get('yoga')).toBe(gen.get('kelvan'))
   })
 
-  it('anak dari pasangan sepupu mengikuti jalur yang paling dekat ke pangkal', () => {
-    // Rangga GEN.2, Gendis GEN.3 → Hasna lewat Rangga GEN.3 (bukan GEN.4).
+  it('anak dari pasangan sepupu mengikuti pihak LAKI-LAKI (ayah lebih dekat ke pangkal)', () => {
+    // Rangga GEN.2, Gendis GEN.3 → Hasna lewat Rangga GEN.3.
     expect(gen.get('hasna')).toBe(3)
-    expect(jalur.get('hasna').map((j) => [j.orangTuaId, j.gen])).toEqual([
-      ['rangga', 3],
-      ['gendis', 4],
+    expect(jalur.get('hasna').map((j) => [j.orangTuaId, j.gen, j.pihakIbu])).toEqual([
+      ['rangga', 3, false],
+      ['gendis', 4, true],
     ])
   })
 
-  it('kalau kedua jalur sama dekatnya, partner1 yang pertama', () => {
+  it('anak dari pasangan sepupu mengikuti pihak LAKI-LAKI walaupun jalur ibu lebih dekat ke pangkal', () => {
+    // Arum (ibu) GEN.2, Dorvi (ayah) GEN.3 → Bintang GEN.4 lewat Dorvi, bukan GEN.3 lewat Arum.
+    // Pernikahannya dicatat dengan Arum sebagai partner1: urutan data tidak berpengaruh.
+    expect(data.unions.find((u) => u.id === 'u18').partner1_id).toBe('arum')
+    expect(gen.get('bintang')).toBe(4)
+    expect(jalur.get('bintang').map((j) => [j.orangTuaId, j.gen, j.pihakIbu])).toEqual([
+      ['dorvi', 4, false],
+      ['arum', 3, true],
+    ])
+  })
+
+  it('generasi sama: tetap pihak laki-laki, juga kalau pihak perempuan dicatat sebagai partner1', () => {
     expect(gen.get('nirvo')).toBe(3)
     expect(jalur.get('nirvo').map((j) => j.orangTuaId)).toEqual(['tamran', 'wati'])
+    const d = bangunKeluargaFiktif()
+    Object.assign(d.unions.find((u) => u.id === 'u9'), { partner1_id: 'wati', partner2_id: 'tamran' })
+    expect(hitung(d).jalur.get('nirvo').map((j) => j.orangTuaId)).toEqual(['tamran', 'wati'])
+  })
+
+  it('jenis kelamin salah satu pihak belum diketahui: aturan lama, jalur yang paling dekat ke pangkal', () => {
+    const d = bangunKeluargaFiktif()
+    d.people.find((p) => p.id === 'dorvi').sex = null
+    const h = hitung(d)
+    expect(h.gen.get('bintang')).toBe(3)
+    expect(h.jalur.get('bintang').map((j) => [j.orangTuaId, j.pihakIbu])).toEqual([['arum', false], ['dorvi', false]])
+  })
+
+  it('keturunan anak antarsepupu ikut dihitung dari pihak laki-laki', () => {
+    const d = bangunKeluargaFiktif()
+    d.people.push({ ...d.people.find((p) => p.id === 'bintang'), id: 'cucu', full_name: 'Cucu', birth_y: 2045 })
+    d.unions.push({ id: 'ub', tree_id: null, partner1_id: 'bintang', partner2_id: null, status: 'menikah', deleted_at: null })
+    d.children.push({ id: 'c-ub', tree_id: null, union_id: 'ub', child_id: 'cucu', kind: 'kandung', biological_parent: 'keduanya', deleted_at: null })
+    expect(hitung(d).gen.get('cucu')).toBe(5)
   })
 
   it('urutan ke-n dan pasangan ke-n per jalur', () => {
