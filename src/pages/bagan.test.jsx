@@ -35,6 +35,16 @@ describe('Bagan: isi kartu', () => {
     expect(mega.querySelector('.kartu-label').textContent).toBe('Putu')
   })
 
+  it('nama panjang (3–4 kata dengan gelar) memakai huruf lebih kecil, nama pendek tetap; nama selalu utuh di teksnya', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const ukuran = (id) => k(id).querySelector('.kartu-nama').dataset.ukuran
+    expect(ukuran('mega')).toBeUndefined()
+    expect(ukuran('ratrisa-k')).toBe('sedang')
+    for (const id of ['sadevan-b', 'bagaskara', 'selvarani', 'ratrisa-a']) expect(ukuran(id), id).toBe('panjang')
+    expect(k('bagaskara').querySelector('.kartu-nama').textContent).toBe('Alm. H. Bagaskara Wiryawan Adinata Mahardika, S.H.')
+  })
+
   it('kartu pangkal: nama dengan Alm./Almh. dan label "Pangkal"', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()

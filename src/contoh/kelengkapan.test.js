@@ -164,6 +164,37 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(utama.some((p) => belumDewasa(p) && p.birth_m && p.birth_d)).toBe(true)
   })
 
+  it('nama depan yang sama di cabang berbeda: sesama keturunan, dan keturunan + pasangan', () => {
+    // Cabang = anak pasangan pangkal (GEN.1) yang menurunkan orang itu; pasangan ikut cabang suami/istrinya.
+    const cabang = (id) => {
+      if (!s.gen.has(id)) {
+        const u = s.graf.pernikahan.get(id)?.find((x) => keturunan(x.partner1_id === id ? x.partner2_id : x.partner1_id))
+        return u ? cabang(u.partner1_id === id ? u.partner2_id : u.partner1_id) : null
+      }
+      if (s.gen.get(id) <= 1) return id
+      const u = s.graf.unions.get(s.graf.tautan.get(id)[0].union_id)
+      return cabang([u.partner1_id, u.partner2_id].find((p) => p && keturunan(p)) ?? u.partner1_id)
+    }
+    const depan = (p) => p.full_name.split(' ')[0]
+    const pasangan = []
+    for (const [i, a] of utama.entries()) for (const b of utama.slice(i + 1)) {
+      if (depan(a) === depan(b) && cabang(a.id) && cabang(b.id) && cabang(a.id) !== cabang(b.id)) pasangan.push([a.id, b.id])
+    }
+    expect(pasangan.some(([a, b]) => keturunan(a) && keturunan(b))).toBe(true)
+    expect(pasangan.some(([a, b]) => keturunan(a) !== keturunan(b))).toBe(true)
+  })
+
+  it('nama 2, 3, dan 4 kata (masing-masing minimal dua orang), sebagian dengan gelar dan panggilan', () => {
+    for (const n of [2, 3, 4]) {
+      const ini = utama.filter((p) => p.full_name.trim().split(/\s+/).length === n)
+      expect(ini.length, `${n} kata`).toBeGreaterThanOrEqual(2)
+      if (n > 2) {
+        expect(ini.some((p) => p.religious_title || p.academic_title), `${n} kata, gelar`).toBe(true)
+        expect(ini.some((p) => p.nickname), `${n} kata, panggilan`).toBe(true)
+      }
+    }
+  })
+
   it('kedua pohon keluarga asal (pasangan khusus A dan B)', () => {
     expect(data.origin_trees.filter((t) => t.is_active)).toHaveLength(2)
     for (const t of data.origin_trees) {

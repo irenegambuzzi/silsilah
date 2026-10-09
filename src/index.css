@@ -341,6 +341,18 @@ html[data-kontras='tinggi'] .kartu-orang {
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
+/* Nama panjang (lihat ukuranNama di KartuOrang.jsx): huruf lebih kecil dan
+   lebih banyak baris, supaya nama 3–4 kata dengan gelar tetap utuh. */
+.kartu-nama[data-ukuran='sedang'] {
+  -webkit-line-clamp: 3;
+  font-size: 0.75rem;
+  line-height: 1.15;
+}
+.kartu-nama[data-ukuran='panjang'] {
+  -webkit-line-clamp: 4;
+  font-size: 0.66rem;
+  line-height: 1.1;
+}
 .kartu-label {
   max-width: 100%;
   overflow: hidden;

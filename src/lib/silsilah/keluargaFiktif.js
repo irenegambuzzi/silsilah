@@ -38,6 +38,11 @@
 //   Nama panggilan yang sangat berbeda dari nama lengkap: Bima "Abah", Kirana
 //   "Nana", Elvina "Ovi", Fajrin "Jojo", Wati "Titi", Rangga "Kiki".
 //
+//   Nama sama di cabang berbeda: "Sadevan" (putra Vino, cabang Cahya, dan
+//   putra Nanda, cabang Bima) dan "Ratrisa" (istri Vino dan putri Yoga,
+//   cabang Lorvan). Nama 2, 3, dan 4 kata, sebagian dengan gelar dan
+//   panggilan; terpanjang: Alm. H. Bagaskara …, S.H. (putra Vino).
+//
 //   Pohon keluarga asal Eka ("T1"): orang tuanya, saudaranya, Mbah, Mbah
 //   buyut, Pakdhe/Budhe/Paklik/Bulik, sepupu, keponakan, dan satu paman
 //   yang urutan lahirnya tidak diketahui.
@@ -272,6 +277,29 @@ export function bangunKeluargaFiktif() {
   for (const [id, panggilan] of [['bima', 'Abah'], ['kirana', 'Nana'], ['elvina', 'Ovi'], ['fajrin', 'Jojo'], ['wati', 'Titi'], ['rangga', 'Kiki']]) {
     data.people.find((p) => p.id === id).nickname = panggilan
   }
+
+  // Nama yang sama di cabang berbeda, dan nama 2, 3, dan 4 kata (sebagian
+  // dengan gelar dan panggilan), untuk menguji kartu, Daftar, panel, dan
+  // pencarian. "Sadevan": dua keturunan (cabang Cahya dan cabang Bima).
+  // "Ratrisa": pasangan (istri Vino, cabang Cahya) dan keturunan (putri
+  // Yoga, cabang Lorvan).
+  orang('ratrisa-k', 'Ratrisa Kemuntari', 'P', 1975)
+  nikah('u19', 'vino', 'ratrisa-k', { marriage_y: 1998 })
+  orang('sadevan-b', 'Sadevan Bramasta Wiratmaja', 'L', 2000, { academic_title: 'S.T.', nickname: 'Bram' })
+  orang('bagaskara', 'Bagaskara Wiryawan Adinata Mahardika', 'L', 2003, {
+    religious_title: 'H.', academic_title: 'S.H.', nickname: 'Mas Bagas', is_deceased: true, death_y: 2025,
+  })
+  for (const a of ['sadevan-b', 'bagaskara']) anak('u19', a)
+  orang('ayundra', 'Ayundra Pramesti', 'P', 1990)
+  nikah('u21', 'nanda', 'ayundra', { marriage_y: 2018 })
+  orang('sadevan-a', 'Sadevan Arkanata', 'L', 2021)
+  anak('u21', 'sadevan-a')
+  orang('selvarani', 'Selvarani Kusumaningtyas Prameswari', 'P', 1985, {
+    religious_title: 'Hj.', academic_title: 'S.Pd.', nickname: 'Bu Rani',
+  })
+  nikah('u20', 'yoga', 'selvarani', { marriage_y: 2007 })
+  orang('ratrisa-a', 'Ratrisa Anindya Maharsi Wijayakusuma', 'P', 2009, { nickname: 'Anin' })
+  anak('u20', 'ratrisa-a')
 
   // "Belum menikah" yang dipilih orangnya sendiri.
   data.people.find((p) => p.id === 'putri').marital_choice = 'belum_menikah'

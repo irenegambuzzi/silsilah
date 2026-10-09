@@ -5,12 +5,17 @@ import { teks } from '../../teks/id.js'
 
 const SIMBOL = { L: '♂', P: '♀' }
 
+// Nama panjang (3–4 kata, apalagi dengan gelar) diperkecil supaya tetap utuh
+// di kartu yang ukurannya tetap: sedang 3 baris, panjang 4 baris (index.css).
+const ukuranNama = (nama) => (nama.length > 30 ? 'panjang' : nama.length > 16 ? 'sedang' : undefined)
+
 // Satu kartu di Bagan, seperti aplikasi lama: strip warna tipis di tepi
 // atas, lingkaran kecil berisi simbol ♂/♀, NAMA kapital (Cinzel, boleh dua
 // baris), dan satu label kecil kapital di bawahnya. Pojok kartu:
 //   kanan atas  GEN.n
 //   kiri atas   nomor urut (hanya anak KANDUNG; anak sambung/angkat tanpa nomor)
 //   kanan bawah tunas daun: belum dewasa (di bawah 18 tahun)
+// Nama panjang memakai huruf lebih kecil (ukuranNama) supaya tidak terpotong.
 // Warnanya menurut warnaKartu (keturunan/pasangan, jenis kelamin, pangkal,
 // wafat). Gaya: .kartu-orang di index.css. Letak (rem) dari tata letak bagan.
 //
@@ -56,7 +61,9 @@ export function KartuOrang({ kartu, letak, terpilih = false, rujukan = null, ula
           <span className="sr-only">{teksUrutanKe(kartu.sex, kartu.urut)}</span>
         </>
       )}
-      <span className="kartu-nama">{kartu.nama}</span>
+      <span className="kartu-nama" data-ukuran={ukuranNama(kartu.nama)}>
+        {kartu.nama}
+      </span>
       {rujukan ? (
         <span className="kartu-label">{rujukan.label}</span>
       ) : (
