@@ -35,9 +35,11 @@ export const kontakContoh = [
   kontak('rangga', 'Jl. Kamboja Contoh No. 11', '0812-0000-0018'),
   kontak('gendis', 'Jl. Kamboja Contoh No. 11', '0812-0000-0019'),
   kontak('kelvan', 'Jl. Seroja Contoh No. 4', '0812-0000-0020', 'Kabupaten Contoh', 'DI Yogyakarta'),
-  kontak('dorvi', 'Kos Contoh Kamar 6, Jl. Mawar Contoh No. 40', '0812-0000-0021', 'Kota Contoh Raya', 'DKI Jakarta'),
+  kontak('dorvi', 'Jl. Mawar Contoh No. 40, RT 05/RW 03', '0812-0000-0021', 'Kota Contoh Raya', 'DKI Jakarta'),
+  kontak('arum', 'Jl. Mawar Contoh No. 40, RT 05/RW 03', '0812-0000-0024', 'Kota Contoh Raya', 'DKI Jakarta'),
   kontak('laras', 'Jl. Cempaka Contoh Gg. 3 No. 14', '0812-0000-0022'),
   kontak('rinzo', 'Jl. Teratai Contoh No. 30', '0812-0000-0023', 'Kota Lain Contoh', 'Jawa Timur'),
   // Anak di bawah umur: hanya alamat (ikut orang tuanya), tanpa nomor HP.
   kontak('bayu', 'Jl. Cempaka Contoh Gg. 3 No. 14', null),
+  kontak('bintang', 'Jl. Mawar Contoh No. 40, RT 05/RW 03', null, 'Kota Contoh Raya', 'DKI Jakarta'),
 ]

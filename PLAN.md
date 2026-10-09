@@ -1216,7 +1216,8 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 5 | 1.20 | Opus 5.5 · high | – (selesai) |
 | ✅ 6 | 1.21 + 1.22 | Sonnet 5.5 · high | – (selesai; opsional: lihat lewat mode contoh) |
 | ✅ 6b | perbaikan tampilan menurut tinjauan Anda (identitas visual lama, warna kartu, isi kartu, garis, antarsepupu, panel, tulisan, mode contoh lengkap) | Opus 5.5 | – (selesai) |
-| ✅ 6c | perbaikan putaran kedua menurut tinjauan Anda (A panel keterangan, B bagan, C fokus cabang, D mode contoh, E tes; lihat "Putaran kedua tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
+| ✅ 6c | perbaikan putaran kedua menurut tinjauan Anda (A panel keterangan, B bagan, C fokus cabang, D mode contoh, E tes; lihat "Putaran kedua tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | – (selesai) |
+| ✅ 6d | perbaikan putaran ketiga menurut tinjauan Anda (A kartu pasangan, B orang tua sambung/angkat, C anak di panel pasangan, D antarsepupu di pihak laki-laki, E nomor silsilah disembunyikan, F fokus cabang, G mode contoh; lihat "Putaran ketiga tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
 | 9 | 1.26 | Sonnet 5.5 · high | – |
@@ -1242,6 +1243,17 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 - **"Disisihkan"** menggantikan "tempat sampah" (8.4): izin `sisihkan`, SQL `007_disisihkan_laporan.sql`.
 - **Migrasi** (16.2, 16.3): laporan wajib mendaftar nama yang jenis kelaminnya belum diketahui; tidak pernah diisi asal.
 - **Tes**: `src/tulisan.test.jsx` (tanpa "Anak ke-", "cerai", "tempat sampah", "Wafat: -" untuk yang masih hidup, "Belum menikah" otomatis; juga pesan SQL), `src/lib/silsilah/{anak,status,umur}.test.js`, `src/lib/bagan/cabang.test.js`, SQL 003/005, dan `src/contoh/kelengkapan.test.js`.
+
+**Putaran ketiga tinjauan tampilan (kelompok 6d, Oktober 2026)**, ringkasan keputusan (rinciannya di bagian 15.1; keputusan putaran sebelumnya tetap, kecuali yang disebut di sini):
+
+- **A. Kartu pasangan** (mengubah "kartu pasangan tanpa label"): satu label kecil kapital "PASANGAN", tanpa GEN; juga untuk pasangan khusus. Kedua kartu pangkal utama tetap "PANGKAL". Label di kartu pasangan wafat berwarna putih supaya kontrasnya ≥ 7:1.
+- **B. Orang tua sambung/angkat** di panel anak itu: "Orang tua: Umar & Cahya (ibu sambung)" ditambah "Anak sambung Cahya"; "Orang tua angkat: Lorvan & Sinta" ditambah "Anak angkat Lorvan & Sinta". Semua nama bisa diketuk.
+- **C. Bagian Anak sama untuk semua orang**: panel pasangan menampilkan semua anaknya, bernomor dari sudut pandangnya; anak kandung yang dibawanya ke pernikahan: "· dari pernikahan sebelumnya" (keputusan saya: ibu/ayah kandungnya yang lain tidak tercatat, jadi "dari istri ke-n" tidak bisa dipakai tanpa menebak).
+- **D. Antarsepupu** (mengubah "GEN mengikuti jalur yang paling dekat ke pangkal"): anak selalu di bawah pihak laki-laki dan GEN-nya lewat ayah; jalur ibu disebut singkat ("Lewat Arum: Buyut · Generasi ke-3"); kalimat urutan ditulis sekali kalau sama bagi kedua pihak. Jenis kelamin belum diketahui: jalur terdekat, dicatat di laporan migrasi (16.3).
+- **E. Nomor silsilah** tidak ditampilkan di mana pun; hanya untuk mengurutkan Daftar.
+- **F. Fokus cabang**: pasangan orang yang difokuskan juga "PANGKAL CABANG" GEN.0 (warna tetap warna pasangan); pita dengan tombol "Keluar dari fokus" selalu ada selama mode fokus (juga di bilah atas); tombol Kembali di browser keluar dari fokus.
+- **G. Mode contoh**: Galen (anak Harvel dari pernikahan sebelumnya), Arum ♥ Dorvi (antarsepupu, jalur ibu lebih dekat) dengan anak Bintang; kontak fiktif ikut. Tabel kasus di README.
+- **Tes**: `src/lib/silsilah/{generasi,kartu,daftar,nomor}.test.js`, `src/lib/bagan/{susun,cabang}.test.js`, `src/pages/{bagan,daftarDetail}.test.jsx`, `src/tulisan.test.jsx` (tanpa "Nomor silsilah"), `src/kontras.test.js`, dan `src/contoh/kelengkapan.test.js`.
 
 ### Langkah Darurat
 

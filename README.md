@@ -46,7 +46,8 @@ cari di bilah atas Bagan), lalu ketuk kartunya untuk membuka panel:
 
 | Kasus | Di mana |
 |---|---|
-| Pasangan pangkal, keduanya wafat | Alm. Raksa & Almh. Selara (kartu emas, strip dan simbol hitam arang). Panel Selara: "Ditinggal wafat pasangan" |
+| Pasangan pangkal, keduanya wafat | Alm. Raksa & Almh. Selara (kartu emas, strip dan simbol hitam arang, label "PANGKAL"). Panel Selara: "Ditinggal wafat pasangan" |
+| Label kartu pasangan | Semua kartu pasangan yang bukan keturunan berlabel kecil "PASANGAN" tanpa GEN, misalnya Eka, Gita, Umar, Harvel, Alm. H. Halvin (kartu arang, label putih), Hj. Dara (pasangan khusus) |
 | Pernikahan berulang, anak 1–11 lintas pernikahan | Bima: dari kiri ke kanan Eka (istri ke-1) → Fitri (istri ke-2) → Eka lagi ("menikah kembali") → Gita (istri ke-3). Nomor urut 1–11 di pojok kiri atas kartu anak-anaknya, urut dari kiri ke kanan. Panel Bima: daftar anak "1. Tamran · dari istri ke-1" … "11. Rangga · dari istri ke-3" |
 | Berpisah (hati patah + garis putus-putus) | Tiga pernikahan pertama Bima; panel Eka/Fitri: "Pasangan dari Bima · berpisah", status "Berpisah" |
 | Berpisah tanpa jalur resmi, lalu menikah lagi | Kirana (anak Bima): Suami ke-1 Danuarta (berpisah, catatan "Berpisah tanpa jalur resmi"), Suami ke-2 Harvel |
@@ -54,24 +55,27 @@ cari di bilah atas Bagan), lalu ketuk kartunya untuk membuka panel:
 | Ditinggal wafat lalu menikah lagi | Ika: Suami ke-1 Alm. H. Halvin, Suami ke-2 Joval, S.E. Juga Hj. Dara (istri Alm. Tirwan): status "Ditinggal wafat pasangan" |
 | Keturunan wafat / pasangan wafat | Alm. Tirwan (kartu hitam arang) / Alm. H. Halvin (kartu arang lebih muda); panel keduanya punya baris "Wafat" |
 | Anak wafat saat bayi | Almh. Sekar, anak Ika (dengan catatan; tanpa baris status pernikahan) |
-| Anak sambung LEBIH TUA dari anak kandung | Vino (anak sambung Cahya, 1972) di kiri Wati (1977) di bawah hati Cahya & Umar, tanpa nomor urut. Panel Vino: "Anak sambung Cahya". Panel Cahya: "Vino · anak sambung", "1. Wati" |
-| Anak sambung LEBIH MUDA dari anak kandung | Elvina (anak Harvel, 2006): panel Kirana menulis "1. Celvia" (2001), "Elvina · anak sambung", "2. Fajrin" (2010) |
-| Anak angkat | Yoga (anak angkat Lorvan & Sinta, lebih muda dari Kelvan): tanpa nomor urut; panel Lorvan: "Yoga · anak angkat" |
+| Anak sambung LEBIH TUA dari anak kandung | Vino (anak sambung Cahya, 1972) di kiri Wati (1977) di bawah hati Cahya & Umar, tanpa nomor urut. Panel Vino: "Orang tua: Umar & Cahya (ibu sambung)" (keduanya bisa diketuk) dan "Anak sambung Cahya". Panel Cahya: "Vino · anak sambung", "1. Wati" |
+| Anak sambung LEBIH MUDA dari anak kandung | Galen (2003) dan Elvina (2006), anak Harvel: panel Kirana menulis "1. Celvia" (2001), "Galen · anak sambung", "Elvina · anak sambung", "2. Fajrin" (2010). Panel Elvina: "Orang tua: Harvel & Kirana (ibu sambung)" |
+| Pasangan dengan anak dari pernikahan sebelumnya | Harvel (pasangan Kirana): bagian Anak berisi SEMUA anaknya, bernomor dari sudut pandang Harvel: "1. Galen · dari pernikahan sebelumnya", "2. Elvina · dari pernikahan sebelumnya", "3. Fajrin". Juga Umar: "1. Vino · dari pernikahan sebelumnya", "2. Wati". Panel pasangan lain (Eka, Gita, Hj. Dara, Alm. H. Halvin, Joval, Danuarta, Sinta, Laila, Fitri) juga menampilkan anak-anaknya |
+| Anak angkat | Yoga (anak angkat Lorvan & Sinta, di antara Kelvan dan Arum menurut umur): tanpa nomor urut; panel Yoga: "Orang tua angkat: Lorvan & Sinta" (keduanya bisa diketuk) dan "Anak angkat Lorvan & Sinta"; panel Lorvan: "1. Kelvan", "Yoga · anak angkat", "2. Arum" |
 | "Putra/Putri ke-n dari n bersaudara" | panel Mega: "Putri ke-6 dari 11 bersaudara"; panel Wati: "Putri tunggal" (Vino anak sambung, tidak dihitung) |
-| Antarsepupu, generasi sama | Tamran & Wati, anaknya Nirvo |
-| Antarsepupu, generasi berbeda | Rangga & Gendis, anaknya Hasna (panel: "Putri tunggal (pihak Rangga)" dan "(pihak Gendis)") |
+| Antarsepupu, generasi sama | Tamran & Wati, anaknya Nirvo di bawah Tamran (pihak laki-laki); panel Nirvo: "Putra tunggal" sekali saja (sama bagi ayah dan ibunya) |
+| Antarsepupu, generasi berbeda | Rangga & Gendis, anaknya Hasna di bawah Rangga; panel Hasna: "Putri tunggal" sekali dan "Lewat Gendis: Canggah · Generasi ke-4"; di samping Gendis catatan "Anak mereka ada di cabang Rangga" |
+| Antarsepupu, jalur IBU lebih dekat ke pangkal | Arum (putri Lorvan, GEN.2) & Dorvi, S.Kom. (cucu Bima, GEN.3): anaknya Bintang tetap di bawah Dorvi (pihak laki-laki) dengan GEN.4 · CANGGAH (bukan GEN.3 lewat Arum). Panel Bintang: "Canggah · Generasi ke-4", "Putra tunggal", "Lewat Arum: Buyut · Generasi ke-3". Di samping Arum (cabang Lorvan): kartu rujukan Dorvi dan catatan "Anak mereka ada di cabang Dorvi, S.Kom." |
 | Pasangan tidak diketahui | Lintang, anaknya Arya (status pernikahan "-") |
 | Jenis kelamin tidak diketahui | Ragil, anak Alm. Tirwan (kartu abu, "Putra/Putri ke-3"); baris legenda "Jenis kelamin tidak diketahui" hanya muncul selama ada orang seperti ini |
 | Dewasa tanpa data pernikahan / memilih "Belum menikah" | Oka ("Status pernikahan: -", tanpa baris Pasangan) / Putri ("Status pernikahan: Belum menikah") |
 | Kolom kosong ("-") | Oka: Panggilan, Pekerjaan, Catatan "-"; pasangan seperti Gita: Orang tua "-" |
-| Anak di bawah umur (tunas daun di pojok kanan bawah kartu) | Bayu, Nala, Ragil, Hasna (tanggal lahir lengkap), Fajrin (4 Juli 2010, tanggal lengkap) |
-| Fokus cabang dihitung dari orangnya | ketuk Bima → "Fokus pada cabang ini" → "Hitung dari Bima": Bima "PANGKAL CABANG" GEN.0, anaknya GEN.1 · Anak, dengan pita "Generasi dihitung dari Bima · Kembali ke pangkal utama". Alamat langsung: `/#/bagan?fokus=bima&hitung=cabang` |
+| Anak di bawah umur (tunas daun di pojok kanan bawah kartu) | Bayu, Nala, Ragil, Bintang, Hasna (tanggal lahir lengkap), Fajrin (4 Juli 2010, tanggal lengkap) |
+| Fokus cabang dihitung dari orangnya | ketuk Bima → "Fokus pada cabang ini" → "Hitung dari Bima": Bima dan ketiga istrinya (Eka, Fitri, Gita) "PANGKAL CABANG" GEN.0, anaknya GEN.1 · Anak, dengan pita "Generasi dihitung dari Bima · Kembali ke pangkal utama" dan tombol "Keluar dari fokus" (juga di bilah atas, dan tetap ada saat bilah disembunyikan). Tombol Kembali di browser juga keluar dari fokus. Alamat langsung: `/#/bagan?fokus=bima&hitung=cabang` |
 | Gelar religius / pendidikan | H. Halvin, Hj. Dara / Dorvi, S.Kom., Laras, S.Ked., Joval, S.E. |
 | Nama panggilan | Dorvi, Joval, Hj. Dara, H. Halvin |
 | Tanggal kabur | H. Halvin "sekitar 1968"; Hj. Dara "Juni 1978"; tahun saja di banyak orang; tanggal lengkap: Dorvi, Fajrin, Hasna |
 | Pekerjaan / catatan | Dorvi, Laras, Joval, H. Halvin, Alm. Tirwan, Harvel / Almh. Sekar, Alm. Tirwan |
 | Pohon keluarga asal | Eka (pasangan khusus A) dan Hj. Dara (pasangan khusus B). Hanya dimuat untuk admin utama (kode `UTAMA234`); layarnya belum dibuat |
-| Alamat dan nomor HP fiktif | `src/contoh/kontakContoh.js` (24 orang); layar data kontak belum dibuat |
+| Alamat dan nomor HP fiktif | `src/contoh/kontakContoh.js` (26 orang); layar data kontak belum dibuat |
+| Nomor silsilah | tidak tampil di mana pun (panel, Daftar, kartu); Daftar tetap diurutkan cabang demi cabang |
 
 ## Menyambungkan ke database
 
