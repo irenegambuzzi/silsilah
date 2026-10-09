@@ -23,6 +23,11 @@ const tunggu = () => screen.findByRole('button', { name: /Hasna/ })
 const semuaKartu = () => document.querySelectorAll('[data-orang]')
 const isiBagan = () => document.querySelector('[role="group"] > div')
 const transform = () => isiBagan().style.transform
+// Baris orang tua di panel, masing-masing persis seperti tampil.
+const barisOrangTua = (panel) =>
+  [...panel.querySelectorAll('dl > div')]
+    .map((b) => b.textContent)
+    .filter((t) => /^(Orang tua|Ayah sambung|Ibu sambung|Orang tua sambung|Orang tua angkat):/.test(t))
 
 describe('Bagan: isi kartu', () => {
   it('kartu keturunan: GEN di pojok, nama, dan istilah Jawa', async () => {
@@ -65,7 +70,7 @@ describe('Bagan: isi kartu', () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('eka').textContent).not.toContain('GEN')
-    expect(screen.getAllByText('Istri ke-1')).toHaveLength(3) // Eka, Eka lagi (menikah kembali), dan istri ke-1 Qori
+    expect(screen.getAllByText('Istri ke-1')).toHaveLength(4) // Eka, Eka lagi (menikah kembali), istri ke-1 Qori, dan Wati (istri ke-1 Tamran)
     expect(screen.getByText('Istri ke-3')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Istri ke-2: Fitri' })).toBe(k('fitri'))
   })
@@ -355,8 +360,9 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await tunggu()
     await aksi.click(k('vino'))
     let panel = screen.getByRole('region', { name: 'Orang terpilih' })
-    expect(panel.textContent).toContain('Orang tua: Umar & Cahya (ibu sambung)')
+    expect(barisOrangTua(panel)).toEqual(['Orang tua: Umar', 'Ibu sambung: Cahya'])
     expect(panel.textContent).toContain('Anak sambung Cahya')
+    expect(within(panel).getByRole('button', { name: 'Cahya' })).toBeTruthy()
     await aksi.click(k('yoga'))
     panel = screen.getByRole('region', { name: 'Orang terpilih' })
     expect(panel.textContent).toContain('Orang tua angkat: Lorvan & Sinta')
@@ -365,7 +371,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Sinta', level: 2 })).toBeTruthy()
   })
 
-  it('panel anak sambung dari sisi pasangan: Harvel punya empat anak (Celvia anak sambung), Celvia menyebut Harvel (ayah sambung)', async () => {
+  it('panel anak sambung dari sisi pasangan: Harvel punya empat anak (Celvia anak sambung), Celvia menyebut "Ayah sambung: Harvel"', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('harvel'))
@@ -375,7 +381,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     ])
     await aksi.click(k('celvia'))
     panel = screen.getByRole('region', { name: 'Orang terpilih' })
-    expect(panel.textContent).toContain('Orang tua: Kirana & Danuarta & Harvel (ayah sambung)')
+    expect(barisOrangTua(panel)).toEqual(['Orang tua: Danuarta & Kirana', 'Ayah sambung: Harvel'])
     expect(panel.textContent).toContain('Anak sambung Harvel')
   })
 

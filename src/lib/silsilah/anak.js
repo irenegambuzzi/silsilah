@@ -158,21 +158,33 @@ export function anakPernikahanMenurutUmur(graf, u, p, anakIds) {
   return urutkanMenurutUmur(graf, kandung, lain)
 }
 
-// Orang tua sambung dari sisi pasangan (kebalikan `panel`): untuk setiap anak,
-// siapa saja yang menikah dengan orang tua kandungnya dan karena itu menjadi
-// ayah/ibu sambungnya. Map anak → [{ id (orang tua sambung), unionId (hubungan
-// anak itu dengan orang tua kandungnya) }], berurutan menurut pernikahan
-// pertama dengan orang tua kandung itu. Dihitung sekali per graf.
+// Orang tua sambung (kebalikan `panel`): untuk setiap anak, siapa saja
+// orang tua sambungnya. SATU sumber untuk panel anak dan panel orang tua:
+// X orang tua sambung Y persis kalau Y "anak sambung" di daftar anak X.
+// Termasuk
+// - orang tua sambung yang dicatat di pernikahan itu sendiri (anak sambung
+//   dengan orang tua kandung diketahui; tanpa batas waktu, karena dicatat), dan
+// - orang tua sambung dari sisi pasangan: menikah dengan orang tua kandungnya
+//   di pernikahan lain, dengan batas waktu sambungDariPasangan (anak itu hidup
+//   selama pernikahan itu berlangsung); pasangan: true.
+// Map anak → [{ id (orang tua sambung), unionId (hubungan anak itu dengan
+// orang tua kandungnya), nikahId (pernikahan yang menjadikannya orang tua
+// sambung), pasangan }], urut menurut waktu pernikahan itu (paling awal
+// dulu). Dihitung sekali per graf.
 const simpananSambung = new WeakMap()
-export function orangTuaSambungPasangan(graf) {
+export function orangTuaSambung(graf) {
   let peta = simpananSambung.get(graf)
   if (peta) return peta
   peta = new Map()
+  const tercatat = (a) => (graf.anakUnion.get(a.unionId) ?? []).find((c) => c.child_id === a.id)
   for (const p of graf.pernikahan.keys()) {
     for (const a of anakOrangTua(graf, p).panel) {
-      if (!a.sambung) continue
+      if (a.kandung || a.kind !== 'sambung') continue
+      // Anak sambung yang orang tua kandungnya tidak diketahui: kedua orang
+      // tuanya ditulis sebagai orang tua biasa.
+      if (!a.sambung && tercatat(a)?.biological_parent == null) continue
       if (!peta.has(a.id)) peta.set(a.id, [])
-      peta.get(a.id).push({ id: p, unionId: a.unionId, nikahId: a.nikahId })
+      peta.get(a.id).push({ id: p, unionId: a.unionId, nikahId: a.sambung ? a.nikahId : a.unionId, pasangan: Boolean(a.sambung) })
     }
   }
   const mulai = (nikahId) => tanggalDari(graf.unions.get(nikahId), 'marriage')
@@ -181,4 +193,13 @@ export function orangTuaSambungPasangan(graf) {
   }
   simpananSambung.set(graf, peta)
   return peta
+}
+
+// Hanya orang tua sambung dari sisi pasangan (bagian dari orangTuaSambung).
+export function orangTuaSambungPasangan(graf) {
+  return new Map(
+    [...orangTuaSambung(graf)]
+      .map(([anak, daftar]) => [anak, daftar.filter((x) => x.pasangan)])
+      .filter(([, daftar]) => daftar.length > 0)
+  )
 }

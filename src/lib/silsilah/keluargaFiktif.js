@@ -8,7 +8,9 @@
 //         ke-2, 6–7 kembali dari istri ke-1, 8–11 dari istri ke-3.
 //   Cahya + Umar: Vino anak sambung (anak Umar), Wati anak kandung.
 //   Lorvan + Sinta: Yoga anak angkat. Anak Lorvan, Kelvan, punya Gendis.
-//   Tamran + Wati: pernikahan antarsepupu, kedua orang tua sama GEN-nya.
+//   Tamran + Wati: pernikahan antarsepupu, kedua orang tua sama GEN-nya;
+//         berpisah, lalu masing-masing menikah lagi (Melvira, Tedrik), jadi
+//         Nirvo punya ayah sambung dan ibu sambung.
 //   Rangga + Gendis: pernikahan antarsepupu, GEN orang tuanya berbeda
 //         (Rangga GEN.2, Gendis GEN.3); anak mereka mengikuti Rangga.
 //   Arum + Dorvi: pernikahan antarsepupu, jalur IBU lebih dekat ke pangkal
@@ -197,9 +199,15 @@ export function bangunKeluargaFiktif() {
   anak('u7', 'gendis')
 
   // Pernikahan antarsepupu, GEN orang tua sama (Tamran dan Wati, keduanya GEN.2).
-  nikah('u9', 'tamran', 'wati', { marriage_y: 1998 })
+  nikah('u9', 'tamran', 'wati', { marriage_y: 1998, status: 'cerai', end_y: 2004 })
   orang('nirvo', 'Nirvo', 'L', 1999)
   anak('u9', 'nirvo')
+  // Sesudah berpisah keduanya menikah lagi: Nirvo punya ayah sambung DAN ibu
+  // sambung (baris "Ayah sambung" dulu, lalu "Ibu sambung").
+  orang('melvira', 'Melvira', 'P', 1976)
+  nikah('u22', 'tamran', 'melvira', { marriage_y: 2006 })
+  orang('tedrik', 'Tedrik', 'L', 1974)
+  nikah('u23', 'wati', 'tedrik', { marriage_y: 2007 })
   // Pernikahan antarsepupu, GEN orang tua berbeda (Rangga GEN.2, Gendis GEN.3).
   nikah('u8', 'rangga', 'gendis', { marriage_y: 2022 })
   orang('hasna', 'Hasna', 'P', 2024)

@@ -42,15 +42,17 @@ function Baris({ nama, children }) {
   )
 }
 
-// "Bima & Eka"; anak sambung: "Umar & Cahya (ibu sambung)". Semua nama bisa diketuk.
-const gabungOrang = (orang, saatPilih) =>
+// "Bima & Eka"; orang tua sambung dipisah koma: "Fitri, Gita". Semua nama bisa diketuk.
+const gabungOrang = (orang, saatPilih, pemisah = ' & ') =>
   orang.map((o, i) => (
     <span key={o.id}>
-      {i > 0 && ' & '}
+      {i > 0 && pemisah}
       <NamaOrang id={o.id} nama={o.nama} saatPilih={saatPilih} />
-      {o.sambung && ` (${o.sambung})`}
     </span>
   ))
+
+const labelOrangTua = (o) =>
+  o.jenis === 'angkat' ? T.orangTuaAngkat : o.jenis === 'sambung' ? T.orangTuaSambung[o.sex] : T.orangTua
 
 // Isi keterangan seseorang dalam format aplikasi lama: avatar, NAMA, istilah
 // dan generasi; KETERANGAN PRIBADI; RIWAYAT HIDUP; anak. Dipakai di panel
@@ -60,7 +62,8 @@ const gabungOrang = (orang, saatPilih) =>
 // di bawah judul nama).
 //
 // Baris yang selalu tampil (isi "-" kalau belum diisi): Panggilan, Jenis
-// kelamin, Orang tua (anak angkat: "Orang tua angkat"), Pekerjaan, Lahir,
+// kelamin, Orang tua (lalu "Ayah sambung"/"Ibu sambung" dan "Orang tua
+// angkat" di baris sendiri, kalau ada), Pekerjaan, Lahir,
 // Catatan. Nomor silsilah TIDAK ditampilkan (hanya untuk mengurutkan Daftar). Baris yang
 // hanya tampil kalau berlaku: Status pernikahan (tidak untuk anak di bawah
 // umur), Pasangan (kalau ada data pernikahan), Wafat (yang sudah wafat).
@@ -90,8 +93,8 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
             <Baris nama={T.orangTua}>{null}</Baris>
           ) : (
             d.orangTua.map((o) => (
-              <Baris key={o.unionId} nama={o.angkat ? T.orangTuaAngkat : T.orangTua}>
-                {gabungOrang(o.orang, saatPilih)}
+              <Baris key={`${o.jenis}${o.sex ?? ''}${o.orang[0].id}`} nama={labelOrangTua(o)}>
+                {gabungOrang(o.orang, saatPilih, o.jenis === 'sambung' ? ', ' : ' & ')}
               </Baris>
             ))
           )}

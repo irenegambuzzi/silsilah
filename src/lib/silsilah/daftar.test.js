@@ -71,33 +71,41 @@ describe('cariDaftar', () => {
 
 describe('labelDetail: orang tua', () => {
   const nama = (d) => d.orangTua.map((o) => o.orang.map((x) => x.nama).join(' & '))
-  it('kedua orang tua dalam satu baris, juga yang bukan keturunan', () => {
-    expect(nama(labelDetail(s, 'tamran'))).toEqual(['Bima & Eka & Fitri & Gita'])
+  const baris = (d) => d.orangTua.map((o) => [o.jenis === 'sambung' ? `sambung ${o.sex}` : o.jenis, o.orang.map((x) => x.nama)])
+  it('orang tua kandung satu baris (ayah dulu), orang tua sambung di baris sendiri', () => {
+    expect(baris(labelDetail(s, 'tamran'))).toEqual([['kandung', ['Bima', 'Eka']], ['sambung P', ['Fitri', 'Gita']]])
   })
-  it('anak sambung: orang tua kandung dulu, lalu orang tua sambungnya "(ibu sambung)"; ditambah "Anak sambung [nama]"', () => {
+  it('anak sambung: orang tua kandungnya saja di baris "Orang tua", orang tua sambungnya di baris sendiri; ditambah "Anak sambung [nama]"', () => {
     expect(labelDetail(s, 'vino').orangTua).toEqual([
-      { unionId: 'u5', angkat: false, orang: [{ id: 'umar', nama: 'Umar', sambung: null }, { id: 'cahya', nama: 'Cahya', sambung: 'ibu sambung' }] },
+      { jenis: 'kandung', orang: [{ id: 'umar', nama: 'Umar' }] },
+      { jenis: 'sambung', sex: 'P', orang: [{ id: 'cahya', nama: 'Cahya' }] },
     ])
     expect(labelDetail(s, 'vino').urutan).toEqual(['Anak sambung Cahya'])
   })
-  it('anak sambung dari ibu kandung: "(ayah sambung)"; jenis kelamin belum diketahui: "(orang tua sambung)"', () => {
+  it('anak sambung dari ibu kandung: baris "Ayah sambung"; jenis kelamin belum diketahui: "Orang tua sambung"', () => {
     const d = bangunKeluargaFiktif()
     d.children.find((c) => c.id === 'c-u5-vino').biological_parent = 'partner1'
     const t = susunSilsilah(d)
-    expect(labelDetail(t, 'vino').orangTua[0].orang.map((o) => [o.nama, o.sambung])).toEqual([['Cahya', null], ['Umar', 'ayah sambung']])
+    expect(baris(labelDetail(t, 'vino'))).toEqual([['kandung', ['Cahya']], ['sambung L', ['Umar']]])
     expect(labelDetail(t, 'vino').urutan).toContain('Anak sambung Umar')
     d.people.find((p) => p.id === 'umar').sex = null
-    expect(labelDetail(susunSilsilah(d), 'vino').orangTua[0].orang[1].sambung).toBe('orang tua sambung')
+    expect(baris(labelDetail(susunSilsilah(d), 'vino'))).toEqual([['kandung', ['Cahya']], ['sambung x', ['Umar']]])
   })
-  it('anak angkat: baris "Orang tua angkat" (angkat: true) dengan kedua orang tua angkatnya; ditambah "Anak angkat [nama]"', () => {
+  it('anak sambung yang orang tua kandungnya tidak diketahui: kedua orang tua di baris "Orang tua"', () => {
+    const d = bangunKeluargaFiktif()
+    d.children.find((c) => c.id === 'c-u5-vino').biological_parent = null
+    const t = susunSilsilah(d)
+    expect(baris(labelDetail(t, 'vino'))).toEqual([['kandung', ['Umar', 'Cahya']]])
+  })
+  it('anak angkat: baris "Orang tua angkat" dengan kedua orang tua angkatnya; ditambah "Anak angkat [nama]"', () => {
     expect(labelDetail(s, 'yoga').orangTua).toEqual([
-      { unionId: 'u6', angkat: true, orang: [{ id: 'lorvan', nama: 'Lorvan', sambung: null }, { id: 'sinta', nama: 'Sinta', sambung: null }] },
+      { jenis: 'angkat', orang: [{ id: 'lorvan', nama: 'Lorvan' }, { id: 'sinta', nama: 'Sinta' }] },
     ])
     expect(labelDetail(s, 'yoga').urutan).toEqual(['Anak angkat Lorvan & Sinta'])
-    expect(labelDetail(s, 'kelvan').orangTua[0].angkat).toBe(false)
+    expect(labelDetail(s, 'kelvan').orangTua[0].jenis).toBe('kandung')
   })
   it('pernikahan antarsepupu: kedua orang tua dalam satu baris', () => {
-    expect(nama(labelDetail(s, 'nirvo'))).toEqual(['Tamran & Wati'])
+    expect(nama(labelDetail(s, 'nirvo'))[0]).toBe('Tamran & Wati')
     expect(nama(labelDetail(s, 'hasna'))).toEqual(['Rangga & Gendis'])
   })
 })

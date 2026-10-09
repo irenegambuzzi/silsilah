@@ -99,7 +99,15 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(utama.some((p) => pasanganSaja(p.id) && punya(p.id))).toBe(true)
     // ... termasuk anak yang dicatat di pernikahan lain, bukan di pernikahan pasangan itu (Celvia bagi Harvel).
     const celvia = labelDetail(s, 'celvia')
-    expect(celvia.orangTua[0].orang.some((o) => o.sambung)).toBe(true)
+    expect(celvia.orangTua.some((o) => o.jenis === 'sambung' && o.orang.some((x) => x.id === 'harvel'))).toBe(true)
+  })
+
+  it('baris orang tua: ayah sambung saja, ibu sambung lebih dari satu, dan keduanya sekaligus', () => {
+    const jenis = (id) => labelDetail(s, id).orangTua.filter((o) => o.jenis === 'sambung')
+    const semua = utama.map((p) => jenis(p.id))
+    expect(semua.some((b) => b.length === 1 && b[0].sex === 'L')).toBe(true)
+    expect(semua.some((b) => b.some((o) => o.sex === 'P' && o.orang.length > 1))).toBe(true)
+    expect(semua.some((b) => b.map((o) => o.sex).join() === 'L,P')).toBe(true)
   })
 
   it('nama panggilan yang sangat berbeda dari nama lengkap (untuk menguji pencarian)', () => {

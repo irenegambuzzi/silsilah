@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from './keluargaFiktif.js'
 import { bangunGraf } from './graf.js'
-import { anakOrangTua, kandungUntuk, orangTuaSambungPasangan, pastiSesudah, urutkanMenurutUmur } from './anak.js'
+import { anakOrangTua, kandungUntuk, orangTuaSambung, orangTuaSambungPasangan, pastiSesudah, urutkanMenurutUmur } from './anak.js'
 
 const graf = bangunGraf(bangunKeluargaFiktif())
 
@@ -94,5 +94,18 @@ describe('anak sambung dari sisi pasangan', () => {
     expect(orangTuaSambungPasangan(graf).get('tamran').map((x) => x.id)).toEqual(['fitri', 'gita'])
     expect(orangTuaSambungPasangan(graf).get('celvia').map((x) => [x.id, x.unionId])).toEqual([['harvel', 'u14']])
     expect(orangTuaSambungPasangan(graf).has('wati')).toBe(false)
+  })
+
+  it('orangTuaSambung: SATU sumber, yang dicatat di pernikahan dan dari sisi pasangan, urut waktu pernikahan', () => {
+    const ortu = (id) => (orangTuaSambung(graf).get(id) ?? []).map((x) => [x.id, x.pasangan])
+    expect(ortu('vino')).toEqual([['cahya', false]]) // dicatat di pernikahan Cahya & Umar
+    expect(ortu('galen')).toEqual([['kirana', false]])
+    expect(ortu('celvia')).toEqual([['harvel', true]])
+    expect(ortu('nirvo')).toEqual([['melvira', true], ['tedrik', true]]) // 2006, lalu 2007
+    expect(ortu('fajrin')).toEqual([]) // lahir sesudah Kirana dan Danuarta berpisah
+    // Kebalikan persis dari "anak sambung" di daftar anak setiap orang.
+    for (const [anak, daftar] of orangTuaSambung(graf)) {
+      for (const { id } of daftar) expect(anakOrangTua(graf, id).panel.some((a) => a.id === anak && !a.kandung && a.kind === 'sambung'), `${id}>${anak}`).toBe(true)
+    }
   })
 })

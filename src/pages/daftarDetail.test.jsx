@@ -17,7 +17,7 @@ describe('Daftar', () => {
   it('menampilkan keturunan dan pasangan, dengan GEN, tanpa nomor silsilah', async () => {
     pasang('/daftar', klienKeluarga())
     expect(await screen.findByRole('heading', { name: 'Daftar', level: 1 })).toBeTruthy()
-    const tamran = (await screen.findByRole('link', { name: /Tamran/ })).textContent
+    const tamran = (await screen.findByRole('link', { name: /^Tamran/ })).textContent
     expect(tamran).toContain('GEN.2')
     expect(tamran).toContain('Putu')
     expect(tamran).toContain('Putra ke-1')
@@ -67,13 +67,18 @@ describe('Daftar', () => {
 
   it('orang di pohon keluarga asal tidak tampil, walaupun datanya sampai', async () => {
     pasang('/daftar', klienKeluarga())
-    await screen.findByRole('link', { name: /Tamran/ })
+    await screen.findByRole('link', { name: /^Tamran/ })
     expect(screen.queryByRole('link', { name: /Karto/ })).toBeNull()
   })
 })
 
 describe('Keterangan orang (halaman sendiri)', () => {
   const bagian = (judul) => screen.getByRole('heading', { name: judul, level: 2 }).closest('section')
+  // Baris orang tua di KETERANGAN PRIBADI, masing-masing persis seperti tampil.
+  const barisOrangTua = () =>
+    [...bagian('Keterangan Pribadi').querySelectorAll('dl > div')]
+      .map((b) => b.textContent)
+      .filter((t) => /^(Orang tua|Ayah sambung|Ibu sambung|Orang tua sambung|Orang tua angkat):/.test(t))
 
   it('dibuka dari Daftar: avatar, nama, "Anak · Generasi ke-1", KETERANGAN PRIBADI, anak', async () => {
     const { aksi } = pasang('/daftar', klienKeluarga())
@@ -111,15 +116,15 @@ describe('Keterangan orang (halaman sendiri)', () => {
     expect(document.body.textContent).not.toMatch(/(Istri|Suami|Pasangan|Pernikahan) ke-1|Menikah · Menikah/)
   })
 
-  it('anak sambung: "Orang tua: Umar & Cahya (ibu sambung)" (keduanya bisa diketuk) dan "Anak sambung Cahya", tanpa nomor urut', async () => {
+  it('anak sambung: "Orang tua: Umar" lalu "Ibu sambung: Cahya" di baris sendiri (keduanya bisa diketuk) dan "Anak sambung Cahya", tanpa nomor urut', async () => {
     pasang('/orang/vino', klienKeluarga())
     await screen.findByRole('heading', { name: 'Vino', level: 1 })
     const info = bagian('Keterangan Pribadi')
-    expect(info.textContent).toContain('Orang tua: Umar & Cahya (ibu sambung)')
+    expect(barisOrangTua()).toEqual(['Orang tua: Umar', 'Ibu sambung: Cahya'])
     expect(info.textContent).toContain('Anak sambung Cahya')
     expect(within(info).getByRole('link', { name: 'Umar' })).toBeTruthy()
     expect(within(info).getByRole('link', { name: 'Cahya' })).toBeTruthy()
-    expect(info.textContent).not.toMatch(/Putra ke-|bersaudara/)
+    expect(info.textContent).not.toMatch(/Putra ke-|bersaudara|\((ayah|ibu) sambung\)/)
   })
 
   it('anak angkat: "Orang tua angkat: Lorvan & Sinta" (keduanya bisa diketuk) dan "Anak angkat Lorvan & Sinta"', async () => {
@@ -210,16 +215,70 @@ describe('Keterangan orang (halaman sendiri)', () => {
   })
 
   it.each([
-    ['celvia', 'Celvia', 'Orang tua: Kirana & Danuarta & Harvel (ayah sambung)', 'Anak sambung Harvel'],
-    ['galen', 'Galen', 'Orang tua: Harvel & Kirana (ibu sambung)', 'Anak sambung Kirana'],
-    ['elvina', 'Elvina', 'Orang tua: Harvel & Kirana (ibu sambung)', 'Anak sambung Kirana'],
-    ['vino', 'Vino', 'Orang tua: Umar & Cahya (ibu sambung)', 'Anak sambung Cahya'],
-  ])('%s: orang tua sambung dan "Anak sambung …"', async (id, nama, orangTua, kalimat) => {
+    ['celvia', 'Celvia', ['Orang tua: Danuarta & Kirana', 'Ayah sambung: Harvel'], 'Anak sambung Harvel'],
+    ['galen', 'Galen', ['Orang tua: Harvel', 'Ibu sambung: Kirana'], 'Anak sambung Kirana'],
+    ['elvina', 'Elvina', ['Orang tua: Harvel', 'Ibu sambung: Kirana'], 'Anak sambung Kirana'],
+    ['vino', 'Vino', ['Orang tua: Umar', 'Ibu sambung: Cahya'], 'Anak sambung Cahya'],
+  ])('%s: orang tua sambung di baris sendiri dan "Anak sambung …"', async (id, nama, orangTua, kalimat) => {
     pasang(`/orang/${id}`, klienKeluarga())
     await screen.findByRole('heading', { name: nama, level: 1 })
-    const info = bagian('Keterangan Pribadi')
-    expect(info.textContent).toContain(orangTua)
-    expect(info.textContent).toContain(kalimat)
+    expect(barisOrangTua()).toEqual(orangTua)
+    expect(bagian('Keterangan Pribadi').textContent).toContain(kalimat)
+  })
+
+  // Putaran kelima, bagian B: baris orang tua dipisah.
+  describe('baris orang tua: kandung, ayah sambung, ibu sambung, angkat', () => {
+    const buka = async (id, nama) => {
+      pasang(`/orang/${id}`, klienKeluarga())
+      await screen.findByRole('heading', { name: nama, level: 1 })
+      return barisOrangTua()
+    }
+    it('anak Danuarta & Kirana yang menjadi anak sambung Harvel (Celvia): "Orang tua: Danuarta & Kirana", "Ayah sambung: Harvel"', async () => {
+      expect(await buka('celvia', 'Celvia')).toEqual(['Orang tua: Danuarta & Kirana', 'Ayah sambung: Harvel'])
+    })
+    it('anak Bima & Eka: "Orang tua: Bima & Eka", "Ibu sambung: Fitri, Gita"', async () => {
+      for (const [id, nama] of [['tamran', 'Tamran'], ['ika', 'Ika']]) {
+        expect(await buka(id, nama), id).toEqual(['Orang tua: Bima & Eka', 'Ibu sambung: Fitri, Gita'])
+        document.body.innerHTML = ''
+      }
+    })
+    it('Fajrin (lahir sesudah Kirana berpisah dari Danuarta): TIDAK ada "Ayah sambung: Danuarta"', async () => {
+      const baris = await buka('fajrin', 'Fajrin')
+      expect(baris).toEqual(['Orang tua: Harvel & Kirana'])
+      expect(document.body.textContent).not.toMatch(/Ayah sambung|Danuarta/)
+    })
+    it('panel Harvel tidak berubah: empat anak, Celvia anak sambung, lalu Galen, Elvina, Fajrin', async () => {
+      await buka('harvel', 'Harvel')
+      expect(within(bagian('Anak')).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+        'Celvia · anak sambung', '1.Galen · dari pernikahan sebelumnya', '2.Elvina · dari pernikahan sebelumnya', '3.Fajrin',
+      ])
+    })
+    it('1. ayah selalu lebih dulu, juga kalau ibu yang dicatat sebagai partner1; hanya satu yang tercatat: satu nama tanpa "&"', async () => {
+      expect(await buka('wati', 'Wati')).toEqual(['Orang tua: Umar & Cahya'])
+      document.body.innerHTML = ''
+      expect(await buka('arya', 'Arya')).toEqual(['Orang tua: Lintang'])
+    })
+    it('2. label menurut jenis kelamin; lebih dari satu dipisah koma, urut waktu pernikahan (paling awal di kiri)', async () => {
+      expect(await buka('tamran', 'Tamran')).toEqual(['Orang tua: Bima & Eka', 'Ibu sambung: Fitri, Gita'])
+      document.body.innerHTML = ''
+      expect(await buka('dorvi', 'Dorvi, S.Kom.')).toEqual(['Orang tua: Alm. H. Halvin & Ika', 'Ayah sambung: Joval, S.E.'])
+    })
+    it('3. punya keduanya: "Ayah sambung" dulu, lalu "Ibu sambung"', async () => {
+      expect(await buka('nirvo', 'Nirvo')).toEqual(['Orang tua: Tamran & Wati', 'Ayah sambung: Tedrik', 'Ibu sambung: Melvira'])
+    })
+    it('4. batas waktu sama dengan anak sambung: lahir sesudah berpisah atau wafat sebelum menikah bukan anak sambung', async () => {
+      // Mega (1983) lahir sesudah Bima dan Fitri berpisah (1981): hanya Gita.
+      expect(await buka('mega', 'Mega')).toEqual(['Orang tua: Bima & Eka', 'Ibu sambung: Gita'])
+      document.body.innerHTML = ''
+      // Almh. Sekar wafat 1998, sebelum Ika menikah dengan Joval (2012).
+      expect(await buka('sekar', 'Almh. Sekar')).toEqual(['Orang tua: Alm. H. Halvin & Ika'])
+      document.body.innerHTML = ''
+      // Bayu lahir 2013, sesudah Alm. H. Halvin wafat (2008).
+      expect(await buka('bayu', 'Bayu')).toEqual(['Orang tua: Joval, S.E. & Ika'])
+    })
+    it('5. "Orang tua angkat" di barisnya sendiri; tanpa data orang tua kandung tidak ada baris "Orang tua"', async () => {
+      expect(await buka('yoga', 'Yoga')).toEqual(['Orang tua angkat: Lorvan & Sinta'])
+    })
   })
 
   it('"Belum menikah" yang dipilih sendiri', async () => {

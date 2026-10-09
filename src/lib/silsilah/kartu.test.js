@@ -214,16 +214,11 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     expect(labelDetail(s, 'cahya').jenisKelamin).toBe('Perempuan')
   })
 
-  it('orang tua dalam SATU baris: kedua orang tua, tanpa "orang tua lain"', () => {
+  it('orang tua kandung dalam SATU baris (ayah dulu), ibu sambung di baris sendiri', () => {
     expect(labelDetail(s, 'tamran').orangTua).toEqual([
-      {
-        unionId: 'u1', angkat: false,
-        orang: [
-          { id: 'bima', nama: 'Bima', sambung: null }, { id: 'eka', nama: 'Eka', sambung: null },
-          // Istri ke-2 dan ke-3 Bima menikah dengannya sesudah Tamran lahir: ibu sambung.
-          { id: 'fitri', nama: 'Fitri', sambung: 'ibu sambung' }, { id: 'gita', nama: 'Gita', sambung: 'ibu sambung' },
-        ],
-      },
+      { jenis: 'kandung', orang: [{ id: 'bima', nama: 'Bima' }, { id: 'eka', nama: 'Eka' }] },
+      // Istri ke-2 dan ke-3 Bima menikah dengannya sesudah Tamran lahir: ibu sambung, urut waktu pernikahan.
+      { jenis: 'sambung', sex: 'P', orang: [{ id: 'fitri', nama: 'Fitri' }, { id: 'gita', nama: 'Gita' }] },
     ])
     expect(labelDetail(s, 'raksa').orangTua).toEqual([])
   })
@@ -270,12 +265,13 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
 
   it('antarsepupu: orang tua satu baris; urutan SEKALI kalau sama bagi kedua pihak; jalur ibu singkat kalau GEN berbeda', () => {
     const d = labelDetail(s, 'hasna')
-    expect(d.orangTua[0].orang.map((o) => o.nama)).toEqual(['Rangga', 'Gendis'])
+    expect(d.orangTua).toEqual([{ jenis: 'kandung', orang: [{ id: 'rangga', nama: 'Rangga' }, { id: 'gendis', nama: 'Gendis' }] }])
     expect(d.urutan).toEqual(['Putri tunggal'])
     expect(d.subjudul).toBe('Buyut · Generasi ke-3')
     expect(d.lewat).toBe('Lewat Gendis: Canggah · Generasi ke-4')
     // Generasi sama, putra tunggal bagi ayah dan ibunya: sekali, tanpa "(pihak …)", tanpa baris tambahan.
-    expect(labelDetail(s, 'nirvo')).toMatchObject({ urutan: ['Putra tunggal'], lewat: null })
+    // (Kalimat kedua: ayah dan ibu sambungnya sesudah Tamran dan Wati berpisah.)
+    expect(labelDetail(s, 'nirvo')).toMatchObject({ urutan: ['Putra tunggal', 'Anak sambung Melvira dan Tedrik'], lewat: null })
     // Jalur ibu lebih dekat: GEN dari ayah, jalur ibu disebut singkat.
     expect(labelDetail(s, 'bintang')).toMatchObject({
       subjudul: 'Canggah · Generasi ke-4', urutan: ['Putra tunggal'], lewat: 'Lewat Arum: Buyut · Generasi ke-3',
@@ -390,20 +386,20 @@ describe('anak di panel pasangan (bukan keturunan): aturan yang sama dengan ketu
   })
 
   it('anak sambung dari sisi pasangan, simetris: panel anak itu menyebut orang tua sambung dan "Anak sambung …"', () => {
-    const orangTua = (id) => labelDetail(s, id).orangTua.map((o) => o.orang.map((x) => (x.sambung ? `${x.nama} (${x.sambung})` : x.nama)).join(' & '))
-    // Celvia: orang tua kandungnya, ditambah Harvel.
-    expect(orangTua('celvia')).toEqual(['Kirana & Danuarta & Harvel (ayah sambung)'])
+    const orangTua = (id) => labelDetail(s, id).orangTua.map((o) => `${o.jenis === 'sambung' ? `sambung ${o.sex}` : o.jenis}: ${o.orang.map((x) => x.nama).join(', ')}`)
+    // Celvia: orang tua kandungnya (ayah dulu), lalu Harvel di baris sendiri.
+    expect(orangTua('celvia')).toEqual(['kandung: Danuarta, Kirana', 'sambung L: Harvel'])
     expect(labelDetail(s, 'celvia').urutan).toEqual(['Putri ke-1 dari 2 bersaudara', 'Anak sambung Harvel'])
     // Galen dan Elvina: Harvel, ditambah Kirana.
     for (const id of ['galen', 'elvina']) {
-      expect(orangTua(id), id).toEqual(['Harvel & Kirana (ibu sambung)'])
+      expect(orangTua(id), id).toEqual(['kandung: Harvel', 'sambung P: Kirana'])
       expect(labelDetail(s, id).urutan, id).toContain('Anak sambung Kirana')
     }
     // Vino dan Cahya (sudah benar).
-    expect(orangTua('vino')).toEqual(['Umar & Cahya (ibu sambung)'])
+    expect(orangTua('vino')).toEqual(['kandung: Umar', 'sambung P: Cahya'])
     expect(labelDetail(s, 'vino').urutan).toEqual(['Anak sambung Cahya'])
     // Wati anak kandung keduanya: tanpa orang tua sambung.
-    expect(orangTua('wati')).toEqual(['Cahya & Umar'])
+    expect(orangTua('wati')).toEqual(['kandung: Umar, Cahya'])
   })
 
   // Anak sambung dari sisi pasangan: SEMUA orang di data contoh, setiap pasangan
@@ -438,7 +434,7 @@ describe('anak di panel pasangan (bukan keturunan): aturan yang sama dengan ketu
     for (const id of utamaSemua) {
       const d = labelDetail(s, id)
       for (const a of d.anak) if (a.jenis === 'anak sambung') maju.add(`${id}>${a.id}`)
-      for (const o of d.orangTua) for (const x of o.orang) if (x.sambung) mundur.add(`${x.id}>${id}`)
+      for (const o of d.orangTua) for (const x of o.orang) if (o.jenis === 'sambung') mundur.add(`${x.id}>${id}`)
     }
     expect(maju.size).toBeGreaterThan(10)
     expect(maju).toEqual(mundur)

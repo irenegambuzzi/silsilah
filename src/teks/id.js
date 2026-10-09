@@ -378,6 +378,8 @@ export const teks = {
     panggilan: 'Panggilan',
     orangTua: 'Orang tua',
     orangTuaAngkat: 'Orang tua angkat',
+    // Baris sendiri di bawah "Orang tua", menurut jenis kelamin orang tua sambungnya.
+    orangTuaSambung: { L: 'Ayah sambung', P: 'Ibu sambung', x: 'Orang tua sambung' },
     statusPernikahan: 'Status pernikahan',
     pasangan: 'Pasangan',
     pasanganTidakDiketahui: 'Tidak diketahui',
@@ -664,8 +666,6 @@ export const teks = {
     pihak: '{isi} (pihak {nama})',
     jenisPasangan: { istri: 'istri', suami: 'suami', pasangan: 'pasangan' },
     anakSambungDari: 'Anak sambung {nama}',
-    // Keterangan di baris "Orang tua" anak sambung: "Umar & Cahya (ibu sambung)".
-    orangTuaSambung: { L: 'ayah sambung', P: 'ibu sambung', x: 'orang tua sambung' },
     anakAngkatDari: 'Anak angkat {nama}',
     // Keterangan kecil di daftar anak milik orang tuanya.
     jenisAnakKecil: { sambung: 'anak sambung', angkat: 'anak angkat' },
