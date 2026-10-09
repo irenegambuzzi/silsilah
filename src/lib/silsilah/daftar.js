@@ -1,6 +1,8 @@
 // Daftar orang untuk layar Daftar: keturunan menurut nomor silsilah, lalu
 // pasangan (dan siapa pun yang belum terhubung ke keturunan) menurut nama.
-// Hanya silsilah utama; orang di pohon keluarga asal tidak ikut.
+// Hanya silsilah utama; orang di pohon keluarga asal tidak ikut. Nomor
+// silsilah hanya dipakai di belakang layar untuk mengurutkan; tidak ada di
+// baris yang dikembalikan, jadi tidak pernah tampil (putaran ketiga tinjauan).
 import { keteranganDaftar, labelKartu } from './kartu.js'
 
 const angka = (nomor) => nomor.split('.').map(Number)
@@ -34,11 +36,11 @@ export function susunDaftar(s) {
       labelGen: k.labelGen,
       istilahGen: k.istilahGen,
       keterangan,
-      nomor: s.nomor.get(id) ?? null,
     }
     ;(k.jenis === 'pasangan' ? pasangan : keturunan).push(baris)
   }
-  keturunan.sort((a, b) => bandingkanNomor(a.nomor ?? '', b.nomor ?? '') || bandingkanNama(a, b))
+  const nomor = (b) => s.nomor.get(b.id) ?? ''
+  keturunan.sort((a, b) => bandingkanNomor(nomor(a), nomor(b)) || bandingkanNama(a, b))
   pasangan.sort(bandingkanNama)
   return { keturunan, pasangan }
 }

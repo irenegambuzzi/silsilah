@@ -5,7 +5,8 @@
 // bernomor (supaya keturunannya juga bernomor): sesudah semua anak kandung
 // orang tua itu, menurut umur. Anak dari pasangan sepupu dinomori lewat
 // jalur pertamanya (pihak laki-laki, sama dengan letaknya di bagan).
-// Pasangan yang bukan keturunan tidak bernomor.
+// Pasangan yang bukan keturunan tidak bernomor. Nomor ini TIDAK pernah
+// ditampilkan (panel, Daftar, kartu); hanya untuk mengurutkan Daftar.
 import { anakOrangTua } from './anak.js'
 
 export function hitungNomor(graf, { gen, jalur }) {

@@ -34,7 +34,7 @@ perintah itu, buka alamat yang tampil di Terminal):
 | kode `UTAMA234` | masuk sebagai admin utama: layar admin (Saya → "Beri akses sementara") terkunci sampai verifikasi dua langkah. Authenticator di mode contoh **tiruan**: kode yang diterima hanya `123456` (kunci/QR yang tampil bukan kunci sungguhan) |
 | `/#/privasi` | halaman Privasi |
 | Beranda setelah masuk | jumlah orang di silsilah contoh (keluarga fiktif): tanda data silsilah sudah termuat |
-| menu Daftar (atau `/#/daftar`) | daftar keluarga fiktif menurut nomor silsilah, dengan kotak pencarian; ketuk satu nama untuk membuka keterangannya |
+| menu Daftar (atau `/#/daftar`) | daftar keluarga fiktif (urut cabang demi cabang; nomor silsilah tidak ditampilkan), dengan kotak pencarian; ketuk satu nama untuk membuka keterangannya |
 | menu Bagan (atau `/#/bagan`) | bagan kartu keluarga fiktif. Di laptop mula-mula tampil utuh, tidak tertutup legenda; di HP mulai dari ukuran terbaca dengan pasangan pangkal di tengah (tombol "Lihat seluruh bagan" untuk melihat semuanya). Geser dengan satu jari (di laptop: seret dengan mouse atau tombol panah), perbesar/perkecil dengan dua jari (di laptop: Ctrl + roda mouse) atau tombol + / − ; "Pusatkan" kembali ke tampilan awal. Ketuk satu kartu → panel keterangan di kanan (di HP: dari bawah) dengan "Fokus pada cabang ini" (pilih "Hitung dari pangkal utama" atau "Hitung dari [nama]"). Di Saya, coba ukuran huruf Sangat besar dan Kontras tinggi: bagan ikut berubah |
 | offline | setelah data termuat, matikan internet (atau DevTools → Network → Offline) lalu muat ulang halaman: aplikasi terbuka dari salinan di perangkat, dengan spanduk "Anda sedang offline". Nyalakan lagi internet: spanduk hilang. Dengan kode `AKSES234` tidak ada salinan (perangkat pinjaman) |
 
@@ -63,7 +63,7 @@ cari di bilah atas Bagan), lalu ketuk kartunya untuk membuka panel:
 | Pasangan tidak diketahui | Lintang, anaknya Arya (status pernikahan "-") |
 | Jenis kelamin tidak diketahui | Ragil, anak Alm. Tirwan (kartu abu, "Putra/Putri ke-3"); baris legenda "Jenis kelamin tidak diketahui" hanya muncul selama ada orang seperti ini |
 | Dewasa tanpa data pernikahan / memilih "Belum menikah" | Oka ("Status pernikahan: -", tanpa baris Pasangan) / Putri ("Status pernikahan: Belum menikah") |
-| Kolom kosong ("-") | Oka: Panggilan, Pekerjaan, Catatan "-"; pasangan seperti Gita: Orang tua "-" dan Nomor silsilah "-" |
+| Kolom kosong ("-") | Oka: Panggilan, Pekerjaan, Catatan "-"; pasangan seperti Gita: Orang tua "-" |
 | Anak di bawah umur (tunas daun di pojok kanan bawah kartu) | Bayu, Nala, Ragil, Hasna (tanggal lahir lengkap), Fajrin (4 Juli 2010, tanggal lengkap) |
 | Fokus cabang dihitung dari orangnya | ketuk Bima → "Fokus pada cabang ini" → "Hitung dari Bima": Bima "PANGKAL CABANG" GEN.0, anaknya GEN.1 · Anak, dengan pita "Generasi dihitung dari Bima · Kembali ke pangkal utama". Alamat langsung: `/#/bagan?fokus=bima&hitung=cabang` |
 | Gelar religius / pendidikan | H. Halvin, Hj. Dara / Dorvi, S.Kom., Laras, S.Ked., Joval, S.E. |

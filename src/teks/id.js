@@ -361,7 +361,6 @@ export const teks = {
     tidakAda: 'Tidak ada nama yang cocok.',
     keturunan: 'Keturunan',
     pasangan: 'Pasangan',
-    nomor: 'No. {nomor}',
   },
   detail: {
     judul: 'Keterangan orang',
@@ -379,7 +378,6 @@ export const teks = {
     pasangan: 'Pasangan',
     pasanganTidakDiketahui: 'Tidak diketahui',
     berpisah: 'berpisah',
-    nomor: 'Nomor silsilah',
     lahir: 'Lahir',
     wafat: 'Wafat',
     anak: 'Anak',

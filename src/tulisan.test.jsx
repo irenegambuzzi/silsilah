@@ -38,6 +38,7 @@ const TERLARANG = [
   /Generasi ke-\d+ \(/, // harus "Putu · Generasi ke-2", bukan "Generasi ke-2 (Putu)"
   /Menikah · Menikah/,
   /Kedua orang tua adalah keturunan/,
+  /Nomor silsilah|\bNo\. \d/i, // nomor silsilah hanya untuk mengurutkan Daftar, tidak pernah tampil
   /Jalur terdekat|Jalur lain|Lewat jalur ini|Orang tua lain/,
   /\b(undefined|null|NaN)\b|\[object/,
   /\b(partner[12]?|union|tree_id|GEN\.null)\b/i,

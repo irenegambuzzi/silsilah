@@ -60,8 +60,8 @@ const gabungOrang = (orang, saatPilih) =>
 // di bawah judul nama).
 //
 // Baris yang selalu tampil (isi "-" kalau belum diisi): Panggilan, Jenis
-// kelamin, Orang tua (anak angkat: "Orang tua angkat"), Pekerjaan, Nomor
-// silsilah, Lahir, Catatan. Baris yang
+// kelamin, Orang tua (anak angkat: "Orang tua angkat"), Pekerjaan, Lahir,
+// Catatan. Nomor silsilah TIDAK ditampilkan (hanya untuk mengurutkan Daftar). Baris yang
 // hanya tampil kalau berlaku: Status pernikahan (tidak untuk anak di bawah
 // umur), Pasangan (kalau ada data pernikahan), Wafat (yang sudah wafat).
 export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi = null }) {
@@ -111,7 +111,6 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
             </Baris>
           )}
           <Baris nama={T.pekerjaan}>{d.pekerjaan}</Baris>
-          <Baris nama={T.nomor}>{d.nomor}</Baris>
         </dl>
       </Bagian>
 

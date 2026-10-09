@@ -14,7 +14,7 @@ beforeEach(() => {
 })
 
 describe('Daftar', () => {
-  it('menampilkan keturunan dan pasangan, dengan GEN dan nomor silsilah', async () => {
+  it('menampilkan keturunan dan pasangan, dengan GEN, tanpa nomor silsilah', async () => {
     pasang('/daftar', klienKeluarga())
     expect(await screen.findByRole('heading', { name: 'Daftar', level: 1 })).toBeTruthy()
     const tamran = (await screen.findByRole('link', { name: /Tamran/ })).textContent
@@ -22,7 +22,8 @@ describe('Daftar', () => {
     expect(tamran).toContain('Putu')
     expect(tamran).toContain('Putra ke-1')
     expect(tamran).not.toContain('Anak ke-')
-    expect(tamran).toMatch(/No\. 1\.1\.1/)
+    expect(tamran).not.toMatch(/No\.|1\.1\.1|Nomor silsilah/)
+    expect(document.body.textContent).not.toMatch(/No\. \d|Nomor silsilah|\b1\.\d+\.\d+\b/)
     expect(screen.getByRole('heading', { name: 'Pasangan' })).toBeTruthy()
   })
 
@@ -187,12 +188,12 @@ describe('Keterangan orang (halaman sendiri)', () => {
     ])
   })
 
-  it('pasangan (bukan keturunan): "Orang tua: -" dan "Nomor silsilah: -"', async () => {
+  it('pasangan (bukan keturunan): "Orang tua: -"; tidak ada baris "Nomor silsilah"', async () => {
     pasang('/orang/gita', klienKeluarga())
     await screen.findByRole('heading', { name: 'Gita', level: 1 })
     const info = bagian('Keterangan Pribadi')
     expect(info.textContent).toContain('Orang tua: -')
-    expect(info.textContent).toContain('Nomor silsilah: -')
+    expect(info.textContent).not.toContain('Nomor silsilah')
   })
 
   it('sudah wafat: baris Wafat tampil', async () => {

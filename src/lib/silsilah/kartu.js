@@ -100,7 +100,8 @@ export function keteranganDaftar(s, id) {
 //   subjudul     "Putu · Generasi ke-2" (istilah Jawa dulu), "Pangkal",
 //                atau "Pasangan dari Bima · berpisah"
 //   jenisKelamin "Laki-laki" / "Perempuan" / "Tidak diketahui"
-//   panggilan, pekerjaan, catatan, nomor   (null kalau kosong)
+//   panggilan, pekerjaan, catatan   (null kalau kosong)
+//   (Nomor silsilah sengaja tidak ada di sini: tidak pernah ditampilkan.)
 //   orangTua     [{ unionId, angkat, orang: [{ id, nama, sambung }] }]: satu
 //                baris per pasangan orang tua ("Bima & Eka"). Anak sambung:
 //                orang tua kandung dulu, lalu orang tua sambungnya dengan
@@ -249,7 +250,6 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
     tampilStatus: !anakKecil || unions.length > 0,
     statusPernikahan: status ? KATA.statusPernikahan[status] : null,
     pasangan,
-    nomor: s.nomor.get(id) ?? null,
     lahir: teksPeristiwa(orang, 'birth') || null,
     sudahWafat: Boolean(orang.is_deceased),
     wafat: orang.is_deceased ? teksPeristiwa(orang, 'death') || null : null,

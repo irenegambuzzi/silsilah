@@ -300,6 +300,8 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(within(panel).getByRole('heading', { name: 'Keterangan Pribadi' })).toBeTruthy()
     expect(within(panel).getByRole('heading', { name: 'Riwayat Hidup' })).toBeTruthy()
     expect(panel.textContent).toContain('Menikah tahun 1974')
+    expect(panel.textContent).not.toMatch(/Nomor silsilah|No\. \d/)
+    for (const kartu of semuaKartu()) expect(kartu.textContent).not.toMatch(/\b1\.\d+/)
     await aksi.click(within(panel).getByRole('button', { name: 'Tutup' }))
     expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
   })

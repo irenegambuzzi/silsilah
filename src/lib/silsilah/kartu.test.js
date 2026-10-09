@@ -205,8 +205,12 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     expect(labelDetail(s, 'tamran').subjudul).not.toMatch(/\(/)
   })
 
-  it('jenis kelamin, nomor silsilah', () => {
-    expect(labelDetail(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenisKelamin: 'Laki-laki', nomor: '1' })
+  it('jenis kelamin; nomor silsilah tidak ada di keterangan (tidak pernah ditampilkan)', () => {
+    expect(labelDetail(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenisKelamin: 'Laki-laki' })
+    for (const id of utamaSemua) {
+      expect(labelDetail(s, id), id).not.toHaveProperty('nomor')
+      expect(labelKartu(s, id), id).not.toHaveProperty('nomor')
+    }
     expect(labelDetail(s, 'cahya').jenisKelamin).toBe('Perempuan')
   })
 
@@ -383,7 +387,7 @@ describe('baris yang selalu tampil dan yang hanya tampil kalau berlaku', () => {
 
   it('isian kosong bernilai null (layar menulis "-")', () => {
     expect(labelDetail(s, 'oka')).toMatchObject({ panggilan: null, pekerjaan: null, catatan: null })
-    expect(labelDetail(s, 'eka')).toMatchObject({ nomor: null, orangTua: [] })
+    expect(labelDetail(s, 'eka')).toMatchObject({ orangTua: [] })
     const d = bangunKeluargaFiktif()
     Object.assign(d.people.find((p) => p.id === 'oka'), { birth_y: null })
     expect(labelDetail(susunSilsilah(d), 'oka').lahir).toBeNull()

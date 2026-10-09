@@ -25,6 +25,13 @@ describe('susunDaftar', () => {
     expect(urut.indexOf('Tamran')).toBeLessThan(urut.indexOf('Cahya'))
   })
 
+  it('nomor silsilah hanya untuk mengurutkan: tidak ada di baris Daftar', () => {
+    for (const b of [...daftar.keturunan, ...daftar.pasangan]) {
+      expect(b, b.id).not.toHaveProperty('nomor')
+      expect(JSON.stringify(b), b.id).not.toMatch(/\b1\.\d+(\.\d+)*\b/)
+    }
+  })
+
   it('pasangan yang bukan keturunan ada di bagian terpisah, menurut nama', () => {
     const pasangan = daftar.pasangan.map(nama)
     expect(pasangan).toEqual(expect.arrayContaining(['Eka', 'Fitri', 'Gita', 'Umar', 'Sinta', 'Laila']))
