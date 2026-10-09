@@ -35,8 +35,34 @@ describe('Daftar', () => {
     expect(screen.queryByRole('link', { name: /Cahya/ })).toBeNull()
     expect(screen.getByRole('status').textContent).toBe('1 orang')
     await aksi.clear(kotak)
-    await aksi.type(kotak, 'zzzz')
+    await aksi.type(kotak, 'xqvj')
     expect(screen.getByRole('status').textContent).toBe('Tidak ada nama yang cocok.')
+  })
+
+  it('pencarian menemukan nama panggilan dan menyebut kenapa: "panggilan: Ovi"', async () => {
+    const { aksi } = pasang('/daftar', klienKeluarga())
+    const kotak = await screen.findByRole('searchbox', { name: 'Cari nama' })
+    await aksi.type(kotak, 'ovi')
+    const tautan = screen.getAllByRole('link')
+    expect(tautan.filter((a) => a.textContent.includes('Elvina'))).toHaveLength(1)
+    expect(screen.getByRole('link', { name: /Elvina/ }).textContent).toContain('panggilan: Ovi')
+    expect(screen.getByRole('status').textContent).toBe('1 orang')
+    // Cocok lewat nama: tidak ada keterangan "panggilan:" (nama panggilan tetap tampil dalam tanda kutip).
+    await aksi.clear(kotak)
+    await aksi.type(kotak, 'elvina')
+    expect(screen.getByRole('link', { name: /Elvina/ }).textContent).not.toContain('panggilan:')
+    expect(screen.getByRole('link', { name: /Elvina/ }).textContent).toContain('“Ovi”')
+  })
+
+  it('pencarian tahan gelar, tanda baca, huruf besar, ejaan lama, dan menemukan pasangan', async () => {
+    const { aksi } = pasang('/daftar', klienKeluarga())
+    const kotak = await screen.findByRole('searchbox', { name: 'Cari nama' })
+    for (const [kata, nama] of [['H. HALVIN!', /Halvin/], ['dorvi s.kom.', /Dorvi/], ['Tjahya', /Cahya/], ['oemar', /Umar/], ['mbak dara', /Dara/]]) {
+      await aksi.clear(kotak)
+      await aksi.type(kotak, kata)
+      expect(screen.getByRole('link', { name: nama }), kata).toBeTruthy()
+      expect(screen.getByRole('status').textContent, kata).toBe('1 orang')
+    }
   })
 
   it('orang di pohon keluarga asal tidak tampil, walaupun datanya sampai', async () => {

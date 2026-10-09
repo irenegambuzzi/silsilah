@@ -270,10 +270,35 @@ describe('Bagan: bilah atas dan legenda', () => {
     expect(screen.getByText(/^2 dari \d+: /)).toBeTruthy()
   })
 
+  it('cari nama panggilan: kartunya terpilih dan hasilnya menyebut "panggilan: Ovi"', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'Ovi{Enter}')
+    expect(screen.getByText('1 dari 1: Elvina (panggilan: Ovi)')).toBeTruthy()
+    expect(k('elvina').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('cari: tahan gelar, tanda baca, ejaan lama; menemukan pasangan', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const kotak = screen.getByRole('searchbox', { name: 'Cari nama' })
+    for (const [kata, id, hasil] of [
+      ['H. halvin', 'halvin', '1 dari 1: Alm. H. Halvin'],
+      ['Tjahya', 'cahya', '1 dari 1: Cahya'],
+      ['oemar', 'umar', '1 dari 1: Umar'],
+      ['harvel', 'harvel', '1 dari 1: Harvel'],
+    ]) {
+      await aksi.clear(kotak)
+      await aksi.type(kotak, `${kata}{Enter}`)
+      expect(screen.getByText(hasil), kata).toBeTruthy()
+      expect(k(id).getAttribute('aria-pressed'), kata).toBe('true')
+    }
+  })
+
   it('cari nama yang tidak ada: pesan jelas', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
-    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'zzz{Enter}')
+    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'xqvj{Enter}')
     expect(screen.getByText('Tidak ada nama yang cocok.')).toBeTruthy()
   })
 

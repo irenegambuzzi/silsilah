@@ -35,6 +35,8 @@
 //         pernikahan (status "-") dan banyak kolom kosong.
 //   Vino: anak sambung LEBIH TUA dari anak kandung (Wati).
 //   Tanggal kabur: tahun saja, "sekitar", bulan dan tahun, tanggal lengkap.
+//   Nama panggilan yang sangat berbeda dari nama lengkap: Bima "Abah", Kirana
+//   "Nana", Elvina "Ovi", Fajrin "Jojo", Wati "Titi", Rangga "Kiki".
 //
 //   Pohon keluarga asal Eka ("T1"): orang tuanya, saudaranya, Mbah, Mbah
 //   buyut, Pakdhe/Budhe/Paklik/Bulik, sepupu, keponakan, dan satu paman
@@ -264,6 +266,12 @@ export function bangunKeluargaFiktif() {
   nikah('u16', 'qori', 'nadira', { marriage_y: 2015 })
   orang('ravela', 'Ravela', 'P', 1996)
   nikah('u17', 'qori', 'ravela', { marriage_y: 2020 })
+
+  // Nama panggilan yang SANGAT berbeda dari nama lengkapnya (untuk menguji
+  // pencarian: "Ovi" harus menemukan Elvina, "Abah" menemukan Bima).
+  for (const [id, panggilan] of [['bima', 'Abah'], ['kirana', 'Nana'], ['elvina', 'Ovi'], ['fajrin', 'Jojo'], ['wati', 'Titi'], ['rangga', 'Kiki']]) {
+    data.people.find((p) => p.id === id).nickname = panggilan
+  }
 
   // "Belum menikah" yang dipilih orangnya sendiri.
   data.people.find((p) => p.id === 'putri').marital_choice = 'belum_menikah'

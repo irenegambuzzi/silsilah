@@ -65,7 +65,7 @@ describe('cariDaftar', () => {
     expect(cariDaftar(daftar, 'umar').pasangan.map(nama)).toEqual(['Umar'])
   })
   it('kata yang tidak ada → kosong', () => {
-    expect(cariDaftar(daftar, 'zzzz')).toEqual({ keturunan: [], pasangan: [] })
+    expect(cariDaftar(daftar, 'xqvj')).toEqual({ keturunan: [], pasangan: [] })
   })
 })
 

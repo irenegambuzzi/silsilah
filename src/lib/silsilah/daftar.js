@@ -3,6 +3,7 @@
 // Hanya silsilah utama; orang di pohon keluarga asal tidak ikut. Nomor
 // silsilah hanya dipakai di belakang layar untuk mengurutkan; tidak ada di
 // baris yang dikembalikan, jadi tidak pernah tampil (putaran ketiga tinjauan).
+import { cocokOrang, siapkanPencarian } from './cari.js'
 import { keteranganDaftar, labelKartu } from './kartu.js'
 
 const angka = (nomor) => nomor.split('.').map(Number)
@@ -45,12 +46,16 @@ export function susunDaftar(s) {
   return { keturunan, pasangan }
 }
 
-// Huruf besar/kecil dan tanda aksen tidak dibedakan.
-export const polos = (teks) => teks.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('id')
-
+// Pencarian nama dan nama panggilan (cari.js). Baris yang cocok lewat nama
+// panggilan diberi `lewat: 'panggilan'` supaya layar bisa menjelaskan kenapa
+// orang itu muncul. Tanpa kata yang bisa dicari, daftar apa adanya.
 export function cariDaftar(daftar, kata) {
-  const cari = polos(kata.trim())
-  if (!cari) return daftar
-  const cocok = (b) => polos(`${b.nama} ${b.panggilan ?? ''}`).includes(cari)
-  return { keturunan: daftar.keturunan.filter(cocok), pasangan: daftar.pasangan.filter(cocok) }
+  const pencarian = siapkanPencarian(kata)
+  if (!pencarian) return daftar
+  const saring = (baris) =>
+    baris.flatMap((b) => {
+      const cocok = cocokOrang(pencarian, b)
+      return cocok ? [{ ...b, lewat: cocok.lewat }] : []
+    })
+  return { keturunan: saring(daftar.keturunan), pasangan: saring(daftar.pasangan) }
 }

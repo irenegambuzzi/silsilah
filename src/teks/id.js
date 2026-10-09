@@ -300,6 +300,8 @@ export const teks = {
     cari: 'Cari nama',
     petunjukCari: 'Cari nama…',
     cariHasil: '{ke} dari {n}: {nama}',
+    // Orang yang cocok lewat nama panggilannya: "1 dari 1: Elvina (panggilan: Ovi)".
+    cariPanggilan: 'panggilan: {panggilan}',
     cariTidakAda: 'Tidak ada nama yang cocok.',
     sembunyikanMenu: 'Sembunyikan menu bagan',
     tampilkanMenu: 'Tampilkan menu bagan',
@@ -356,7 +358,9 @@ export const teks = {
   daftar: {
     judul: 'Daftar',
     cari: 'Cari nama',
-    petunjukCari: 'Ketik sebagian nama',
+    petunjukCari: 'Ketik nama atau nama panggilan',
+    // Di baris orang yang cocok lewat nama panggilannya.
+    cariPanggilan: 'panggilan: {panggilan}',
     jumlah: '{n} orang',
     tidakAda: 'Tidak ada nama yang cocok.',
     keturunan: 'Keturunan',

@@ -12,7 +12,7 @@ import { susunBagan } from '../lib/bagan/susun.js'
 import { silsilahCabang } from '../lib/bagan/cabang.js'
 import { tataBagan } from '../lib/bagan/tata.js'
 import { useGeserZoom } from '../lib/bagan/useGeserZoom.js'
-import { polos } from '../lib/silsilah/daftar.js'
+import { cocokOrang, siapkanPencarian } from '../lib/silsilah/cari.js'
 import { labelDetail } from '../lib/silsilah/kartu.js'
 import { useSilsilah } from '../lib/silsilah/useSilsilah.js'
 import { formatJam } from '../lib/waktu.js'
@@ -73,16 +73,23 @@ function Pencarian({ kartu, saatKetemu }) {
   const [hasil, setHasil] = useState(null)
   const kirim = (e) => {
     e.preventDefault()
-    const cari = polos(kata.trim())
-    if (!cari) return
-    const cocok = kartu.filter((k) => polos(`${k.nama} ${k.panggilan ?? ''}`).includes(cari))
+    const pencarian = siapkanPencarian(kata)
+    if (!pencarian) return
+    const cocok = kartu.flatMap((k) => {
+      const c = cocokOrang(pencarian, k)
+      return c ? [{ ...k, lewat: c.lewat }] : []
+    })
     if (cocok.length === 0) {
       setHasil({ teks: T.cariTidakAda })
       return
     }
     // Menekan Cari lagi dengan kata yang sama: ke hasil berikutnya.
+    const cari = pencarian.kata.join(' ')
     const ke = hasil?.kata === cari ? (hasil.ke + 1) % cocok.length : 0
-    setHasil({ kata: cari, ke, teks: isiTeks(T.cariHasil, { ke: ke + 1, n: cocok.length, nama: cocok[ke].nama }) })
+    const utama = isiTeks(T.cariHasil, { ke: ke + 1, n: cocok.length, nama: cocok[ke].nama })
+    // Muncul karena nama panggilan: sebutkan, supaya jelas kenapa.
+    const sebab = cocok[ke].lewat === 'panggilan' ? ` (${isiTeks(T.cariPanggilan, { panggilan: cocok[ke].panggilan })})` : ''
+    setHasil({ kata: cari, ke, teks: utama + sebab })
     saatKetemu(cocok[ke].id)
   }
   return (
