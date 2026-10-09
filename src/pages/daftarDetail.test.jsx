@@ -84,12 +84,26 @@ describe('Keterangan orang (halaman sendiri)', () => {
     expect(document.body.textContent).not.toMatch(/(Istri|Suami|Pasangan|Pernikahan) ke-1|Menikah · Menikah/)
   })
 
-  it('anak sambung: "Anak sambung [nama]", tanpa nomor urut', async () => {
+  it('anak sambung: "Orang tua: Umar & Cahya (ibu sambung)" (keduanya bisa diketuk) dan "Anak sambung Cahya", tanpa nomor urut', async () => {
     pasang('/orang/vino', klienKeluarga())
     await screen.findByRole('heading', { name: 'Vino', level: 1 })
     const info = bagian('Keterangan Pribadi')
+    expect(info.textContent).toContain('Orang tua: Umar & Cahya (ibu sambung)')
     expect(info.textContent).toContain('Anak sambung Cahya')
+    expect(within(info).getByRole('link', { name: 'Umar' })).toBeTruthy()
+    expect(within(info).getByRole('link', { name: 'Cahya' })).toBeTruthy()
     expect(info.textContent).not.toMatch(/Putra ke-|bersaudara/)
+  })
+
+  it('anak angkat: "Orang tua angkat: Lorvan & Sinta" (keduanya bisa diketuk) dan "Anak angkat Lorvan & Sinta"', async () => {
+    pasang('/orang/yoga', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Yoga', level: 1 })
+    const info = bagian('Keterangan Pribadi')
+    expect(info.textContent).toContain('Orang tua angkat: Lorvan & Sinta')
+    expect(info.textContent).toContain('Anak angkat Lorvan & Sinta')
+    expect(info.textContent).not.toContain('Orang tua: ')
+    expect(within(info).getByRole('link', { name: 'Lorvan' })).toBeTruthy()
+    expect(within(info).getByRole('link', { name: 'Sinta' })).toBeTruthy()
   })
 
   it('di keterangan orang tua: anak kandung bernomor, anak sambung/angkat tanpa nomor dengan keterangan kecil', async () => {

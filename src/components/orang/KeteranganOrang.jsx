@@ -42,11 +42,13 @@ function Baris({ nama, children }) {
   )
 }
 
+// "Bima & Eka"; anak sambung: "Umar & Cahya (ibu sambung)". Semua nama bisa diketuk.
 const gabungOrang = (orang, saatPilih) =>
   orang.map((o, i) => (
     <span key={o.id}>
       {i > 0 && ' & '}
       <NamaOrang id={o.id} nama={o.nama} saatPilih={saatPilih} />
+      {o.sambung && ` (${o.sambung})`}
     </span>
   ))
 
@@ -58,7 +60,8 @@ const gabungOrang = (orang, saatPilih) =>
 // di bawah judul nama).
 //
 // Baris yang selalu tampil (isi "-" kalau belum diisi): Panggilan, Jenis
-// kelamin, Orang tua, Pekerjaan, Nomor silsilah, Lahir, Catatan. Baris yang
+// kelamin, Orang tua (anak angkat: "Orang tua angkat"), Pekerjaan, Nomor
+// silsilah, Lahir, Catatan. Baris yang
 // hanya tampil kalau berlaku: Status pernikahan (tidak untuk anak di bawah
 // umur), Pasangan (kalau ada data pernikahan), Wafat (yang sudah wafat).
 export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi = null }) {
@@ -87,7 +90,7 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
             <Baris nama={T.orangTua}>{null}</Baris>
           ) : (
             d.orangTua.map((o) => (
-              <Baris key={o.unionId} nama={T.orangTua}>
+              <Baris key={o.unionId} nama={o.angkat ? T.orangTuaAngkat : T.orangTua}>
                 {gabungOrang(o.orang, saatPilih)}
               </Baris>
             ))

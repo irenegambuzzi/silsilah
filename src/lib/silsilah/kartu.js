@@ -14,7 +14,7 @@ import { tahunHidup, tanggalDari, teksPeristiwa, teksWaktu } from './tanggal.js'
 import { istilahGenerasi, labelGen, teksGenerasi } from './generasi.js'
 import { jenisPasangan, pasanganBerurutan, teksBersaudara, teksPasanganKe, teksUrutanKe } from './urutan.js'
 import { orangTuaUnion, pasanganDi } from './graf.js'
-import { anakOrangTua } from './anak.js'
+import { anakOrangTua, kandungUntuk } from './anak.js'
 import { statusPernikahan } from './status.js'
 import { belumDewasa, masihAnak } from './umur.js'
 
@@ -101,8 +101,12 @@ export function keteranganDaftar(s, id) {
 //                atau "Pasangan dari Bima · berpisah"
 //   jenisKelamin "Laki-laki" / "Perempuan" / "Tidak diketahui"
 //   panggilan, pekerjaan, catatan, nomor   (null kalau kosong)
-//   orangTua     [{ unionId, orang: [{ id, nama }] }]: satu baris per
-//                pasangan orang tua ("Bima & Eka")
+//   orangTua     [{ unionId, angkat, orang: [{ id, nama, sambung }] }]: satu
+//                baris per pasangan orang tua ("Bima & Eka"). Anak sambung:
+//                orang tua kandung dulu, lalu orang tua sambungnya dengan
+//                keterangan (sambung: "ibu sambung"/"ayah sambung"), misalnya
+//                "Umar & Cahya (ibu sambung)". Anak angkat (angkat: true):
+//                barisnya "Orang tua angkat: Lorvan & Sinta".
 //   urutan       kalimat di bawah judul KETERANGAN PRIBADI, tanpa label:
 //                "Putri ke-3 dari 11 bersaudara"; antarsepupu: satu kalimat
 //                per orang tua ("… (pihak Rangga)"); anak sambung/angkat:
@@ -129,11 +133,18 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   const nama = (pid) => namaTampil(s.graf.orang.get(pid))
   const gabungOrangTua = (u) => orangTuaUnion(u).map(nama).join(' & ')
 
-  // Orang tua: satu baris per hubungan anak (biasanya satu).
+  // Orang tua: satu baris per hubungan anak (biasanya satu). Anak sambung:
+  // orang tua kandungnya dulu, lalu orang tua sambungnya dengan keterangan.
   const tautan = s.graf.tautan.get(id) ?? []
   const orangTua = tautan.map((t) => {
     const u = s.graf.unions.get(t.union_id)
-    return { unionId: u.id, orang: orangTuaUnion(u).map((pid) => ({ id: pid, nama: nama(pid) })) }
+    const orang = orangTuaUnion(u).map((pid) => {
+      const sambung = t.kind === 'sambung' && t.biological_parent != null && !kandungUntuk(t, u, pid)
+      const sex = s.graf.orang.get(pid)?.sex
+      return { id: pid, nama: nama(pid), sambung: sambung ? KATA.orangTuaSambung[sex === 'L' || sex === 'P' ? sex : 'x'] : null }
+    })
+    orang.sort((a, b) => Number(Boolean(a.sambung)) - Number(Boolean(b.sambung)))
+    return { unionId: u.id, angkat: t.kind === 'angkat', orang }
   })
 
   // Urutan lahir: dari orang tua keturunan, hanya kalau ia anak KANDUNG orang

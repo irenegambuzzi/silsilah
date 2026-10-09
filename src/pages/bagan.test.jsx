@@ -302,6 +302,21 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Wati', level: 2 })).toBeTruthy()
   })
 
+  it('panel anak sambung dan anak angkat: orang tua sambung/angkat tetap tertulis dan bisa diketuk', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(k('vino'))
+    let panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(panel.textContent).toContain('Orang tua: Umar & Cahya (ibu sambung)')
+    expect(panel.textContent).toContain('Anak sambung Cahya')
+    await aksi.click(k('yoga'))
+    panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(panel.textContent).toContain('Orang tua angkat: Lorvan & Sinta')
+    expect(panel.textContent).toContain('Anak angkat Lorvan & Sinta')
+    await aksi.click(within(panel).getByRole('button', { name: 'Sinta' }))
+    expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Sinta', level: 2 })).toBeTruthy()
+  })
+
   it('fokus cabang: hanya orang itu dan keturunannya; "Tampilkan semua" mengembalikan', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()

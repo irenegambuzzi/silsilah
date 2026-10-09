@@ -67,11 +67,27 @@ describe('labelDetail: orang tua', () => {
   it('kedua orang tua dalam satu baris, juga yang bukan keturunan', () => {
     expect(nama(labelDetail(s, 'tamran'))).toEqual(['Bima & Eka'])
   })
-  it('anak sambung: orang tua satu baris, keterangan lembut menyebut orang tua sambungnya', () => {
+  it('anak sambung: orang tua kandung dulu, lalu orang tua sambungnya "(ibu sambung)"; ditambah "Anak sambung [nama]"', () => {
     expect(labelDetail(s, 'vino').orangTua).toEqual([
-      { unionId: 'u5', orang: [{ id: 'cahya', nama: 'Cahya' }, { id: 'umar', nama: 'Umar' }] },
+      { unionId: 'u5', angkat: false, orang: [{ id: 'umar', nama: 'Umar', sambung: null }, { id: 'cahya', nama: 'Cahya', sambung: 'ibu sambung' }] },
     ])
     expect(labelDetail(s, 'vino').urutan).toEqual(['Anak sambung Cahya'])
+  })
+  it('anak sambung dari ibu kandung: "(ayah sambung)"; jenis kelamin belum diketahui: "(orang tua sambung)"', () => {
+    const d = bangunKeluargaFiktif()
+    d.children.find((c) => c.id === 'c-u5-vino').biological_parent = 'partner1'
+    const t = susunSilsilah(d)
+    expect(labelDetail(t, 'vino').orangTua[0].orang.map((o) => [o.nama, o.sambung])).toEqual([['Cahya', null], ['Umar', 'ayah sambung']])
+    expect(labelDetail(t, 'vino').urutan).toContain('Anak sambung Umar')
+    d.people.find((p) => p.id === 'umar').sex = null
+    expect(labelDetail(susunSilsilah(d), 'vino').orangTua[0].orang[1].sambung).toBe('orang tua sambung')
+  })
+  it('anak angkat: baris "Orang tua angkat" (angkat: true) dengan kedua orang tua angkatnya; ditambah "Anak angkat [nama]"', () => {
+    expect(labelDetail(s, 'yoga').orangTua).toEqual([
+      { unionId: 'u6', angkat: true, orang: [{ id: 'lorvan', nama: 'Lorvan', sambung: null }, { id: 'sinta', nama: 'Sinta', sambung: null }] },
+    ])
+    expect(labelDetail(s, 'yoga').urutan).toEqual(['Anak angkat Lorvan & Sinta'])
+    expect(labelDetail(s, 'kelvan').orangTua[0].angkat).toBe(false)
   })
   it('pernikahan antarsepupu: kedua orang tua dalam satu baris', () => {
     expect(nama(labelDetail(s, 'nirvo'))).toEqual(['Tamran & Wati'])

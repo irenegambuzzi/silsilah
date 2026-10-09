@@ -211,7 +211,7 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
 
   it('orang tua dalam SATU baris: kedua orang tua, tanpa "orang tua lain"', () => {
     expect(labelDetail(s, 'tamran').orangTua).toEqual([
-      { unionId: 'u1', orang: [{ id: 'bima', nama: 'Bima' }, { id: 'eka', nama: 'Eka' }] },
+      { unionId: 'u1', angkat: false, orang: [{ id: 'bima', nama: 'Bima', sambung: null }, { id: 'eka', nama: 'Eka', sambung: null }] },
     ])
     expect(labelDetail(s, 'raksa').orangTua).toEqual([])
   })
