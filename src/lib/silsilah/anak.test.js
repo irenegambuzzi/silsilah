@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from './keluargaFiktif.js'
 import { bangunGraf } from './graf.js'
-import { anakOrangTua, kandungUntuk, pastiSesudah, urutkanMenurutUmur } from './anak.js'
+import { anakOrangTua, kandungUntuk, orangTuaSambungPasangan, pastiSesudah, urutkanMenurutUmur } from './anak.js'
 
 const graf = bangunGraf(bangunKeluargaFiktif())
 
@@ -48,5 +48,51 @@ describe('menurut umur', () => {
 
   it('di keluarga contoh: Vino (anak sambung, lebih tua) sebelum Wati', () => {
     expect(anakOrangTua(graf, 'cahya').semua.map((a) => [a.id, a.kandung])).toEqual([['vino', false], ['wati', true]])
+  })
+})
+
+describe('anak sambung dari sisi pasangan', () => {
+  const sambung = (g, id) => anakOrangTua(g, id).panel.filter((a) => a.sambung).map((a) => a.id)
+  const ubah = (fn) => {
+    const d = bangunKeluargaFiktif()
+    fn(d)
+    return bangunGraf(d)
+  }
+
+  it('`semua` (dipakai nomor silsilah) tidak memuatnya, `panel` memuatnya menurut umur', () => {
+    expect(anakOrangTua(graf, 'harvel').semua.map((a) => a.id)).toEqual(['galen', 'elvina', 'fajrin'])
+    expect(anakOrangTua(graf, 'harvel').panel.map((a) => [a.id, a.kandung])).toEqual([
+      ['celvia', false], ['galen', true], ['elvina', true], ['fajrin', true],
+    ])
+    expect(anakOrangTua(graf, 'harvel').kandung).toEqual(['galen', 'elvina', 'fajrin'])
+  })
+
+  it('anak yang lahir sesudah pernikahan berakhir bukan anak sambung; tanggal tidak diketahui tidak mengeluarkan siapa pun', () => {
+    // Halvin wafat 2008; Bayu lahir 2013. Tanpa tanggal wafat Halvin, Bayu tidak bisa dikeluarkan.
+    expect(sambung(graf, 'halvin')).toEqual([])
+    const g = ubah((d) => Object.assign(d.people.find((p) => p.id === 'halvin'), { death_y: null }))
+    expect(sambung(g, 'halvin')).toEqual(['bayu'])
+    // Fajrin (2010) lahir sesudah Kirana berpisah dari Danuarta (2004); tanpa tanggal berpisah ia tidak bisa dikeluarkan.
+    expect(sambung(graf, 'danuarta')).toEqual([])
+    expect(sambung(ubah((d) => Object.assign(d.unions.find((u) => u.id === 'u14'), { end_y: null })), 'danuarta')).toEqual(['fajrin'])
+  })
+
+  it('anak yang wafat sebelum pernikahan dimulai bukan anak sambung (Sekar, wafat 1998; Joval menikah 2012)', () => {
+    expect(sambung(graf, 'joval')).toEqual(['dorvi', 'laras'])
+    expect(sambung(ubah((d) => Object.assign(d.unions.find((u) => u.id === 'u11'), { marriage_y: null })), 'joval')).toEqual(['dorvi', 'sekar', 'laras'])
+  })
+
+  it('pernikahan yang sama dengan anak sendiri atau anak angkat tidak membuat anak sambung', () => {
+    for (const id of ['lorvan', 'sinta', 'bima', 'eka', 'umar']) {
+      const sendiri = new Set(anakOrangTua(graf, id).semua.map((a) => a.id))
+      for (const a of anakOrangTua(graf, id).panel) if (a.sambung) expect(sendiri.has(a.id), `${id}>${a.id}`).toBe(false)
+    }
+    expect(sambung(graf, 'sinta')).toEqual([])
+  })
+
+  it('orang tua sambung: kebalikannya, berurutan menurut pernikahan pertama dengan orang tua kandung', () => {
+    expect(orangTuaSambungPasangan(graf).get('tamran').map((x) => x.id)).toEqual(['fitri', 'gita'])
+    expect(orangTuaSambungPasangan(graf).get('celvia').map((x) => [x.id, x.unionId])).toEqual([['harvel', 'u14']])
+    expect(orangTuaSambungPasangan(graf).has('wati')).toBe(false)
   })
 })

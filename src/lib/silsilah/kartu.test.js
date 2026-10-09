@@ -216,13 +216,20 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
 
   it('orang tua dalam SATU baris: kedua orang tua, tanpa "orang tua lain"', () => {
     expect(labelDetail(s, 'tamran').orangTua).toEqual([
-      { unionId: 'u1', angkat: false, orang: [{ id: 'bima', nama: 'Bima', sambung: null }, { id: 'eka', nama: 'Eka', sambung: null }] },
+      {
+        unionId: 'u1', angkat: false,
+        orang: [
+          { id: 'bima', nama: 'Bima', sambung: null }, { id: 'eka', nama: 'Eka', sambung: null },
+          // Istri ke-2 dan ke-3 Bima menikah dengannya sesudah Tamran lahir: ibu sambung.
+          { id: 'fitri', nama: 'Fitri', sambung: 'ibu sambung' }, { id: 'gita', nama: 'Gita', sambung: 'ibu sambung' },
+        ],
+      },
     ])
     expect(labelDetail(s, 'raksa').orangTua).toEqual([])
   })
 
   it('urutan lahir: "Putri ke-6 dari 11 bersaudara" (hanya anak kandung), tanpa label', () => {
-    expect(labelDetail(s, 'mega').urutan).toEqual(['Putri ke-6 dari 11 bersaudara'])
+    expect(labelDetail(s, 'mega').urutan).toEqual(['Putri ke-6 dari 11 bersaudara', 'Anak sambung Gita'])
     expect(labelDetail(s, 'rangga').urutan).toEqual(['Putra ke-11 dari 11 bersaudara'])
     // Cahya: Vino anak sambung (tidak dihitung), jadi Wati anak kandung satu-satunya.
     expect(labelDetail(s, 'wati').urutan).toEqual(['Putri tunggal'])
@@ -312,8 +319,11 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
       [8, 'Oka', 'dari istri ke-3'], [9, 'Putri', 'dari istri ke-3'], [10, 'Qori', 'dari istri ke-3'], [11, 'Rangga', 'dari istri ke-3'],
     ])
     // Eka hanya punya satu pasangan (Bima, dua kali menikah): tanpa "dari suami ke-n".
-    expect(labelDetail(s, 'eka').anak.map((a) => [a.ke, a.nama, a.dari])).toEqual([
-      [1, 'Tamran', null], [2, 'Ika', null], [3, 'Alm. Tirwan', null], [4, 'Mega', null], [5, 'Nanda', null],
+    // Kirana dan Lintang (anak Bima dengan Fitri, lahir di antara dua pernikahan Eka) anak sambungnya.
+    expect(labelDetail(s, 'eka').anak.map((a) => [a.ke, a.nama, a.jenis, a.dari])).toEqual([
+      [1, 'Tamran', null, null], [2, 'Ika', null, null], [3, 'Alm. Tirwan', null, null],
+      [null, 'Kirana', 'anak sambung', null], [null, 'Lintang', 'anak sambung', null],
+      [4, 'Mega', null, null], [5, 'Nanda', null, null],
     ])
   })
 
@@ -343,29 +353,115 @@ describe('anak di panel pasangan (bukan keturunan): aturan yang sama dengan ketu
     return hasil
   }
 
-  it('Harvel: anaknya dari pernikahan sebelumnya DAN anaknya bersama Kirana, bernomor dari sudut pandang Harvel', () => {
+  it.each(pasangan.filter((id) => anakDariData(id).size > 0))('%s: semua anak dari pernikahannya tampil, anak kandung bernomor 1..n menurut umur', (id) => {
+    const anak = labelDetail(s, id).anak
+    for (const a of anakDariData(id)) expect(anak.map((x) => x.id), a).toContain(a)
+    const kandung = anak.filter((a) => a.ke != null)
+    expect(kandung.map((a) => a.ke)).toEqual(kandung.map((_, i) => i + 1))
+  })
+
+  it('Harvel: empat anak. Galen, Elvina, Fajrin anak kandung bernomor 1–3; Celvia (anak Kirana) anak sambung tanpa nomor, menurut umur', () => {
     expect(labelDetail(s, 'harvel').anak).toEqual([
+      { id: 'celvia', nama: 'Celvia', ke: null, jenis: 'anak sambung', dari: null },
       { id: 'galen', nama: 'Galen', ke: 1, jenis: null, dari: 'dari pernikahan sebelumnya' },
       { id: 'elvina', nama: 'Elvina', ke: 2, jenis: null, dari: 'dari pernikahan sebelumnya' },
       { id: 'fajrin', nama: 'Fajrin', ke: 3, jenis: null, dari: null },
     ])
-    // Bagi Kirana, Fajrin anak kandung ke-2; Galen dan Elvina anak sambung tanpa nomor.
-    expect(labelDetail(s, 'kirana').anak.map((a) => [a.nama, a.ke, a.jenis])).toEqual([
-      ['Celvia', 1, null], ['Galen', null, 'anak sambung'], ['Elvina', null, 'anak sambung'], ['Fajrin', 2, null],
+  })
+
+  it('Kirana (tidak berubah): Celvia anak kandung dengan suami pertama, Galen dan Elvina anak sambung, Fajrin anak kandung dengan Harvel', () => {
+    expect(labelDetail(s, 'kirana').anak).toEqual([
+      { id: 'celvia', nama: 'Celvia', ke: 1, jenis: null, dari: 'dari suami ke-1' },
+      { id: 'galen', nama: 'Galen', ke: null, jenis: 'anak sambung', dari: 'dari suami ke-2' },
+      { id: 'elvina', nama: 'Elvina', ke: null, jenis: 'anak sambung', dari: 'dari suami ke-2' },
+      { id: 'fajrin', nama: 'Fajrin', ke: 2, jenis: null, dari: 'dari suami ke-2' },
     ])
   })
 
-  it.each(pasangan.filter((id) => anakDariData(id).size > 0))('%s: semua anak tampil, anak kandung bernomor 1..n menurut umur, sisanya dengan keterangan', (id) => {
-    const anak = labelDetail(s, id).anak
-    expect(new Set(anak.map((a) => a.id))).toEqual(anakDariData(id))
-    const kandung = anak.filter((a) => a.ke != null)
-    expect(kandung.map((a) => a.ke)).toEqual(kandung.map((_, i) => i + 1))
-    const tahun = kandung.map((a) => s.graf.orang.get(a.id).birth_y).filter((y) => y != null)
-    expect(tahun).toEqual([...tahun].sort((a, b) => a - b))
-    for (const a of anak) if (a.ke == null) expect(a.jenis, a.id).toMatch(/^anak (sambung|angkat)$/)
+  it('Umar dan Cahya: Vino anak kandung Umar dan anak sambung Cahya; Wati anak kandung keduanya', () => {
+    expect(labelDetail(s, 'umar').anak).toEqual([
+      { id: 'vino', nama: 'Vino', ke: 1, jenis: null, dari: 'dari pernikahan sebelumnya' },
+      { id: 'wati', nama: 'Wati', ke: 2, jenis: null, dari: null },
+    ])
+    expect(labelDetail(s, 'cahya').anak).toEqual([
+      { id: 'vino', nama: 'Vino', ke: null, jenis: 'anak sambung', dari: null },
+      { id: 'wati', nama: 'Wati', ke: 1, jenis: null, dari: null },
+    ])
   })
 
-  it('pasangan yang menikah dengan dua keturunan: "dari suami ke-n" seperti keturunan', () => {
+  it('anak sambung dari sisi pasangan, simetris: panel anak itu menyebut orang tua sambung dan "Anak sambung …"', () => {
+    const orangTua = (id) => labelDetail(s, id).orangTua.map((o) => o.orang.map((x) => (x.sambung ? `${x.nama} (${x.sambung})` : x.nama)).join(' & '))
+    // Celvia: orang tua kandungnya, ditambah Harvel.
+    expect(orangTua('celvia')).toEqual(['Kirana & Danuarta & Harvel (ayah sambung)'])
+    expect(labelDetail(s, 'celvia').urutan).toEqual(['Putri ke-1 dari 2 bersaudara', 'Anak sambung Harvel'])
+    // Galen dan Elvina: Harvel, ditambah Kirana.
+    for (const id of ['galen', 'elvina']) {
+      expect(orangTua(id), id).toEqual(['Harvel & Kirana (ibu sambung)'])
+      expect(labelDetail(s, id).urutan, id).toContain('Anak sambung Kirana')
+    }
+    // Vino dan Cahya (sudah benar).
+    expect(orangTua('vino')).toEqual(['Umar & Cahya (ibu sambung)'])
+    expect(labelDetail(s, 'vino').urutan).toEqual(['Anak sambung Cahya'])
+    // Wati anak kandung keduanya: tanpa orang tua sambung.
+    expect(orangTua('wati')).toEqual(['Cahya & Umar'])
+  })
+
+  // Anak sambung dari sisi pasangan: SEMUA orang di data contoh, setiap pasangan
+  // yang punya anak dari hubungan lain. Anak yang lahir sesudah pernikahan
+  // berakhir (berpisah atau wafat), atau wafat sebelum pernikahan dimulai, bukan anak sambung.
+  const sambungDari = (id) => labelDetail(s, id).anak.filter((a) => a.jenis === 'anak sambung').map((a) => a.id)
+  it.each([
+    ['cahya', ['vino']],
+    ['kirana', ['galen', 'elvina']],
+    ['harvel', ['celvia']],
+    // Bima: Eka ke-1 dan ke-2 (1970–76, 1982–86), Fitri (1977–81), Gita (sejak 1987).
+    ['eka', ['kirana', 'lintang']], // lahir 1978 dan 1980: sebelum pernikahan ke-2 dengan Bima; Mega dst. anak kandungnya
+    ['fitri', ['tamran', 'ika', 'tirwan']], // Mega (1983) dan sesudahnya lahir setelah ia berpisah (1981)
+    ['gita', ['tamran', 'ika', 'tirwan', 'kirana', 'lintang', 'mega', 'nanda']],
+    // Ika: Joval menikah dengannya 2012; Sekar wafat 1998 (sebelum menikah), jadi bukan anak sambung.
+    ['joval', ['dorvi', 'laras']],
+    // Yang tidak punya anak sambung.
+    ['bima', []], ['umar', []], ['sinta', []], ['laila', []], ['halvin', []], ['dara', []], ['danuarta', []],
+    ['nadira', []], ['ravela', []], ['wati', []], ['tamran', []], ['arum', []], ['dorvi', []], ['rangga', []], ['gendis', []],
+  ])('%s: anak sambung', (id, harapan) => {
+    expect(sambungDari(id)).toEqual(harapan)
+  })
+
+  it('Halvin (wafat 2008) tidak punya anak sambung: Bayu (2013) lahir sesudah ia wafat; Danuarta juga tidak: Fajrin lahir sesudah mereka berpisah', () => {
+    expect(labelDetail(s, 'halvin').anak.map((a) => a.id)).toEqual(['dorvi', 'sekar', 'laras'])
+    expect(labelDetail(s, 'danuarta').anak.map((a) => a.id)).toEqual(['celvia'])
+  })
+
+  it('simetris untuk SEMUA orang: X anak sambung Y persis kalau Y orang tua sambung X', () => {
+    const maju = new Set()
+    const mundur = new Set()
+    for (const id of utamaSemua) {
+      const d = labelDetail(s, id)
+      for (const a of d.anak) if (a.jenis === 'anak sambung') maju.add(`${id}>${a.id}`)
+      for (const o of d.orangTua) for (const x of o.orang) if (x.sambung) mundur.add(`${x.id}>${id}`)
+    }
+    expect(maju.size).toBeGreaterThan(10)
+    expect(maju).toEqual(mundur)
+  })
+
+  it('daftar anak siapa pun: urut menurut umur, anak kandung bernomor 1..n, sisanya tanpa nomor dengan keterangan, tanpa pengulangan', () => {
+    for (const id of utamaSemua) {
+      const anak = labelDetail(s, id).anak
+      expect(new Set(anak.map((a) => a.id)).size, id).toBe(anak.length)
+      const kandung = anak.filter((a) => a.ke != null)
+      expect(kandung.map((a) => a.ke), id).toEqual(kandung.map((_, i) => i + 1))
+      for (const a of anak) if (a.ke == null) expect(a.jenis, `${id}>${a.id}`).toMatch(/^anak (sambung|angkat)$/)
+      const tahun = anak.map((a) => s.graf.orang.get(a.id).birth_y)
+      expect(tahun, id).toEqual([...tahun].sort((x, y) => x - y)) // di data contoh semua tahun lahir diketahui
+    }
+  })
+
+  it('anak sambung dari sisi pasangan tidak mengubah nomor Daftar, jumlah "bersaudara", maupun Bagan', () => {
+    expect(labelDetail(s, 'kirana').urutan[0]).toBe('Putri ke-4 dari 11 bersaudara')
+    expect(s.nomor.get('celvia')).toBe(s.nomor.get('kirana') + '.1')
+  })
+
+  it('pasangan yang menikah dengan dua keturunan: "dari suami ke-n" seperti keturunan; anak Lintang anak sambung Dara', () => {
     const d = bangunKeluargaFiktif()
     d.unions.push({
       id: 'ux', tree_id: null, partner1_id: 'lintang', partner2_id: 'dara', status: 'menikah',
@@ -374,10 +470,11 @@ describe('anak di panel pasangan (bukan keturunan): aturan yang sama dengan ketu
     d.people.push({ ...d.people.find((p) => p.id === 'arya'), id: 'bungsu', full_name: 'Bungsu', birth_y: 2019 })
     d.children.push({ id: 'c-ux', tree_id: null, union_id: 'ux', child_id: 'bungsu', kind: 'kandung', biological_parent: 'keduanya', deleted_at: null })
     expect(labelDetail(susunSilsilah(d), 'dara').anak.map((a) => [a.ke, a.nama, a.dari])).toEqual([
-      [1, 'Rinzo', 'dari suami ke-1'], [2, 'Nala', 'dari suami ke-1'], [3, 'Ragil', 'dari suami ke-1'], [4, 'Bungsu', 'dari suami ke-2'],
+      [1, 'Rinzo', 'dari suami ke-1'], [null, 'Arya', null], [2, 'Nala', 'dari suami ke-1'], [3, 'Ragil', 'dari suami ke-1'], [4, 'Bungsu', 'dari suami ke-2'],
     ])
   })
 })
+
 
 describe('baris yang selalu tampil dan yang hanya tampil kalau berlaku', () => {
   it('Wafat hanya untuk yang sudah wafat; yang masih hidup tanpa baris Wafat', () => {

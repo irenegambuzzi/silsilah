@@ -11,6 +11,7 @@
 //   lahirnya; yang tanpa tanggal lahir di paling akhir. Urutan anak kandung
 //   sendiri tidak pernah berubah.
 import { bandingkanKabur, tanggalDari } from './tanggal.js'
+import { pasanganDi } from './graf.js'
 
 // true kalau hubungan anak `c` di pernikahan `u` menjadikan `p` orang tua
 // kandungnya (sama dengan private.is_birth_parent di SQL 003).
@@ -56,6 +57,47 @@ export function urutkanMenurutUmur(graf, kandung, lain) {
   return [...hasil, ...tanpaTanggal]
 }
 
+// Tanggal paling awal di antara yang diketahui (null kalau tidak ada).
+function terawal(tanggal) {
+  const ada = tanggal.filter((t) => t.y != null)
+  return ada.length ? ada.reduce((a, b) => (bandingkanKabur(b, a) < 0 ? b : a)) : null
+}
+
+// Anak sambung dari sisi PASANGAN: anak kandung pasangan `q` dari hubungan
+// lain (bukan dengan `p`), selama pernikahan p dan q berlaku. Itu anak
+// sambung `p`, tanpa perlu dicatat di pernikahan p dan q. Dihitung bila ada
+// satu saja pernikahan p dan q di mana anak itu
+// - tidak PASTI lahir sesudah pernikahan itu berakhir (berpisah, atau salah
+//   satu pasangan wafat), dan
+// - tidak PASTI sudah wafat sebelum pernikahan itu dimulai.
+// Tanggal yang tidak diketahui tidak mengeluarkan siapa pun. Hasil: Map anak →
+// { unionId (hubungan anak itu dengan q), via (q), nikahId (pernikahan p dan q) }.
+function sambungDariPasangan(graf, p, sudah) {
+  const hasil = new Map()
+  for (const u of graf.pernikahan.get(p) ?? []) {
+    const q = pasanganDi(u, p)
+    if (!q) continue
+    const akhir = terawal([
+      u.status === 'cerai' ? tanggalDari(u, 'end') : { y: null },
+      graf.orang.get(p).is_deceased ? tanggalDari(graf.orang.get(p), 'death') : { y: null },
+      graf.orang.get(q)?.is_deceased ? tanggalDari(graf.orang.get(q), 'death') : { y: null },
+    ])
+    const mulai = tanggalDari(u, 'marriage')
+    for (const w of graf.pernikahan.get(q) ?? []) {
+      if (w.partner1_id === p || w.partner2_id === p) continue // anak p dan q sendiri
+      for (const c of graf.anakUnion.get(w.id) ?? []) {
+        const id = c.child_id
+        if (id === p || sudah.has(id) || hasil.has(id) || !kandungUntuk(c, w, q)) continue
+        const anak = graf.orang.get(id)
+        if (pastiSesudah(lahir(graf, id), akhir)) continue
+        if (anak.is_deceased && pastiSesudah(mulai, tanggalDari(anak, 'death'))) continue
+        hasil.set(id, { unionId: w.id, via: q, nikahId: u.id })
+      }
+    }
+  }
+  return hasil
+}
+
 const simpanan = new WeakMap()
 
 // Semua anak `p` di silsilah graf ini (dihitung sekali per graf):
@@ -65,6 +107,10 @@ const simpanan = new WeakMap()
 //            atas). lain: anak kandung `p` yang dibawa ke pernikahan itu
 //            (anak sambung bagi pasangannya), jadi BUKAN anak dari pasangan
 //            di pernikahan itu: anak dari pernikahan sebelumnya.
+//   panel    seperti `semua`, DITAMBAH anak sambung dari sisi pasangan
+//            (anak kandung pasangan dari hubungan lain; sambung: true,
+//            via: pasangan itu); inilah daftar di panel keterangan.
+//            `semua` sengaja tidak memuatnya: ia dipakai nomor silsilah.
 //
 // Berlaku sama untuk keturunan dan pasangan (bukan keturunan). Pasangan
 // tidak punya birth_ranks, jadi anak kandungnya diurutkan menurut tanggal lahir.
@@ -88,10 +134,14 @@ export function anakOrangTua(graf, p) {
   const kandung = [...tautan].filter(([, t]) => t.kandung).map(([id]) => id)
   kandung.sort((a, b) => rank(a) - rank(b) || bandingkanKabur(lahir(graf, a), lahir(graf, b)) || bandingkanId(a, b))
   const lain = [...tautan].filter(([, t]) => !t.kandung).map(([id]) => id)
+  const dariPasangan = sambungDariPasangan(graf, p, tautan)
   const hasil = {
     kandung,
     ke: new Map(kandung.map((id, i) => [id, i + 1])),
     semua: urutkanMenurutUmur(graf, kandung, lain).map((id) => ({ id, ...tautan.get(id) })),
+    panel: urutkanMenurutUmur(graf, kandung, [...lain, ...dariPasangan.keys()]).map((id) =>
+      tautan.has(id) ? { id, ...tautan.get(id) } : { id, kandung: false, kind: 'sambung', lain: false, sambung: true, ...dariPasangan.get(id) }
+    ),
   }
   peta.set(p, hasil)
   return hasil
@@ -106,4 +156,29 @@ export function anakPernikahanMenurutUmur(graf, u, p, anakIds) {
   kandung.sort((a, b) => (ke.get(a) ?? Infinity) - (ke.get(b) ?? Infinity) || bandingkanId(a, b))
   const lain = anakIds.filter((id) => !kandungUntuk(tautan.get(id), u, p))
   return urutkanMenurutUmur(graf, kandung, lain)
+}
+
+// Orang tua sambung dari sisi pasangan (kebalikan `panel`): untuk setiap anak,
+// siapa saja yang menikah dengan orang tua kandungnya dan karena itu menjadi
+// ayah/ibu sambungnya. Map anak → [{ id (orang tua sambung), unionId (hubungan
+// anak itu dengan orang tua kandungnya) }], berurutan menurut pernikahan
+// pertama dengan orang tua kandung itu. Dihitung sekali per graf.
+const simpananSambung = new WeakMap()
+export function orangTuaSambungPasangan(graf) {
+  let peta = simpananSambung.get(graf)
+  if (peta) return peta
+  peta = new Map()
+  for (const p of graf.pernikahan.keys()) {
+    for (const a of anakOrangTua(graf, p).panel) {
+      if (!a.sambung) continue
+      if (!peta.has(a.id)) peta.set(a.id, [])
+      peta.get(a.id).push({ id: p, unionId: a.unionId, nikahId: a.nikahId })
+    }
+  }
+  const mulai = (nikahId) => tanggalDari(graf.unions.get(nikahId), 'marriage')
+  for (const daftar of peta.values()) {
+    daftar.sort((a, b) => bandingkanKabur(mulai(a.nikahId), mulai(b.nikahId)) || bandingkanId(a.id, b.id))
+  }
+  simpananSambung.set(graf, peta)
+  return peta
 }

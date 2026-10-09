@@ -330,6 +330,20 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Sinta', level: 2 })).toBeTruthy()
   })
 
+  it('panel anak sambung dari sisi pasangan: Harvel punya empat anak (Celvia anak sambung), Celvia menyebut Harvel (ayah sambung)', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(k('harvel'))
+    let panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(within(panel).getAllByRole('listitem').map((li) => li.textContent).filter((x) => /Celvia|Galen|Elvina|Fajrin/.test(x))).toEqual([
+      'Celvia · anak sambung', '1.Galen · dari pernikahan sebelumnya', '2.Elvina · dari pernikahan sebelumnya', '3.Fajrin',
+    ])
+    await aksi.click(k('celvia'))
+    panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(panel.textContent).toContain('Orang tua: Kirana & Danuarta & Harvel (ayah sambung)')
+    expect(panel.textContent).toContain('Anak sambung Harvel')
+  })
+
   it('fokus cabang: hanya orang itu dan keturunannya; "Keluar dari fokus" mengembalikan', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()

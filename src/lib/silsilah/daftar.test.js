@@ -72,7 +72,7 @@ describe('cariDaftar', () => {
 describe('labelDetail: orang tua', () => {
   const nama = (d) => d.orangTua.map((o) => o.orang.map((x) => x.nama).join(' & '))
   it('kedua orang tua dalam satu baris, juga yang bukan keturunan', () => {
-    expect(nama(labelDetail(s, 'tamran'))).toEqual(['Bima & Eka'])
+    expect(nama(labelDetail(s, 'tamran'))).toEqual(['Bima & Eka & Fitri & Gita'])
   })
   it('anak sambung: orang tua kandung dulu, lalu orang tua sambungnya "(ibu sambung)"; ditambah "Anak sambung [nama]"', () => {
     expect(labelDetail(s, 'vino').orangTua).toEqual([
