@@ -93,6 +93,21 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(ada).toBe(true)
   })
 
+  it('anak sambung dari sisi pasangan: pasangan keturunan DAN pasangan bukan keturunan punya anak sambung dari hubungan lain', () => {
+    const punya = (id) => labelDetail(s, id).anak.some((a) => a.jenis === 'anak sambung')
+    expect(utama.some((p) => keturunan(p.id) && punya(p.id))).toBe(true)
+    expect(utama.some((p) => pasanganSaja(p.id) && punya(p.id))).toBe(true)
+    // ... termasuk anak yang dicatat di pernikahan lain, bukan di pernikahan pasangan itu (Celvia bagi Harvel).
+    const celvia = labelDetail(s, 'celvia')
+    expect(celvia.orangTua[0].orang.some((o) => o.sambung)).toBe(true)
+  })
+
+  it('nama panggilan yang sangat berbeda dari nama lengkap (untuk menguji pencarian)', () => {
+    const huruf = (teks) => teks.toLowerCase().replace(/[^a-z]/g, '')
+    const beda = utama.filter((p) => p.nickname && !huruf(p.full_name).includes(huruf(p.nickname)) && !huruf(p.nickname).includes(huruf(p.full_name)))
+    expect(beda.length).toBeGreaterThanOrEqual(5)
+  })
+
   it('pernikahan baru sementara pernikahan sebelumnya belum ditandai berakhir', () => {
     expect([...s.graf.pernikahan.entries()].some(([id, us]) =>
       s.gen.has(id) && us.filter((u) => u.status === 'menikah' && u.partner2_id && !orang.get(u.partner2_id).is_deceased).length > 1)).toBe(true)
