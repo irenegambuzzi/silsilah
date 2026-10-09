@@ -299,6 +299,35 @@ html[data-kontras='tinggi'] .kartu-orang {
   letter-spacing: 0.02em;
   color: var(--k-redup);
 }
+.kartu-urut {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.2rem;
+  border-radius: 9999px;
+  border: 1px solid var(--k-redup);
+  color: var(--k-teks);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+/* Tunas daun: belum dewasa (di bawah 18 tahun), di pojok kanan bawah. */
+.kartu-tunas {
+  position: absolute;
+  right: 0.45rem;
+  bottom: 0.35rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--c-sukses);
+}
+.kartu-orang[data-belum-dewasa] .kartu-label {
+  max-width: calc(100% - 2.6rem);
+}
 .kartu-nama {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -445,6 +474,43 @@ html[data-kontras='tinggi'] [data-warna$='-wafat'] {
   flex-shrink: 0;
   width: 1.6rem;
   border-top: 2px dashed var(--c-hati);
+}
+/* Berpisah: garis putus-putus dengan hati patah di tengahnya. */
+.legenda-berpisah {
+  position: relative;
+  height: 1.1rem;
+  border-top: 0;
+  background: linear-gradient(to right, var(--c-hati) 50%, transparent 0) 0 50% / 0.35rem 2px repeat-x;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-hati);
+}
+.legenda-hati {
+  width: 0.95rem;
+  height: 0.95rem;
+  padding: 0.05rem;
+  border-radius: 9999px;
+  background: var(--c-kertas);
+}
+.legenda-ikon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+}
+.legenda-urut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 9999px;
+  border: 1px solid var(--c-redup);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* Pernikahan antarsepupu: catatan kecil di bawah hati, "Anak mereka ada di

@@ -123,13 +123,13 @@ describe('Supabase gagal → layar keterangan, TIDAK PERNAH menulis data bawaan'
 })
 
 describe('sinkron live', () => {
-  it('perubahan dari anggota lain langsung tampil: tambah, buang ke tempat sampah, hapus permanen', async () => {
+  it('perubahan dari anggota lain langsung tampil: tambah, disisihkan, hapus permanen', async () => {
     const klien = klienKeluarga()
     pasang('/', klien)
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     await kirim(klien, { table: 'people', eventType: 'INSERT', new: { id: 'baru', tree_id: null, full_name: 'Baru Contoh', version: 1 } })
     expect(await screen.findByText(ringkasan(JUMLAH_UTAMA + 1))).toBeTruthy()
-    // Anggota biasa tidak melihat isi tempat sampah; yang sampai hanya penandanya.
+    // Anggota biasa tidak melihat data yang disisihkan; yang sampai hanya penandanya.
     await kirim(klien, { table: 'sync_removals', eventType: 'INSERT', new: { table_name: 'people', row_id: 'baru', tree_id: null } })
     expect(await screen.findByText(ringkasan(JUMLAH_UTAMA))).toBeTruthy()
     await kirim(klien, { table: 'people', eventType: 'DELETE', old: { id: keluarga.people.find((p) => p.tree_id === null).id } })

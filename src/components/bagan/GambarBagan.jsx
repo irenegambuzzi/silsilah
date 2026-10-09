@@ -1,5 +1,6 @@
 import { UKURAN } from '../../lib/bagan/tata.js'
 import { isiTeks, teks } from '../../teks/id.js'
+import { IkonHati } from './IkonHati.jsx'
 import { KartuOrang } from './KartuOrang.jsx'
 
 const T = teks.bagan
@@ -9,6 +10,8 @@ const jalur = (titik) => titik.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).j
 // Satu keturunan dengan pernikahan dan anak-anaknya. Kartu diletakkan
 // menurut tata letak (posisi absolut), tetapi urutan di halaman tetap
 // berupa daftar bersarang, supaya pembaca layar membacanya sebagai silsilah.
+// Satu kelompok per pernikahan, dari kiri ke kanan menurut waktu; pasangan
+// yang dinikahi kembali tampil lagi dengan keterangan "menikah kembali".
 function Simpul({ simpul, tata, terpilih, saatKetuk, saatLompat }) {
   const letak = (kunci) => tata.letak.get(kunci)
   return (
@@ -28,23 +31,31 @@ function Simpul({ simpul, tata, terpilih, saatKetuk, saatLompat }) {
           <div key={kunci}>
             <span className="sr-only">
               {isiTeks(k.berpisah ? T.pasanganDariBerpisah : T.pasanganDari, { nama: simpul.kartu.nama })}
+              {k.ulang && ` (${T.menikahKembali})`}
             </span>
-            {k.label && lLabel && (
+            {(k.label || k.ulang) && lLabel && (
               <span
                 aria-hidden="true"
-                className="absolute flex items-end justify-center pb-1 text-sm font-bold uppercase tracking-wide text-emas-teks"
-                style={{ left: rem(lLabel.x), top: rem(lLabel.y), width: rem(UKURAN.lebarKartu), height: rem(UKURAN.tinggiLabel) }}
+                data-label-pasangan
+                className="absolute flex flex-col items-center justify-end pb-1 text-sm font-bold uppercase leading-tight tracking-wide text-emas-teks"
+                style={{ left: rem(lLabel.x), top: rem(lLabel.y), width: rem(UKURAN.lebarKartu), height: rem(lLabel.tinggi ?? UKURAN.tinggiLabel) }}
               >
                 {k.label}
+                {k.ulang && <span className="text-xs font-semibold normal-case tracking-normal text-redup">{T.menikahKembali}</span>}
               </span>
             )}
             {k.kartu && lKartu && !k.keturunan && (
               <KartuOrang
                 kartu={k.kartu}
                 letak={lKartu}
+                ulang={k.ulang}
                 terpilih={terpilih === k.id}
                 saatKetuk={saatKetuk}
-                aria-label={k.label ? `${k.label}: ${k.kartu.nama}` : undefined}
+                aria-label={
+                  k.label || k.ulang
+                    ? `${k.label ? `${k.label}: ` : ''}${k.kartu.nama}${k.ulang ? ` (${T.menikahKembali})` : ''}`
+                    : undefined
+                }
               />
             )}
             {k.kartu && lKartu && k.keturunan && (
@@ -115,10 +126,11 @@ export function GambarBagan({ akar, tata, terpilih, saatKetuk, saatLompat }) {
           key={h.kunci}
           aria-hidden="true"
           data-hati={h.kunci}
+          data-patah={h.patah || undefined}
           className="bagan-hati absolute"
           style={{ left: rem(h.x - UKURAN.jariHati), top: rem(h.y - UKURAN.jariHati), width: rem(2 * UKURAN.jariHati), height: rem(2 * UKURAN.jariHati) }}
         >
-          ♥
+          <IkonHati patah={h.patah} className="size-[62%]" />
         </span>
       ))}
       <ul>

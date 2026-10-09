@@ -1,6 +1,6 @@
 // Sinkron live: berlangganan perubahan tabel silsilah lewat Supabase
 // Realtime. Server hanya mengirim perubahan yang boleh dibaca anggota ini
-// (RLS), ditambah penanda "dibuang ke tempat sampah" (SQL 014).
+// (RLS), ditambah penanda "didisisihkan" (SQL 014).
 import { TABEL_SILSILAH } from './kolom.js'
 
 export const TABEL_LIVE = [...TABEL_SILSILAH, 'settings', 'sync_removals']

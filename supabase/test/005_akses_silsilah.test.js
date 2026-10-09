@@ -16,7 +16,7 @@ import { ditolak } from './pembantu-akses.js'
 
 let db, h
 let kakek, nenek, akar, a, m, w, uAM, uAW, b, n, uBN
-let cAM, cicit, cSambung, cAngkat, cAW, cBN, cDitahan, sampah
+let cAM, cicit, cSambung, cAngkat, cAW, cBN, cDitahan, disisih
 let t1, t2, bapakM, ibuM, uOrtuM, bapakN
 const akun = {}
 
@@ -57,8 +57,8 @@ beforeAll(async () => {
   cDitahan = await h.orang('cDitahan', { birth_y: 1982 }); await h.anak(uBN, cDitahan)
   const uCicit = await h.nikah(cAM, await h.orang('Pasangan cAM'))
   cicit = await h.orang('cicit', { birth_y: 2000 }); await h.anak(uCicit, cicit)
-  sampah = await h.orang('Data Ganda (sampah)')
-  await db.query(`update public.people set deleted_at = now(), delete_batch = gen_random_uuid() where id = $1`, [sampah])
+  disisih = await h.orang('Data Ganda (disisihkan)')
+  await db.query(`update public.people set deleted_at = now(), delete_batch = gen_random_uuid() where id = $1`, [disisih])
 
   t1 = await h.pohonAsal(m); t2 = await h.pohonAsal(n)
   bapakM = await h.orang('Bapak M', { tree_id: t1 }); ibuM = await h.orang('Ibu M', { tree_id: t1 })
@@ -66,7 +66,7 @@ beforeAll(async () => {
   bapakN = await h.orang('Bapak N', { tree_id: t2 })
 
   await jadikanAnggota('pemilik', b, { isOwner: true })
-  await jadikanAnggota('asistenSampah', kakek, { role: 'asisten', permissions: ['tempat_sampah', 'lihat_anggota'] })
+  await jadikanAnggota('asistenSisih', kakek, { role: 'asisten', permissions: ['sisihkan', 'lihat_anggota'] })
   await jadikanAnggota('anggotaA', a)
   await jadikanAnggota('lihatAW', cAW, { role: 'lihat' })
   await jadikanAnggota('anchorM', m)
@@ -81,7 +81,7 @@ beforeAll(async () => {
   akun.tanpaPerangkat = await buatPengguna(db)
 }, 60000)
 
-// Semua orang di silsilah utama yang tidak di tempat sampah (dibaca sebagai pemilik database).
+// Semua orang di silsilah utama yang tidak disisihkan (dibaca sebagai pemilik database).
 const utamaAktif = async () =>
   (await baris(db, `select full_name from public.people where tree_id is null and deleted_at is null order by full_name`)).map((r) => r.full_name)
 
@@ -109,7 +109,7 @@ describe('tamu, akun tanpa perangkat, perangkat dicabut', () => {
 })
 
 describe('silsilah utama', () => {
-  it('semua anggota (termasuk "hanya melihat") membaca silsilah utama, tanpa data di tempat sampah', async () => {
+  it('semua anggota (termasuk "hanya melihat") membaca silsilah utama, tanpa data yang disisihkan', async () => {
     for (const siapa of ['lihatAW', 'anggotaA', 'ditahan', 'memberAngkat']) {
       expect(await namaTerlihat(siapa), siapa).toEqual(await utamaAktif())
     }
@@ -129,7 +129,7 @@ describe('silsilah utama', () => {
     expect(r).toEqual([{ version: 2 }])
   })
 
-  it('anggota tidak bisa menghapus, membuang ke tempat sampah langsung, atau menulis kolom sistem', async () => {
+  it('anggota tidak bisa menghapus, menyisihkan langsung, atau menulis kolom sistem', async () => {
     await ditolakHak(q('anggotaA', `delete from public.people where id = $1`, [cBN]))
     await ditolakHak(q('anggotaA', `update public.people set deleted_at = now(), delete_batch = gen_random_uuid() where id = $1`, [cBN]))
     await ditolakHak(q('anggotaA', `update public.people set version = 1 where id = $1`, [cBN]))
@@ -141,10 +141,10 @@ describe('silsilah utama', () => {
     await ditolakRls(q('ditahan', `insert into public.people (full_name) values ('Dari yang ditahan')`))
   })
 
-  it('data di tempat sampah hanya terlihat oleh izin "tempat_sampah", dan tidak bisa diubah', async () => {
-    expect(await namaTerlihat('asistenSampah')).toContain('Data Ganda (sampah)')
-    expect(await namaTerlihat('anggotaA')).not.toContain('Data Ganda (sampah)')
-    expect(await q('asistenSampah', `update public.people set nickname = 'x' where id = $1 returning id`, [sampah])).toEqual([])
+  it('data yang disisihkan hanya terlihat oleh izin "sisihkan", dan tidak bisa diubah', async () => {
+    expect(await namaTerlihat('asistenSisih')).toContain('Data Ganda (disisihkan)')
+    expect(await namaTerlihat('anggotaA')).not.toContain('Data Ganda (disisihkan)')
+    expect(await q('asistenSisih', `update public.people set nickname = 'x' where id = $1 returning id`, [disisih])).toEqual([])
   })
 
   it('urutan lahir: anggota bisa menggeser, "hanya melihat" tidak', async () => {
@@ -168,7 +168,7 @@ describe('pohon keluarga asal', () => {
   it('awalnya hanya admin utama (dengan aal2) yang melihatnya', async () => {
     expect(await pohonTerlihat('pemilik', 'aal2')).toEqual([t1, t2].sort())
     expect(await pohonTerlihat('pemilik', 'aal1')).toEqual([])
-    for (const siapa of ['anchorM', 'memberAM', 'memberSambung', 'anggotaA', 'asistenSampah']) {
+    for (const siapa of ['anchorM', 'memberAM', 'memberSambung', 'anggotaA', 'asistenSisih']) {
       expect(await pohonTerlihat(siapa), siapa).toEqual([])
     }
   })
@@ -216,7 +216,7 @@ describe('pohon keluarga asal', () => {
     await ditolakRls(q('pemilik', `insert into public.people (full_name, tree_id) values ('Tanpa aal2', $1)`, [t1], 'aal1'))
     await ditolakRls(q('anchorM', `insert into public.people (full_name, tree_id) values ('Dari M', $1)`, [t1]))
     expect(await q('anchorM', `update public.people set nickname = 'x' where id = $1 returning id`, [bapakM])).toEqual([])
-    await ditolakRls(q('asistenSampah', `insert into public.origin_tree_access (tree_id, member_id, mode) values ($1, $2, 'izinkan')`, [t2, akun.anggotaA.memberId]))
+    await ditolakRls(q('asistenSisih', `insert into public.origin_tree_access (tree_id, member_id, mode) values ($1, $2, 'izinkan')`, [t2, akun.anggotaA.memberId]))
     expect(await q('anchorM', `update public.origin_trees set grant_all_descendants = false where id = $1 returning id`, [t1])).toEqual([])
   })
 
@@ -245,7 +245,7 @@ describe('pengaturan, anggota, perangkat', () => {
 
   it('anggota: melihat barisnya sendiri; daftar lengkap hanya dengan izin "lihat_anggota"', async () => {
     expect((await q('anggotaA', `select id from public.members`)).map((r) => r.id)).toEqual([akun.anggotaA.memberId])
-    expect((await q('asistenSampah', `select id from public.members`)).length).toBeGreaterThan(5)
+    expect((await q('asistenSisih', `select id from public.members`)).length).toBeGreaterThan(5)
   })
 
   it('nama semua anggota tersedia untuk riwayat, tanpa kolom lain', async () => {
@@ -275,7 +275,7 @@ describe('status pernikahan', () => {
 
   it('menandai berpisah: anggota yang bukan salah satu pasangan ditolak, termasuk anaknya sendiri', async () => {
     await ditolak(ubahUAW('memberAM', 'cerai'), 'SL010')
-    await ditolak(ubahUAW('asistenSampah', 'cerai'), 'SL010') // asisten tanpa izin "status_pernikahan"
+    await ditolak(ubahUAW('asistenSisih', 'cerai'), 'SL010') // asisten tanpa izin "status_pernikahan"
     await ditolak(ubahUAW('pemilik', 'cerai', 'aal1'), 'SL010') // admin utama tanpa verifikasi dua langkah
     expect(await statusUAW()).toBe('menikah')
   })

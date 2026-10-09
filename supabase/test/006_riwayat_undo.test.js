@@ -155,7 +155,7 @@ describe('undo', () => {
     expect((await h.satu(`select academic_title from public.people where id = $1`, [b])).academic_title).toBeNull()
   })
 
-  it('membatalkan "tambah anak" membuang orang DAN hubungannya ke tempat sampah sekaligus', async () => {
+  it('membatalkan "tambah anak" menyisihkan orang DAN hubungannya sekaligus', async () => {
     const cucu = (await h.satu(`select id from public.people where full_name = 'Cucu Baru'`)).id
     await undo('Wulan', await batchTerakhir('people', cucu))
     const r = await h.satu(`select (select deleted_at is not null from public.people where id = $1) as orang,

@@ -16,7 +16,7 @@ import { jenisPasangan, pasanganBerurutan, teksBersaudara, teksPasanganKe, teksU
 import { orangTuaUnion, pasanganDi } from './graf.js'
 import { anakOrangTua } from './anak.js'
 import { statusPernikahan } from './status.js'
-import { masihAnak } from './umur.js'
+import { belumDewasa, masihAnak } from './umur.js'
 
 const KATA = teks.silsilah
 
@@ -56,8 +56,9 @@ export function keteranganPasangan(s, id) {
 
 // jenis: 'pangkal' (GEN.0) | 'keturunan' | 'pasangan' (bukan keturunan).
 // label: satu label kecil di bawah nama; pojok: "GEN.n" di pojok kartu.
+// belumDewasa: penanda tunas daun di pojok kartu (di bawah 18 tahun).
 // panggilan hanya untuk pencarian, tidak tampil di kartu.
-export function labelKartu(s, id) {
+export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const gen = s.gen.get(id) ?? null
@@ -75,6 +76,7 @@ export function labelKartu(s, id) {
     istilahGen: istilah,
     label: jenis === 'pasangan' ? null : istilah,
     pojok: jenis === 'keturunan' ? labelGen(gen) : null,
+    belumDewasa: belumDewasa(orang, hariIni),
   }
 }
 

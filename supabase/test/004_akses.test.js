@@ -206,7 +206,7 @@ describe('admin utama tidak bisa diubah lewat aplikasi', () => {
 })
 
 describe('peran, izin, dan status hanya diatur admin utama', () => {
-  const jadikanAsisten = `update public.members set role = 'asisten', permissions = '{tempat_sampah}' where id = `
+  const jadikanAsisten = `update public.members set role = 'asisten', permissions = '{sisihkan}' where id = `
   it('asisten dan admin utama tanpa verifikasi dua langkah ditolak', async () => {
     await ditolak(jalankanLewatApi(asisten, `${jadikanAsisten}'${biasa.memberId}'`), 'AK002')
     await ditolak(jalankanLewatApi(owner, `${jadikanAsisten}'${biasa.memberId}'`, 'aal1'), 'AK002')

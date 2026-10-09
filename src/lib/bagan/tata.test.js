@@ -73,14 +73,31 @@ describe('tataBagan', () => {
     const putus = t.garis.filter((g) => g.putus)
     expect(putus.length).toBeGreaterThan(0)
     for (const g of putus) expect(g.jenis).toBe('nikah')
-    // Bima: Eka (berpisah) dan Fitri (berpisah) putus-putus; Gita (menikah) tidak.
+    // Bima: Eka, Fitri, Eka lagi (berpisah) putus-putus; Gita (menikah) tidak.
     const nikahBima = (i) => t.garis.filter((g) => g.kunci.startsWith(`n:bima:${i}:`))
-    expect(nikahBima(0).every((g) => g.putus)).toBe(true)
-    expect(nikahBima(1).every((g) => g.putus)).toBe(true)
-    expect(nikahBima(2).some((g) => g.putus)).toBe(false)
+    for (const i of [0, 1, 2]) expect(nikahBima(i).every((g) => g.putus)).toBe(true)
+    expect(nikahBima(3).some((g) => g.putus)).toBe(false)
     // Pasangan pangkal (sama-sama sudah wafat, tidak berpisah): garis biasa.
     expect(t.garis.filter((g) => g.kunci.startsWith('n:raksa:')).some((g) => g.putus)).toBe(false)
     expect(t.garis.filter((g) => g.jenis === 'anak').some((g) => g.putus)).toBe(false)
+  })
+
+  it('hati patah hanya untuk pernikahan yang berakhir karena berpisah; ditinggal wafat tetap utuh', () => {
+    expect([0, 1, 2, 3].map((i) => hati(`h:bima:${i}`).patah)).toEqual([true, true, true, false])
+    expect(hati('h:raksa:0').patah).toBe(false) // keduanya wafat
+    expect(hati('h:tirwan:0').patah).toBe(false) // Tirwan wafat, Dara ditinggal
+  })
+
+  it('pernikahan berulang: kiri ke kanan menurut waktu, dengan ruang label "menikah kembali"', () => {
+    const x = (i) => t.letak.get(`p:bima:${i}`).x
+    expect(x(0)).toBeLessThan(x(1))
+    expect(x(1)).toBeLessThan(x(2))
+    expect(x(2)).toBeLessThan(x(3))
+    expect(t.letak.get('l:bima:2').tinggi).toBe(UKURAN.tinggiLabelUlang)
+    // Anak setiap pernikahan di bawah pernikahannya sendiri, jadi dari kiri ke kanan = urutan lahir.
+    const urut = ['tamran', 'ika', 'tirwan', 'kirana', 'lintang', 'mega', 'nanda', 'oka', 'putri', 'qori', 'rangga']
+    const xs = urut.map((id) => t.letak.get(`o:${id}`).x)
+    expect(xs).toEqual([...xs].sort((a, b) => a - b))
   })
 
   it('anak dari pernikahan antarsepupu hanya punya SATU garis masuk', () => {

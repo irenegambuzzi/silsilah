@@ -1,8 +1,8 @@
--- 007 — Laporan kesalahan, tempat sampah, dan hapus permanen.
+-- 007 — Laporan kesalahan, data yang disisihkan, dan hapus permanen.
 --
 -- Anggota biasa TIDAK bisa menghapus apa pun; mereka memakai "Laporkan
--- kesalahan". Tempat sampah hanya untuk kesalahan input (data ganda, salah
--- cabang); keturunan yang sah tidak dibuang.
+-- kesalahan". Menyisihkan data hanya untuk kesalahan input (data ganda, salah
+-- cabang); keturunan yang sah tidak pernah disisihkan.
 --
 --   report_problem()   anggota (bukan "hanya melihat", tidak ditahan)
 --                      melaporkan kesalahan; maksimal 10 laporan per jam.
@@ -10,13 +10,13 @@
 --                      diberi tahu.
 --   handle_report()    izin "tindak_laporan": proses/selesai/tolak + catatan;
 --                      pelapor diberi tahu.
---   move_to_trash()    izin "tempat_sampah" (+ admin utama). Satu kelompok
+--   move_to_trash()    izin "sisihkan" (+ admin utama). Satu kelompok
 --                      (delete_batch) per aksi. Ditolak kalau: masih punya
 --                      anak aktif, pasangan pangkal, punya pohon keluarga
 --                      asal, anggota aplikasi yang aktif, atau hubungan anak
 --                      yang satu-satunya menyambungkan orang yang sudah
 --                      berkeluarga (pakai "pindahkan ke orang tua lain").
---   restore_batch()    izin "tempat_sampah": memulihkan satu kelompok.
+--   restore_batch()    izin "sisihkan": memulihkan satu kelompok.
 --   purge_batch()      HANYA admin utama (aal2), wajib mengetik "HAPUS".
 --   empty_trash()      HANYA admin utama (aal2), wajib mengetik "HAPUS".
 --                      Keduanya memanggil before_big_action() lebih dulu
@@ -27,9 +27,9 @@
 --   "Pindahkan ke orang tua lain": ubah union_id hubungan anak (edit biasa,
 --   sudah bisa sejak 005, tercatat dan bisa di-Undo).
 --
--- Kode error: TR001 tanpa izin tempat sampah · TR002 masih punya anak ·
+-- Kode error: TR001 tanpa izin menyisihkan · TR002 masih punya anak ·
 -- TR003 punya pohon keluarga asal · TR004 pasangan pangkal · TR005 anggota
--- aplikasi · TR006 tidak ditemukan/sudah di sampah · TR007 masih dipakai
+-- aplikasi · TR006 tidak ditemukan/sudah disisihkan · TR007 masih dipakai
 -- data lain · TR008 hanya admin utama · TR009 konfirmasi "HAPUS" ·
 -- TR010 hubungan satu-satunya · TR011 kelompok tidak ditemukan ·
 -- TR012 pohon keluarga asal hanya admin utama · RP001 tidak bisa melapor ·
@@ -161,8 +161,8 @@ end $$;
 revoke all on function public.handle_report(uuid, text, text) from public, anon, authenticated;
 grant execute on function public.handle_report(uuid, text, text) to authenticated;
 
--- ── Tempat sampah ─────────────────────────────────────────────────
--- Izin untuk aksi tempat sampah pada data di pohon tertentu.
+-- ── Data yang disisihkan ──────────────────────────────────────────
+-- Izin untuk menyisihkan dan memulihkan data pada data di pohon tertentu.
 create or replace function private.require_trash_right(pohon uuid)
 returns void
 language plpgsql
@@ -175,8 +175,8 @@ begin
     if not public.is_owner() then
       perform private.fail('TR012', 'Data pohon keluarga asal hanya bisa diatur admin utama.');
     end if;
-  elsif not (public.has_perm('tempat_sampah') and public.can_edit()) then
-    perform private.fail('TR001', 'Anda tidak punya izin tempat sampah.');
+  elsif not (public.has_perm('sisihkan') and public.can_edit()) then
+    perform private.fail('TR001', 'Anda tidak punya izin untuk menyisihkan atau memulihkan data.');
   end if;
 end $$;
 revoke all on function private.require_trash_right(uuid) from public, anon, authenticated;
@@ -200,11 +200,11 @@ begin
   if p_table = 'people' then
     select * into o from public.people where id = p_id and deleted_at is null;
     if not found then
-      perform private.fail('TR006', 'Data tidak ditemukan atau sudah di tempat sampah.');
+      perform private.fail('TR006', 'Data tidak ditemukan atau sudah disisihkan.');
     end if;
     perform private.require_trash_right(o.tree_id);
     if p_id in (akar.partner1_id, akar.partner2_id) then
-      perform private.fail('TR004', 'Pasangan pangkal tidak bisa dibuang.');
+      perform private.fail('TR004', 'Pasangan pangkal tidak bisa disisihkan.');
     end if;
     if exists (select 1 from public.origin_trees where anchor_person_id = p_id) then
       perform private.fail('TR003', 'Orang ini punya pohon keluarga asal. Admin utama perlu mengurus pohon itu dulu.');
@@ -215,7 +215,7 @@ begin
     if exists (
       select 1 from public.children ch join public.unions un on un.id = ch.union_id
       where p_id in (un.partner1_id, un.partner2_id) and ch.deleted_at is null and un.deleted_at is null) then
-      perform private.fail('TR002', 'Orang ini masih punya anak yang aktif. Pindahkan atau buang anak-anaknya dulu.');
+      perform private.fail('TR002', 'Orang ini masih punya anak yang aktif. Pindahkan atau sisihkan anak-anaknya dulu.');
     end if;
     -- Urutan: pernikahan → hubungan sebagai anak → orang. (Undo dan
     -- pemulihan berjalan terbalik.)
@@ -228,21 +228,21 @@ begin
   elsif p_table = 'unions' then
     select * into u from public.unions where id = p_id and deleted_at is null;
     if not found then
-      perform private.fail('TR006', 'Data tidak ditemukan atau sudah di tempat sampah.');
+      perform private.fail('TR006', 'Data tidak ditemukan atau sudah disisihkan.');
     end if;
     perform private.require_trash_right(u.tree_id);
     if p_id = akar.id then
-      perform private.fail('TR004', 'Pernikahan pasangan pangkal tidak bisa dibuang.');
+      perform private.fail('TR004', 'Pernikahan pasangan pangkal tidak bisa disisihkan.');
     end if;
     if exists (select 1 from public.children where union_id = p_id and deleted_at is null) then
-      perform private.fail('TR002', 'Pernikahan ini masih punya anak yang aktif. Pindahkan atau buang anak-anaknya dulu.');
+      perform private.fail('TR002', 'Pernikahan ini masih punya anak yang aktif. Pindahkan atau sisihkan anak-anaknya dulu.');
     end if;
     update public.unions set deleted_at = now(), deleted_by = saya, delete_batch = b where id = p_id;
 
   elsif p_table = 'children' then
     select * into c from public.children where id = p_id and deleted_at is null;
     if not found then
-      perform private.fail('TR006', 'Data tidak ditemukan atau sudah di tempat sampah.');
+      perform private.fail('TR006', 'Data tidak ditemukan atau sudah disisihkan.');
     end if;
     perform private.require_trash_right(c.tree_id);
     if not exists (select 1 from public.children where child_id = c.child_id and id <> p_id and deleted_at is null)
@@ -254,14 +254,14 @@ begin
     update public.children set deleted_at = now(), deleted_by = saya, delete_batch = b where id = p_id;
 
   else
-    perform private.fail('TR006', 'Data tidak ditemukan atau sudah di tempat sampah.');
+    perform private.fail('TR006', 'Data tidak ditemukan atau sudah disisihkan.');
   end if;
   return b;
 end $$;
 revoke all on function public.move_to_trash(text, uuid) from public, anon, authenticated;
 grant execute on function public.move_to_trash(text, uuid) to authenticated;
 
--- Pohon kelompok sampah: null kalau semuanya di silsilah utama.
+-- Pohon kelompok yang disisihkan: null kalau semuanya di silsilah utama.
 create or replace function private.batch_tree(b uuid)
 returns uuid
 language sql
@@ -297,10 +297,10 @@ set search_path = ''
 as $$
 begin
   if p_batch is null or not private.batch_exists(p_batch) then
-    perform private.fail('TR011', 'Kelompok data ini tidak ada di tempat sampah.');
+    perform private.fail('TR011', 'Kelompok data ini tidak ada di daftar data yang disisihkan.');
   end if;
   perform private.require_trash_right(private.batch_tree(p_batch));
-  -- Kebalikan urutan membuang: orang → hubungan sebagai anak → pernikahan.
+  -- Kebalikan urutan menyisihkan: orang → hubungan sebagai anak → pernikahan.
   update public.people set deleted_at = null, deleted_by = null, delete_batch = null where delete_batch = p_batch;
   update public.children set deleted_at = null, deleted_by = null, delete_batch = null where delete_batch = p_batch;
   update public.unions set deleted_at = null, deleted_by = null, delete_batch = null where delete_batch = p_batch;
@@ -383,7 +383,7 @@ as $$
 begin
   perform private.require_purge(p_konfirmasi);
   if p_batch is null or not private.batch_exists(p_batch) then
-    perform private.fail('TR011', 'Kelompok data ini tidak ada di tempat sampah.');
+    perform private.fail('TR011', 'Kelompok data ini tidak ada di daftar data yang disisihkan.');
   end if;
   perform private.before_big_action('sebelum_hapus_permanen', jsonb_build_object('delete_batch', p_batch));
   return private.purge_batch_rows(p_batch);
@@ -391,7 +391,7 @@ end $$;
 revoke all on function public.purge_batch(uuid, text) from public, anon, authenticated;
 grant execute on function public.purge_batch(uuid, text) to authenticated;
 
--- Mengosongkan tempat sampah: semua kelompok, dari yang paling lama.
+-- Menghapus permanen semua data yang disisihkan: semua kelompok, dari yang paling lama.
 -- Kalau satu kelompok tidak bisa dihapus, TIDAK ADA yang dihapus.
 create or replace function public.empty_trash(p_konfirmasi text)
 returns int
@@ -421,13 +421,13 @@ revoke all on function public.empty_trash(text) from public, anon, authenticated
 grant execute on function public.empty_trash(text) to authenticated;
 
 insert into public.app_migrations (version, name)
-values ('007', 'tempat_sampah_laporan')
+values ('007', 'disisihkan_laporan')
 on conflict (version) do update set last_applied_at = now();
 
 commit;
 
 -- ── Pemeriksaan ───────────────────────────────────────────────────
-select 'Fungsi tempat sampah/laporan yang ada (dari 7)' as pemeriksaan,
+select 'Fungsi penyisihan/laporan yang ada (dari 7)' as pemeriksaan,
        (select count(*)::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
         where n.nspname = 'public' and p.proname in ('report_problem', 'handle_report', 'move_to_trash',
               'restore_batch', 'purge_batch', 'empty_trash', 'release_hold')) as hasil,

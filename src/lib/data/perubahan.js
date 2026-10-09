@@ -3,10 +3,10 @@
 //
 // Bentuk peristiwa (dari supabase-js): { table, eventType, new, old }
 //   INSERT/UPDATE  baris baru (hanya kolom yang diizinkan yang disimpan);
-//                  baris yang masuk tempat sampah (deleted_at terisi) dibuang
+//                  baris yang disisihkan (deleted_at terisi) dibuang
 //   DELETE         hapus permanen; hanya berisi id
-//   sync_removals  penanda "baris ini dibuang ke tempat sampah" untuk anggota
-//                  yang tidak boleh melihat isi tempat sampah (SQL 014)
+//   sync_removals  penanda "baris ini didisisihkan" untuk anggota
+//                  yang tidak boleh melihat data yang disisihkan (SQL 014)
 //   settings       pangkal silsilah dan istilah generasi
 //
 // Perubahan yang lebih lama daripada yang sudah dipegang (version lebih

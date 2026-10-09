@@ -2,7 +2,7 @@
 // memperbesar/memperkecil), mouse (seret; Ctrl + roda atau cubit di trackpad
 // untuk zoom), dan papan ketik (panah, + dan −, 0). Perilaku murni ada di pandang.js.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { geser, jagaTerlihat, pandangAwal, pasDiLayar, pusatkan, zoomDi } from './pandang.js'
+import { LEBAR_HP, geser, jagaTerlihat, pandangAwal, pandangHp, pusatkan, zoomDi } from './pandang.js'
 
 const AMBANG_SERET_PX = 6
 const LANGKAH_PANAH_PX = 80
@@ -27,12 +27,32 @@ function letakDiIsi(kartu, isi) {
   return { x, y }
 }
 
+// Kotak yang memuat kartu-kartu orang `ids` di dalam isi (sebelum zoom).
+function kotakDiIsi(isi, ids) {
+  const kotak = ids
+    .map((id) => kartuDi(isi, id))
+    .filter((k) => k && k.offsetWidth)
+    .map((k) => {
+      const t = letakDiIsi(k, isi)
+      return { kiri: t.x - k.offsetWidth / 2, atas: t.y - k.offsetHeight / 2, kanan: t.x + k.offsetWidth / 2 }
+    })
+  if (kotak.length === 0) return null
+  const kiri = Math.min(...kotak.map((k) => k.kiri))
+  return { x: kiri, y: Math.min(...kotak.map((k) => k.atas)), lebar: Math.max(...kotak.map((k) => k.kanan)) - kiri }
+}
+
 // `kunci`: tampilan dikembalikan ke awal setiap kali kunci berubah (mis. pindah cabang).
 // `pusat`: id orang yang diletakkan di tengah bingkai pada tampilan awal.
-export function useGeserZoom({ kunci, pusat = null }) {
+// `pangkal`: id kartu pasangan pangkal (atau pangkal cabang) yang di HP
+//   diletakkan di tengah pada tampilan awal, dengan ukuran yang terbaca.
+// `halangan(kotakBingkai)`: { atas, legenda } — bagian bingkai yang tertutup
+//   bilah atas dan legenda; tampilan awal tidak meletakkan bagan di bawahnya.
+export function useGeserZoom({ kunci, pusat = null, pangkal = [], halangan = null }) {
   const bingkai = useRef(null)
   const isi = useRef(null)
   const [pandang, setPandang] = useState({ x: 0, y: 0, k: 1 })
+  const masukan = useRef({ pangkal, halangan })
+  masukan.current = { pangkal, halangan }
   const titik = useRef(new Map())
   const gerak = useRef({ mulai: null, diseret: false, jarak: null, tengah: null })
 
@@ -53,14 +73,28 @@ export function useGeserZoom({ kunci, pusat = null }) {
     [ukuran]
   )
 
-  useLayoutEffect(() => {
+  const ukurHalangan = useCallback(() => {
+    const f = masukan.current.halangan
+    return f && bingkai.current ? f(bingkai.current.getBoundingClientRect()) : {}
+  }, [])
+  // Tampilan awal: di HP pasangan pangkal di tengah dengan ukuran terbaca;
+  // di layar lebar seluruh bagan, tidak tertutup legenda dan bilah atas.
+  const awal = useCallback(() => {
     const u = ukuran()
-    if (!u) return
-    let p = pandangAwal(u.isi, u.bingkai)
+    if (!u) return null
+    const h = ukurHalangan()
+    const kotak = u.bingkai.lebar < LEBAR_HP ? kotakDiIsi(isi.current, masukan.current.pangkal) : null
+    return kotak ? jagaTerlihat(pandangHp(kotak, u.bingkai, h), u.isi, u.bingkai) : pandangAwal(u.isi, u.bingkai, h)
+  }, [ukuran, ukurHalangan])
+
+  useLayoutEffect(() => {
+    let p = awal()
+    if (!p) return
+    const u = ukuran()
     const kartu = pusat && kartuDi(isi.current, pusat)
     if (kartu) p = jagaTerlihat(pusatkan({ ...p, k: Math.max(p.k, SKALA_TERBACA) }, letakDiIsi(kartu, isi.current), u.bingkai), u.isi, u.bingkai)
     setPandang(p)
-  }, [kunci, pusat, ukuran])
+  }, [kunci, pusat, ukuran, awal])
 
   useEffect(() => {
     const elemenBingkai = bingkai.current
@@ -90,9 +124,15 @@ export function useGeserZoom({ kunci, pusat = null }) {
     () => ({
       perbesar: () => zoomTengah(FAKTOR_TOMBOL),
       perkecil: () => zoomTengah(1 / FAKTOR_TOMBOL),
+      // "Pusatkan": kembali ke tampilan awal.
       pas: () => {
+        const p = awal()
+        if (p) setPandang(p)
+      },
+      // "Lihat seluruh bagan": seluruh pohon terlihat (di HP kartunya kecil).
+      seluruh: () => {
         const u = ukuran()
-        if (u) setPandang(pasDiLayar(u.isi, u.bingkai))
+        if (u) setPandang(pandangAwal(u.isi, u.bingkai, ukurHalangan()))
       },
       geser: (dx, dy) => setPandang((p) => jaga(geser(p, dx, dy))),
       // Melompat ke kartu seseorang (pencarian, kartu rujukan): kartu itu di
@@ -109,7 +149,7 @@ export function useGeserZoom({ kunci, pusat = null }) {
         setPandang((p) => jaga(pusatkan({ ...p, k: Math.max(p.k, SKALA_TERBACA) }, letakDiIsi(kartu, isi.current), terlihat)))
       },
     }),
-    [jaga, ukuran, zoomTengah]
+    [awal, jaga, ukuran, ukurHalangan, zoomTengah]
   )
 
   const posisi = (e) => {
@@ -183,7 +223,7 @@ export function useGeserZoom({ kunci, pusat = null }) {
       if (langkah) aksi.geser(...langkah)
       else if (e.key === '+' || e.key === '=') aksi.perbesar()
       else if (e.key === '-') aksi.perkecil()
-      else if (e.key === '0') aksi.pas()
+      else if (e.key === '0') aksi.seluruh()
       else return
       e.preventDefault()
     },

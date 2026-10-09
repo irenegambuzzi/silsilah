@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUp, Menu, Minus, Network, Plus, Search, X } from 'lucide-react'
+import { ArrowUp, Expand, Menu, Minus, Network, Plus, Search, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { GambarBagan } from '../components/bagan/GambarBagan.jsx'
 import { Legenda } from '../components/bagan/Legenda.jsx'
@@ -10,7 +10,6 @@ import { KeteranganOrang } from '../components/orang/KeteranganOrang.jsx'
 import { useDataSilsilah } from '../lib/data/konteksData.js'
 import { susunBagan } from '../lib/bagan/susun.js'
 import { tataBagan } from '../lib/bagan/tata.js'
-import { warnaKartu } from '../lib/bagan/warna.js'
 import { useGeserZoom } from '../lib/bagan/useGeserZoom.js'
 import { polos } from '../lib/silsilah/daftar.js'
 import { labelDetail } from '../lib/silsilah/kartu.js'
@@ -115,9 +114,9 @@ function Pencarian({ kartu, saatKetemu }) {
 }
 
 // Bilah atas yang melayang di kiri atas, seperti aplikasi lama.
-function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup }) {
+function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, ref }) {
   return (
-    <div className={`absolute left-3 right-3 top-3 z-20 flex flex-col gap-3 p-4 pr-14 sm:right-auto sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
+    <div ref={ref} className={`absolute left-3 right-3 top-3 z-20 flex flex-col gap-3 p-4 pr-14 sm:right-auto sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
       <button
         type="button"
         onClick={saatTutup}
@@ -145,6 +144,11 @@ function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup }) {
               {T.pusatkan}
             </button>
           </div>
+          {/* Di HP tampilan awal tidak memperkecil seluruh pohon; tombol ini menampilkannya. */}
+          <button type="button" className={`${TOMBOL_KECIL} sm:hidden`} onClick={aksi.seluruh}>
+            <Expand aria-hidden="true" className="size-5" />
+            {T.lihatSeluruh}
+          </button>
         </div>
       </div>
       {fokus}
@@ -199,13 +203,29 @@ function IsiBagan() {
   const [terpilih, setTerpilih] = useState(params.get('pilih'))
   const [bilah, setBilah] = useState(true)
   const pengukur = useRef(null)
+  const atasRef = useRef(null)
+  const legendaRef = useRef(null)
 
   const fokusId = bagan && bagan.simpul.has(params.get('fokus')) ? params.get('fokus') : null
   const akar = useMemo(() => (bagan ? (fokusId ? bagan.simpul.get(fokusId) : bagan.akar) : null), [bagan, fokusId])
   const tata = useMemo(() => (akar ? tataBagan(akar) : null), [akar])
   const pusat = fokusId ? null : params.get('pilih')
-  const { pandang, props, isi, aksi } = useGeserZoom({ kunci: fokusId ?? '', pusat })
+  // Bagian bingkai yang tertutup bilah atas dan legenda (tampilan awal).
+  const halangan = (kotak) => {
+    const hasil = {}
+    const a = atasRef.current?.getBoundingClientRect()
+    if (a?.height) hasil.atas = a.bottom - kotak.top
+    const l = legendaRef.current?.getBoundingClientRect()
+    if (l?.height) hasil.legenda = { lebar: l.right - kotak.left, tinggi: kotak.bottom - l.top }
+    return hasil
+  }
+  const pangkal = akar ? [akar.id, akar.pasangan[0]?.id].filter(Boolean) : []
+  const { pandang, props, isi, aksi } = useGeserZoom({ kunci: fokusId ?? '', pusat, pangkal, halangan })
   const kartu = useMemo(() => (akar ? semuaKartu(akar) : []), [akar])
+  const ada = useMemo(
+    () => ({ tanpaJenisKelamin: kartu.some((k) => !k.sex), belumDewasa: kartu.some((k) => k.belumDewasa) }),
+    [kartu]
+  )
 
   if (!bagan) {
     return (
@@ -280,17 +300,17 @@ function IsiBagan() {
         </div>
       </div>
       {bilah ? (
-        <BilahAtas kartu={kartu} aksi={aksi} saatKetemu={lompat} fokus={fokus} saatTutup={() => setBilah(false)} />
+        <BilahAtas ref={atasRef} kartu={kartu} aksi={aksi} saatKetemu={lompat} fokus={fokus} saatTutup={() => setBilah(false)} />
       ) : (
         <>
           <h1 className="sr-only">{teks.aplikasi.nama}</h1>
-          <button type="button" onClick={() => setBilah(true)} aria-label={T.tampilkanMenu} className={`${TOMBOL_BULAT} left-3 top-3`}>
+          <button ref={atasRef} type="button" onClick={() => setBilah(true)} aria-label={T.tampilkanMenu} className={`${TOMBOL_BULAT} left-3 top-3`}>
             <Menu aria-hidden="true" className="size-6" />
           </button>
         </>
       )}
       <div ref={pengukur} aria-hidden="true" className="pointer-events-none invisible absolute h-0 w-[26rem]" />
-      <Legenda bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} warnaAda={new Set(kartu.map(warnaKartu))} />
+      <Legenda ref={legendaRef} bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} ada={ada} />
       {kartuTerpilih && (
         <PanelOrang
           d={labelDetail(silsilah, kartuTerpilih.id)}

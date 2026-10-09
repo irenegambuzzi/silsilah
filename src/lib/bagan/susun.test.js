@@ -28,15 +28,37 @@ describe('susunBagan', () => {
     expect([...s.gen.keys()].sort()).toEqual([...new Set([...id, ...sebagaiPasangan])].sort())
   })
 
-  it('anak banyak pernikahan: 11 anak Bima urut "ke-n" lintas pasangan', () => {
+  it('pernikahan berulang: dari kiri ke kanan menurut waktu, menikah kembali tampil sebagai pernikahan tersendiri', () => {
     const bima = bagan.simpul.get('bima')
+    // Membaca dari kiri ke kanan = urutan kelahiran.
     expect(bima.anak.map(nama)).toEqual([
       'Tamran', 'Ika', 'Alm. Tirwan', 'Kirana', 'Lintang', 'Mega', 'Nanda', 'Oka', 'Putri', 'Qori', 'Rangga',
     ])
-    // Tiga pasangan berbeda (Eka menikah dua kali = satu kartu), diberi "Istri ke-n".
-    expect(bima.pasangan.map((p) => [p.kartu.nama, p.label])).toEqual([
-      ['Eka', 'Istri ke-1'], ['Fitri', 'Istri ke-2'], ['Gita', 'Istri ke-3'],
+    // istri ke-1 → istri ke-2 → istri ke-1 (menikah kembali) → istri ke-3.
+    expect(bima.pasangan.map((p) => [p.kartu.nama, p.label, p.ulang])).toEqual([
+      ['Eka', 'Istri ke-1', false], ['Fitri', 'Istri ke-2', false], ['Eka', 'Istri ke-1', true], ['Gita', 'Istri ke-3', false],
     ])
+    expect(bima.pasangan.map((p) => p.unionId)).toEqual(['u1', 'u2', 'u3', 'u4'])
+  })
+
+  it('nomor urut di kartu: hanya anak kandung, sama dengan "Putra/Putri ke-n"', () => {
+    expect(bagan.simpul.get('bima').anak.map((a) => a.kartu.urut)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    expect(bagan.simpul.get('vino').kartu.urut).toBeNull() // anak sambung
+    expect(bagan.simpul.get('yoga').kartu.urut).toBeNull() // anak angkat
+    expect(bagan.simpul.get('wati').kartu.urut).toBe(1)
+    expect(bagan.akar.kartu.urut).toBeNull() // pangkal
+  })
+
+  it('di bawah setiap pernikahan semua anak menurut umur: anak sambung yang lebih tua di kiri, anak angkat yang lebih muda di kanan', () => {
+    expect(bagan.simpul.get('cahya').pasangan[0].anak.map(nama)).toEqual(['Vino', 'Wati'])
+    expect(bagan.simpul.get('lorvan').pasangan[0].anak.map(nama)).toEqual(['Kelvan', 'Yoga'])
+  })
+
+  it('anak sambung/angkat tanpa tanggal lahir di paling kanan; anak kandung tanpa tanggal tetap menurut nomornya', () => {
+    const d = structuredClone(data)
+    d.people.find((p) => p.id === 'vino').birth_y = null
+    const c = susunBagan(susunSilsilah(d)).simpul.get('cahya')
+    expect(c.pasangan[0].anak.map(nama)).toEqual(['Wati', 'Vino'])
   })
 
   it('pasangan tunggal tidak diberi label urutan', () => {
@@ -80,17 +102,18 @@ describe('susunBagan', () => {
     expect(bagan.simpul.get('wati').pasangan.find((p) => p.id === 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran' })
   })
 
-  it('anak dikelompokkan per pasangan; menikah lagi dengan pasangan yang sama tetap satu kelompok', () => {
+  it('anak di bawah hati pernikahannya masing-masing', () => {
     const bima = bagan.simpul.get('bima')
     expect(bima.pasangan.map((k) => [k.id, k.anak.map(nama)])).toEqual([
-      ['eka', ['Tamran', 'Ika', 'Alm. Tirwan', 'Mega', 'Nanda']],
+      ['eka', ['Tamran', 'Ika', 'Alm. Tirwan']],
       ['fitri', ['Kirana', 'Lintang']],
+      ['eka', ['Mega', 'Nanda']],
       ['gita', ['Oka', 'Putri', 'Qori', 'Rangga']],
     ])
   })
 
-  it('status berpisah menurut pernikahan terakhir dengan pasangan itu', () => {
-    expect(bagan.simpul.get('bima').pasangan.map((k) => k.berpisah)).toEqual([true, true, false])
+  it('status berpisah per pernikahan', () => {
+    expect(bagan.simpul.get('bima').pasangan.map((k) => k.berpisah)).toEqual([true, true, true, false])
     expect(bagan.simpul.get('cahya').pasangan[0].berpisah).toBe(false)
   })
 

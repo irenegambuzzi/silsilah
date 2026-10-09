@@ -2,7 +2,7 @@
 // yang menentukan: silsilah utama + pohon keluarga asal yang diberi akses).
 // HANYA MEMBACA: tidak ada insert, update, upsert, delete, atau rpc di sini
 // (aturanKode.test.js menjaganya). Galat dilempar apa adanya.
-import { KOLOM, KOLOM_PENGATURAN, PUNYA_TEMPAT_SAMPAH, TABEL_SILSILAH, pilihKolom, saringData } from './kolom.js'
+import { KOLOM, KOLOM_PENGATURAN, BISA_DISISIHKAN, TABEL_SILSILAH, pilihKolom, saringData } from './kolom.js'
 
 // Server mengembalikan paling banyak 1.000 baris per permintaan (batas
 // bawaan Supabase), padahal silsilah bisa lebih besar. Karena itu dimuat
@@ -17,8 +17,8 @@ export async function ambilSemua(klien, tabel) {
   let total = null
   for (let halaman = 0; halaman < BATAS_HALAMAN; halaman++) {
     let q = klien.from(tabel).select(kolom.join(','), halaman === 0 ? { count: 'exact' } : undefined)
-    // Yang ada di tempat sampah tidak ikut (yang berizin melihatnya di layar Tempat sampah).
-    if (PUNYA_TEMPAT_SAMPAH.has(tabel)) q = q.is('deleted_at', null)
+    // Yang disisihkan tidak ikut (yang berizin melihatnya di layar Data yang disisihkan).
+    if (BISA_DISISIHKAN.has(tabel)) q = q.is('deleted_at', null)
     for (const k of URUTAN[tabel] ?? ['id']) q = q.order(k)
     const { data, error, count } = await q.range(hasil.length, hasil.length + UKURAN_HALAMAN - 1)
     if (error) throw error

@@ -54,6 +54,12 @@ const PASANGAN = [
     ['teks', latar, 7, `nama di kartu (${latar})`],
     ['redup', latar, 7, `label kecil di kartu (${latar})`],
   ]),
+  // Tunas daun "belum dewasa" di pojok kartu (anak yang masih hidup), dan
+  // tepi nomor urut (redup) di setiap latar kartu: penanda grafis ≥ 3:1.
+  ...['k-tl-latar', 'k-tp-latar', 'k-pl-latar', 'k-pp-latar', 'k-x-latar', 'k-pangkal-latar'].map((latar) => [
+    'sukses', latar, 3, `tunas daun di kartu (${latar})`,
+  ]),
+  ['hati', 'kertas', 3, 'hati patah (berpisah) di lingkaran putih'],
   // Simbol ♂/♀ di lingkaran putih.
   ...['k-tl-simbol', 'k-tp-simbol', 'k-pl-simbol', 'k-pp-simbol', 'k-x-simbol', 'emas-teks', 'k-pangkal-wafat'].map((simbol) => [
     simbol, 'kertas', 4.5, `simbol ${simbol} di lingkaran putih`,

@@ -291,7 +291,7 @@ declare
   kolom text[];
   pembanding text[];
   terakhir record;
-  batch_sampah uuid := gen_random_uuid();
+  batch_sisih uuid := gen_random_uuid();
   batch_baru uuid;
 begin
   if saya is null or not public.can_edit() then
@@ -357,7 +357,7 @@ begin
         execute format('update public.%I t set deleted_at = now(), deleted_by = $2, delete_batch = $3
                         from jsonb_populate_record(null::public.%I, $1) r where %s',
                        e.table_name, e.table_name, private.key_predicate(e.row_key))
-          using e.row_key, saya, batch_sampah;
+          using e.row_key, saya, batch_sisih;
       elsif e.table_name = 'origin_tree_access' then
         execute format('delete from public.%I t using jsonb_populate_record(null::public.%I, $1) r where %s',
                        e.table_name, e.table_name, private.key_predicate(e.row_key))

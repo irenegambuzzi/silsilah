@@ -1,4 +1,4 @@
-// Tes laporan kesalahan, tempat sampah, dan hapus permanen. Semua FIKTIF.
+// Tes laporan kesalahan, data yang disisihkan, dan hapus permanen. Semua FIKTIF.
 import { beforeAll, describe, expect, it } from 'vitest'
 import { baris, buatDatabase, buatPengguna, jalankanFileDanPeriksa, klaimUntuk, sebagai } from './tiruan-supabase.js'
 import { pembantuSilsilah } from './pembantu-silsilah.js'
@@ -17,7 +17,7 @@ const ditolak = async (janji, kode) => {
   expect(e.code).toBe(kode)
   return e
 }
-const diSampah = async (tabel, id) => (await h.satu(`select deleted_at is not null as s from public.${tabel} where id = $1`, [id]))?.s
+const disisihkan = async (tabel, id) => (await h.satu(`select deleted_at is not null as s from public.${tabel} where id = $1`, [id]))?.s
 
 async function jadikanAnggota(nama, personId, { role = 'anggota', permissions = [], isOwner = false } = {}) {
   const u = await buatPengguna(db)
@@ -33,7 +33,7 @@ beforeAll(async () => {
                    '005_akses_silsilah.sql', '006_riwayat_undo.sql']) {
     expect(await jalankanFileDanPeriksa(db, f)).toEqual([])
   }
-  expect(await jalankanFileDanPeriksa(db, '007_tempat_sampah_laporan.sql')).toEqual([])
+  expect(await jalankanFileDanPeriksa(db, '007_disisihkan_laporan.sql')).toEqual([])
   h = pembantuSilsilah(db)
   kakek = await h.orang('Kakek'); nenek = await h.orang('Nenek')
   akar = await h.nikah(kakek, nenek); await h.aturPangkal(akar)
@@ -47,15 +47,15 @@ beforeAll(async () => {
   bapakM = await h.orang('Bapak M', { tree_id: t1 })
 
   await jadikanAnggota('Pemilik', kakek, { isOwner: true })
-  await jadikanAnggota('Asisten', nenek, { role: 'asisten', permissions: ['tempat_sampah', 'tindak_laporan'] })
+  await jadikanAnggota('Asisten', nenek, { role: 'asisten', permissions: ['sisihkan', 'tindak_laporan'] })
   await jadikanAnggota('Anggota A', a)
   await jadikanAnggota('Anggota B', b)
   await jadikanAnggota('Lihat N', n, { role: 'lihat' })
 }, 60000)
 
-describe('007_tempat_sampah_laporan.sql', () => {
+describe('007_disisihkan_laporan.sql', () => {
   it('semua pemeriksaan sesuai, dan aman dijalankan ulang', async () => {
-    expect(await jalankanFileDanPeriksa(db, '007_tempat_sampah_laporan.sql')).toEqual([])
+    expect(await jalankanFileDanPeriksa(db, '007_disisihkan_laporan.sql')).toEqual([])
   })
 })
 
@@ -93,14 +93,14 @@ describe('laporan kesalahan', () => {
   })
 })
 
-describe('siapa boleh membuang ke tempat sampah', () => {
+describe('siapa boleh memdisisihkan', () => {
   it('anggota biasa dan admin utama tanpa aal2 tidak bisa', async () => {
     const dup = await h.orang('Ganda Satu')
     await ditolak(buang('Anggota A', 'people', dup), 'TR001')
     await ditolak(buang('Pemilik', 'people', dup, 'aal1'), 'TR001')
     await expect(q('Anggota A', `update public.people set deleted_at = now() where id = $1`, [dup])).rejects.toThrow(/permission denied/)
   })
-  it('asisten berizin "tempat_sampah" dan admin utama (aal2) bisa', async () => {
+  it('asisten berizin "sisihkan" dan admin utama (aal2) bisa', async () => {
     expect(await buang('Asisten', 'people', await h.orang('Ganda Dua'))).toBeTruthy()
     expect(await buang('Pemilik', 'people', await h.orang('Ganda Tiga'), 'aal2')).toBeTruthy()
   })
@@ -134,7 +134,7 @@ describe('pengaman saat membuang', () => {
     const ganda = await h.orang('C2 Ganda', { birth_y: 1971 }); await h.anak(uAM, ganda)
     expect((await h.urutan(a)).length).toBe(3)
     const kelompok = await buang('Asisten', 'people', ganda)
-    expect(await diSampah('people', ganda)).toBe(true)
+    expect(await disisihkan('people', ganda)).toBe(true)
     expect((await h.satu(`select delete_batch from public.children where child_id = $1`, [ganda])).delete_batch).toBe(kelompok)
     expect((await h.urutan(a)).map((r) => r.child_id)).toEqual([c1, c2])
     expect((await q('Anggota A', `select id from public.people where id = $1`, [ganda]))).toEqual([])
@@ -148,7 +148,7 @@ describe('memulihkan', () => {
     const kelompok = await buang('Asisten', 'people', ganda)
     await ditolak(q('Anggota A', `select public.restore_batch($1)`, [kelompok]), 'TR001')
     await q('Asisten', `select public.restore_batch($1)`, [kelompok])
-    expect(await diSampah('people', ganda)).toBe(false)
+    expect(await disisihkan('people', ganda)).toBe(false)
     expect((await h.urutan(a)).map((r) => r.child_id)).toEqual([c1, ganda, c2])
     await buang('Asisten', 'people', ganda) // rapikan lagi untuk tes berikutnya
   })
@@ -159,7 +159,7 @@ describe('memulihkan', () => {
     await buang('Asisten', 'people', x)
     const batch = (await h.satu(`select batch_id from public.change_log where table_name = 'people' and op = 'hapus' order by id desc limit 1`)).batch_id
     await q('Asisten', `select public.undo_batch($1)`, [batch])
-    expect(await diSampah('people', x)).toBe(false)
+    expect(await disisihkan('people', x)).toBe(false)
     expect((await h.satu(`select count(*)::int as n from public.unions where partner1_id = $1 and deleted_at is null`, [x])).n).toBe(1)
   })
 
@@ -215,14 +215,14 @@ describe('hapus permanen', () => {
     expect((await h.satu(`select count(*)::int as n from public.children where deleted_at is not null`)).n).toBe(0)
   })
 
-  it('mengosongkan tempat sampah: kalau satu kelompok tidak bisa dihapus, tidak ada yang dihapus', async () => {
+  it('menghapus permanen semua data yang disisihkan: kalau satu kelompok tidak bisa dihapus, tidak ada yang dihapus', async () => {
     const x = await h.orang('Mantan Anggota'); await h.anak(uBN, x)
     await jadikanAnggota('Mantan', x)
     await db.query(`update public.members set status = 'dicabut', revoked_at = now() where id = $1`, [akun.Mantan.memberId])
     await buang('Asisten', 'people', x)
     const lain = await h.orang('Ganda Lain'); await buang('Asisten', 'people', lain)
     await ditolak(q('Pemilik', `select public.empty_trash('HAPUS')`, [], 'aal2'), 'TR005')
-    expect(await diSampah('people', lain)).toBe(true)
+    expect(await disisihkan('people', lain)).toBe(true)
   })
 })
 

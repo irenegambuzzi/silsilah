@@ -6,8 +6,8 @@
 --   Silsilah utama        baca: semua anggota (termasuk "hanya melihat")
 --                         ubah/tambah: anggota yang bisa mengedit
 --                         (can_edit: bukan "hanya melihat", tidak ditahan)
---                         hapus: tidak ada (hanya lewat tempat sampah, 007)
---   Data di tempat sampah baca: hanya izin "tempat_sampah" (+ admin utama)
+--                         hapus: tidak ada (hanya lewat penyisihan, 007)
+--   Data yang disisihkan baca: hanya izin "sisihkan" (+ admin utama)
 --                         ubah: tidak ada
 --   Pohon keluarga asal   baca: admin utama; anggota yang diberi izin; dan
 --                         kalau "semua keturunan" menyala: keturunan DARAH
@@ -123,7 +123,7 @@ begin
     execute format('drop policy if exists baca on public.%I', t);
     execute format($p$
       create policy baca on public.%I for select to authenticated using (
-        (deleted_at is null or (select public.has_perm('tempat_sampah')))
+        (deleted_at is null or (select public.has_perm('sisihkan')))
         and (
           (tree_id is null and (select public.current_member_id()) is not null)
           or tree_id in (select public.viewable_origin_trees())

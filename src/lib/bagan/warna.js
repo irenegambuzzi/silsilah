@@ -17,7 +17,8 @@ export function warnaKartu(kartu) {
 }
 
 // Baris legenda, urut seperti di legenda. "Jenis kelamin tidak diketahui"
-// hanya ditampilkan kalau memang ada kartu seperti itu.
+// hanya ditampilkan SELAMA masih ada orang yang jenis kelaminnya belum
+// diketahui (hilang sendiri setelah semuanya diisi).
 export const WARNA_LEGENDA = [
   'keturunan-l', 'keturunan-p', 'pasangan-l', 'pasangan-p', 'pangkal', 'keturunan-wafat', 'pasangan-wafat', 'x',
 ]

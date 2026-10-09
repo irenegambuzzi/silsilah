@@ -26,8 +26,8 @@ export const KOLOM = {
 // Dari baris settings (satu baris) hanya dua ini yang dipakai tampilan.
 export const KOLOM_PENGATURAN = ['root_union_id', 'generation_terms']
 
-// Tabel yang punya tempat sampah (kolom deleted_at).
-export const PUNYA_TEMPAT_SAMPAH = new Set(['people', 'unions', 'children'])
+// Tabel yang punya data yang disisihkan (kolom deleted_at).
+export const BISA_DISISIHKAN = new Set(['people', 'unions', 'children'])
 
 export const TABEL_SILSILAH = Object.keys(KOLOM)
 

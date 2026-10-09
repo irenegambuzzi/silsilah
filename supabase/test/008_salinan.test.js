@@ -22,7 +22,7 @@ async function jadikanAnggota(nama, personId, { isOwner = false } = {}) {
 beforeAll(async () => {
   db = await buatDatabase()
   for (const f of ['001_dasar_keamanan.sql', '002_silsilah.sql', '003_aturan_silsilah.sql', '004_akses.sql',
-                   '005_akses_silsilah.sql', '006_riwayat_undo.sql', '007_tempat_sampah_laporan.sql']) {
+                   '005_akses_silsilah.sql', '006_riwayat_undo.sql', '007_disisihkan_laporan.sql']) {
     expect(await jalankanFileDanPeriksa(db, f)).toEqual([])
   }
   expect(await jalankanFileDanPeriksa(db, '008_salinan.sql')).toEqual([])
@@ -94,7 +94,7 @@ describe('salinan otomatis sebelum hapus permanen (BUKTI)', () => {
     expect(diSalinan.delete_batch).toBe(kelompok)
   })
 
-  it('mengosongkan tempat sampah juga membuat salinan dulu', async () => {
+  it('menghapus permanen semua data yang disisihkan juga membuat salinan dulu', async () => {
     const x = await h.orang('Ganda Dua')
     await q('Pemilik', `select public.move_to_trash('people', $1)`, [x], 'aal2')
     const sebelum = await jumlahSalinan('sebelum_hapus_permanen')

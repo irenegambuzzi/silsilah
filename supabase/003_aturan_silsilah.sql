@@ -21,7 +21,7 @@
 --      disisipkan menurut tanggal lahir (kalau tidak ada tanggal, di urutan
 --      terakhir). Anak sambung dan anak angkat TIDAK bernomor ("Putra/Putri
 --      ke-n" hanya menghitung anak kandung orang tua itu). Urutan
---      dirapikan otomatis kalau hubungan dibuang ke tempat sampah atau
+--      dirapikan otomatis kalau hubungan didisisihkan atau
 --      dipindah. Urutan yang bertentangan dengan tanggal lahir tidak
 --      ditolak, tetapi muncul di birth_rank_warnings().
 --
@@ -29,7 +29,7 @@
 --   SL001 siklus · SL002 pangkal punya orang tua · SL003 pohon tidak cocok
 --   SL004 pasangan diberi orang tua · SL005 pihak garis keturunan bukan
 --   keturunan pangkal · SL006 kolom tidak boleh diubah · SL007 urutan lahir
---   bukan untuk anak kandung orang tua itu · SL008 data di tempat sampah
+--   bukan untuk anak kandung orang tua itu · SL008 data yang disisihkan
 --   SL009 pohon keluarga asal bukan untuk pasangan di silsilah utama
 --
 -- Catatan untuk impor data (migrasi): atur pasangan pangkal lebih dulu,
@@ -356,7 +356,7 @@ begin
 
   if new.deleted_at is null then
     if p1.deleted_at is not null then
-      perform private.fail('SL008', 'Orang ini sedang berada di tempat sampah. Pulihkan dulu sebelum dipakai.');
+      perform private.fail('SL008', 'Orang ini sedang disisihkan. Pulihkan dulu sebelum dipakai.');
     end if;
     if new.partner2_id is not null then
       select * into p2 from public.people where id = new.partner2_id;
@@ -364,7 +364,7 @@ begin
         perform private.fail('SL003', 'Kedua pasangan harus berada di pohon yang sama.');
       end if;
       if p2.deleted_at is not null then
-        perform private.fail('SL008', 'Pasangan ini sedang berada di tempat sampah. Pulihkan dulu sebelum dipakai.');
+        perform private.fail('SL008', 'Pasangan ini sedang disisihkan. Pulihkan dulu sebelum dipakai.');
       end if;
     end if;
 
@@ -428,7 +428,7 @@ begin
   if new.deleted_at is null
      and (tg_op = 'INSERT' or new.union_id is distinct from old.union_id or old.deleted_at is not null) then
     if u.deleted_at is not null or anak.deleted_at is not null then
-      perform private.fail('SL008', 'Data ini sedang berada di tempat sampah. Pulihkan dulu sebelum dipakai.');
+      perform private.fail('SL008', 'Data ini sedang disisihkan. Pulihkan dulu sebelum dipakai.');
     end if;
 
     if private.is_ancestor_or_self(new.child_id, u.partner1_id)
@@ -442,8 +442,8 @@ begin
       if akar.id is not null and new.child_id in (akar.partner1_id, akar.partner2_id) then
         perform private.fail('SL002', 'Pasangan pangkal tidak boleh punya orang tua di silsilah utama.');
       end if;
-      -- Hanya untuk hubungan baru atau pindahan: saat memulihkan dari tempat
-      -- sampah, orangnya sementara tidak terhitung keturunan (hubungan yang
+      -- Hanya untuk hubungan baru atau pindahan: saat memulihkan data yang
+      -- disisihkan, orangnya sementara tidak terhitung keturunan (hubungan yang
       -- dipulihkan inilah yang membuatnya keturunan).
       if (tg_op = 'INSERT' or new.union_id is distinct from old.union_id)
          and exists (
@@ -565,7 +565,7 @@ begin
     perform private.fail('SL003', 'Pasangan pangkal harus berada di silsilah utama.');
   end if;
   if u.deleted_at is not null then
-    perform private.fail('SL008', 'Pernikahan ini sedang berada di tempat sampah. Pulihkan dulu sebelum dipakai.');
+    perform private.fail('SL008', 'Pernikahan ini sedang disisihkan. Pulihkan dulu sebelum dipakai.');
   end if;
   if exists (
     select 1 from public.children c

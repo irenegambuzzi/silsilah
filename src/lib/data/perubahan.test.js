@@ -28,12 +28,12 @@ describe('terapkanPerubahan', () => {
     expect(lama.people[0].full_name).toBe('A Baru')
   })
 
-  it('UPDATE ke tempat sampah (deleted_at terisi) membuang baris', () => {
+  it('UPDATE yang menyisihkan (deleted_at terisi) membuang baris', () => {
     const d = terapkanPerubahan(awal(), ev('people', 'UPDATE', { id: 'b', full_name: 'B Contoh', version: 2, deleted_at: '2026-10-08T00:00:00Z' }))
     expect(d.people.map((p) => p.id)).toEqual(['a'])
   })
 
-  it('penanda sync_removals membuang baris (untuk yang tidak melihat isi tempat sampah)', () => {
+  it('penanda sync_removals membuang baris (untuk yang tidak melihat data yang disisihkan)', () => {
     const d = terapkanPerubahan(awal(), ev('sync_removals', 'INSERT', { table_name: 'children', row_id: 'c1', tree_id: null }))
     expect(d.children).toEqual([])
   })

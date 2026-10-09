@@ -4,15 +4,15 @@
 -- live lewat Supabase Realtime. Realtime menghormati RLS: setiap anggota
 -- hanya menerima perubahan pada baris yang memang boleh ia baca.
 --
--- Akibat RLS itu, satu jenis perubahan TIDAK sampai: baris yang dibuang ke
--- tempat sampah. Setelah dibuang, baris itu tidak lagi boleh dibaca anggota
+-- Akibat RLS itu, satu jenis perubahan TIDAK sampai: baris yang disisihkan.
+-- Setelah disisihkan, baris itu tidak lagi boleh dibaca anggota
 -- biasa, jadi Realtime tidak mengirim apa pun kepadanya, dan orang itu akan
 -- tetap tampil di HP anggota sampai aplikasi memuat ulang. Karena itu:
 --
 --   sync_removals   penanda "baris ini keluar dari tampilan": hanya nama
 --                   tabel, id baris, pohon, dan waktu. TANPA isi data.
---                   Diisi trigger saat baris people/unions/children dibuang
---                   ke tempat sampah; penanda yang berumur lebih dari 1 hari
+--                   Diisi trigger saat baris people/unions/children disisihkan;
+--                   penanda yang berumur lebih dari 1 hari
 --                   dihapus sendiri (aplikasi yang lama tertutup memuat
 --                   ulang semua data saat dibuka lagi).
 --
@@ -128,7 +128,7 @@ select 'Hak tulis pengguna atas sync_removals',
             then 'ada' else 'tidak ada' end,
        'tidak ada'
 union all
-select 'Trigger penanda tempat sampah (dari 3)',
+select 'Trigger penanda data yang disisihkan (dari 3)',
        (select count(*)::text from pg_trigger
         where tgname = 'sync_removals' and not tgisinternal
           and tgrelid in ('public.people'::regclass, 'public.unions'::regclass, 'public.children'::regclass)),

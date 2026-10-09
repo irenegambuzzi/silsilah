@@ -77,7 +77,7 @@ create table if not exists public.members (
   revoked_by uuid references public.members (id) on delete set null,
 
   constraint members_permissions_known check (permissions <@ array[
-    'batalkan_orang_lain', 'tindak_laporan', 'tempat_sampah', 'buat_undangan',
+    'batalkan_orang_lain', 'tindak_laporan', 'sisihkan', 'buat_undangan',
     'lihat_anggota', 'akses_sementara', 'tambah_kuota_kontak', 'unduh_kontak',
     'kelola_jadwal', 'bendahara', 'konfirmasi_kabar', 'bagikan_whatsapp',
     'status_pernikahan']::text[]),

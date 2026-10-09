@@ -1,5 +1,5 @@
 // Tes sinkron live (SQL 014): tabel yang didaftarkan ke Realtime, dan
-// penanda baris yang dibuang ke tempat sampah. Semua orang FIKTIF.
+// penanda baris yang didisisihkan. Semua orang FIKTIF.
 import { beforeAll, describe, expect, it } from 'vitest'
 import { baris, buatDatabaseLengkap, jalankanFileDanPeriksa, klaimUntuk, sebagai } from './tiruan-supabase.js'
 import { pembantuSilsilah } from './pembantu-silsilah.js'
@@ -32,7 +32,7 @@ beforeAll(async () => {
   t1 = await h.pohonAsal(menantu)
   kerabatAsal = await h.orang('Kerabat Asal Contoh', { tree_id: t1 })
   pemilik = await a.anggota(kakek, { isOwner: true, nama: 'Admin Utama Contoh' })
-  asisten = await a.anggota(nenek, { role: 'asisten', permissions: ['tempat_sampah'], nama: 'Asisten Contoh' })
+  asisten = await a.anggota(nenek, { role: 'asisten', permissions: ['sisihkan'], nama: 'Asisten Contoh' })
   biasa = await a.anggota(anak, { nama: 'Anggota Biasa Contoh' })
 }, 60000)
 
@@ -52,7 +52,7 @@ describe('014_sinkron_live.sql', () => {
   })
 })
 
-describe('penanda baris yang dibuang ke tempat sampah', () => {
+describe('penanda baris yang didisisihkan', () => {
   it('membuang orang → penanda untuk hubungan anak dan orangnya, TANPA isi data; anggota biasa bisa membacanya', async () => {
     const x = await cucuBaru('Cucu Satu Contoh')
     await buang(asisten, 'people', x.id)

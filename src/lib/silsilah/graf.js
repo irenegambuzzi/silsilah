@@ -5,7 +5,7 @@
 //   { people, unions, children, birth_ranks, root_union_id }
 //
 // `pohon` null = silsilah utama; terisi = satu pohon keluarga asal (id di
-// origin_trees). Baris yang ada di tempat sampah diabaikan. Id hanya
+// origin_trees). Baris yang disisihkan diabaikan. Id hanya
 // dianggap penanda, jadi bentuknya bebas (uuid atau teks).
 import { urutkanPernikahan } from './urutan.js'
 
@@ -18,7 +18,7 @@ export function bangunGraf(data, { pohon = null } = {}) {
   const unions = new Map()
   for (const u of data.unions) {
     if (!aktif(u) || (u.tree_id ?? null) !== pohon || !orang.has(u.partner1_id)) continue
-    // Pasangan yang orangnya sudah di tempat sampah dianggap tidak diketahui.
+    // Pasangan yang orangnya sudah disisihkan dianggap tidak diketahui.
     unions.set(u.id, orang.has(u.partner2_id) ? u : { ...u, partner2_id: null })
   }
 

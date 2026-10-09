@@ -119,7 +119,7 @@ describe('hitungGenerasi', () => {
     expect(istilahGenerasi(g.get('a12'))).toBeNull()
   })
 
-  it('baris di tempat sampah diabaikan', () => {
+  it('baris yang disisihkan diabaikan', () => {
     const d = bangunKeluargaFiktif()
     d.children.find((c) => c.child_id === 'bima').deleted_at = '2026-02-01T00:00:00Z'
     const { gen: g } = hitung(d)

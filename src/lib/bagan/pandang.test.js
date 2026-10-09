@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SKALA_MAX, SKALA_MIN, TEPI, batasiSkala, geser, jagaTerlihat, pandangAwal, pasDiLayar, pusatkan, zoomDi } from './pandang.js'
+import { SKALA_MAX, SKALA_MIN, SKALA_TERBACA_HP, TEPI, batasiSkala, geser, jagaTerlihat, pandangAwal, pandangHp, pasDiLayar, pusatkan, zoomDi } from './pandang.js'
 
 const bingkai = { lebar: 400, tinggi: 600 }
 
@@ -55,6 +55,36 @@ describe('tampilan awal', () => {
     const p = pasDiLayar(isi, bingkai)
     expect(isi.lebar * p.k).toBeLessThanOrEqual(bingkai.lebar - 2 * TEPI + 1e-6)
     expect(isi.tinggi * p.k).toBeLessThanOrEqual(bingkai.tinggi - 2 * TEPI + 1e-6)
+  })
+  it('layar lebar: legenda di kiri bawah dan bilah atas tidak menutupi bagan', () => {
+    const layar = { lebar: 1400, tinggi: 800 }
+    const isi = { lebar: 3000, tinggi: 900 }
+    const halangan = { atas: 150, legenda: { lebar: 300, tinggi: 330 } }
+    const p = pandangAwal(isi, layar, halangan)
+    const kiri = p.x
+    const atas = p.y
+    const kanan = p.x + isi.lebar * p.k
+    const bawah = p.y + isi.tinggi * p.k
+    expect(atas).toBeGreaterThanOrEqual(halangan.atas)
+    // Tidak menindih kotak legenda: seluruhnya di atas legenda ATAU di kanan legenda.
+    const atasLegenda = layar.tinggi - halangan.legenda.tinggi
+    expect(bawah <= atasLegenda + 1e-6 || kiri >= halangan.legenda.lebar - 1e-6).toBe(true)
+    expect(kanan).toBeLessThanOrEqual(layar.lebar)
+    expect(bawah).toBeLessThanOrEqual(layar.tinggi)
+  })
+  it('tanpa halangan: sama dengan sebelumnya', () => {
+    expect(pandangAwal({ lebar: 4000, tinggi: 1000 }, bingkai, {})).toEqual(pandangAwal({ lebar: 4000, tinggi: 1000 }, bingkai))
+  })
+  it('HP: mulai dari ukuran yang terbaca, pasangan pangkal di tengah, tepat di bawah bilah atas', () => {
+    const hp = { lebar: 390, tinggi: 760 }
+    const pangkal = { x: 5000, y: 16, lebar: 410 } // dua kartu + hati di bagan selebar ribuan piksel
+    const p = pandangHp(pangkal, hp, { atas: 200 })
+    expect(p.k).toBeGreaterThanOrEqual(SKALA_TERBACA_HP)
+    expect(p.k).toBeLessThanOrEqual(1)
+    expect((pangkal.x + pangkal.lebar / 2) * p.k + p.x).toBeCloseTo(hp.lebar / 2)
+    expect(pangkal.y * p.k + p.y).toBe(200 + TEPI)
+    // Bandingkan: memperlihatkan seluruh bagan selebar 12.000 px membuat kartu tak terbaca.
+    expect(pandangAwal({ lebar: 12000, tinggi: 1500 }, hp).k).toBeLessThan(0.1)
   })
   it('pusatkan menaruh titik isi di tengah bingkai', () => {
     const p = pusatkan({ x: 0, y: 0, k: 2 }, { x: 500, y: 300 }, bingkai)

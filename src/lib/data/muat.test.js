@@ -1,5 +1,5 @@
 // Memuat semua data silsilah: per halaman, hanya kolom yang diizinkan,
-// tanpa isi tempat sampah, dan tanpa menulis apa pun. Data FIKTIF.
+// tanpa data yang disisihkan, dan tanpa menulis apa pun. Data FIKTIF.
 import { describe, expect, it } from 'vitest'
 import { buatKlienTiruan, GALAT } from '../../test/klienTiruan.js'
 import { UKURAN_HALAMAN, ambilSemua, muatSemua } from './muat.js'
@@ -21,7 +21,7 @@ describe('ambilSemua', () => {
     expect(await ambilSemua(klien, 'people')).toHaveLength(1250)
   })
 
-  it('yang ada di tempat sampah tidak ikut', async () => {
+  it('yang disisihkan tidak ikut', async () => {
     const people = [...orangFiktif(3), { id: 'dibuang', tree_id: null, full_name: 'Dibuang Contoh', deleted_at: '2026-10-01T00:00:00Z' }]
     const r = await ambilSemua(buatKlienTiruan({ tabel: { people } }), 'people')
     expect(r.map((p) => p.id)).not.toContain('dibuang')

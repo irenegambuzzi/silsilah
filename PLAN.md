@@ -27,7 +27,7 @@ Istilah:
    - Gagal memuat → pesan error yang jelas + tombol "Coba lagi".
    - Database kosong → "Belum ada data, hubungi admin".
    - Project Supabase dijeda → "Aplikasi sedang dipulihkan".
-5. **Tidak ada yang hilang tanpa disengaja.** Semua perubahan tercatat dan bisa dibatalkan. Tempat sampah hanya untuk kesalahan input. Hapus permanen hanya oleh admin utama, setelah snapshot otomatis.
+5. **Tidak ada yang hilang tanpa disengaja.** Semua perubahan tercatat dan bisa dibatalkan. Menyisihkan data ("Sisihkan") hanya untuk kesalahan input. Hapus permanen hanya oleh admin utama, setelah snapshot otomatis.
 6. **Tidak ada keturunan yang disembunyikan atau dihapus** hanya karena tidak punya anak atau sudah lama wafat.
 7. **Data kontak dan lokasi diperlakukan paling ketat:** terenkripsi, dicatat setiap kali dibuka, tidak pernah disimpan offline, dan tidak pernah ikut cetakan atau notifikasi.
 8. **Semua teks berbahasa Indonesia**, termasuk pesan error. Semua teks dikumpulkan di `src/teks/id.js`.
@@ -180,8 +180,8 @@ Keterangan: ✓ = boleh, ✗ = tidak, **izin** = hanya asisten yang dicentang iz
 | Membatalkan perubahan **orang lain** | ✗ | ✗ | izin | ✓ |
 | "Laporkan kesalahan" | ✗ | ✓ | ✓ | ✓ |
 | Menindaklanjuti laporan | ✗ | ✗ | izin | ✓ |
-| Memindahkan ke tempat sampah dan memulihkan | ✗ | ✗ | izin | ✓ |
-| Hapus permanen, mengosongkan tempat sampah | ✗ | ✗ | ✗ | ✓ |
+| Menyisihkan data ("Sisihkan") dan memulihkannya | ✗ | ✗ | izin | ✓ |
+| Hapus permanen (satu kelompok, atau semua data yang disisihkan) | ✗ | ✗ | ✗ | ✓ |
 | Membuka data kontak (batas harian) | ✗ | ✓ (20) | ✓ (50) | ✓ (tanpa batas) |
 | Menambah kuota harian data kontak | ✗ | ✗ | izin | ✓ |
 | Mengunduh data kontak (PDF berpassword) | ✗ | ✗ | izin | ✓ |
@@ -209,7 +209,7 @@ Keterangan: ✓ = boleh, ✗ = tidak, **izin** = hanya asisten yang dicentang iz
 
 **Daftar izin asisten** (kolom `members.permissions`, berupa centang):
 
-`batalkan_orang_lain`, `tindak_laporan`, `tempat_sampah`, `buat_undangan`, `lihat_anggota`, `akses_sementara`, `tambah_kuota_kontak`, `unduh_kontak`, `kelola_jadwal`, `bendahara`, `konfirmasi_kabar`, `bagikan_whatsapp`, `status_pernikahan` (menandai pernikahan orang lain berakhir karena berpisah; ditambahkan Oktober 2026).
+`batalkan_orang_lain`, `tindak_laporan`, `sisihkan` (dulu `tempat_sampah`), `buat_undangan`, `lihat_anggota`, `akses_sementara`, `tambah_kuota_kontak`, `unduh_kontak`, `kelola_jadwal`, `bendahara`, `konfirmasi_kabar`, `bagikan_whatsapp`, `status_pernikahan` (menandai pernikahan orang lain berakhir karena berpisah; ditambahkan Oktober 2026).
 
 **Aturan tambahan:**
 
@@ -234,7 +234,7 @@ Dipakai di tabel data utama (`people`, `unions`, `children`, `gatherings`, `cash
 | `id` uuid PK | |
 | `version` int | Dinaikkan trigger di setiap update. Dipakai untuk mendeteksi edit bersamaan. |
 | `created_at/by`, `updated_at/by` | Diisi trigger dari anggota yang login, bukan dari klien. |
-| `deleted_at/by`, `delete_batch` | Hanya di tabel yang punya tempat sampah. |
+| `deleted_at/by`, `delete_batch` | Hanya di tabel yang datanya bisa disisihkan. |
 
 ### 5.3 Tanggal kabur
 
@@ -579,7 +579,7 @@ Rinciannya ada di bagian 7.
 
 | Data | Baca | Tulis |
 |---|---|---|
-| Silsilah utama (`tree_id` null) | `current_member()` | `can_edit()`. Hapus = RPC tempat sampah (izin). Hapus permanen = RPC admin utama. Tambahan (trigger SQL 005): status pernikahan berakhir karena berpisah hanya oleh salah satu pasangan, admin utama, atau izin `status_pernikahan`; `marital_choice` hanya oleh orangnya sendiri. |
+| Silsilah utama (`tree_id` null) | `current_member()` | `can_edit()`. Hapus = RPC sisihkan (izin). Hapus permanen = RPC admin utama. Tambahan (trigger SQL 005): status pernikahan berakhir karena berpisah hanya oleh salah satu pasangan, admin utama, atau izin `status_pernikahan`; `marital_choice` hanya oleh orangnya sendiri. |
 | Pohon keluarga asal | `can_view_origin()` | admin utama |
 | `change_log` | anggota, asisten, admin (bukan "lihat") | hanya trigger |
 | `members` | baris sendiri; daftar lengkap: izin `lihat_anggota`; nama tampilan lewat fungsi `member_names()` | admin utama (undangan: izin `buat_undangan`, lewat RPC) |
@@ -742,7 +742,7 @@ Setiap bulan admin utama mendapat daftar anggota yang **tidak aktif lebih dari 1
 
 ---
 
-## 8. Riwayat, Undo, Laporan, Tempat Sampah, dan Edit Bersamaan
+## 8. Riwayat, Undo, Laporan, Data yang Disisihkan, dan Edit Bersamaan
 
 ### 8.1 Riwayat (`change_log`)
 
@@ -768,19 +768,21 @@ Klien tidak bisa menulis atau mengubah riwayat. Ada dua pengecualian:
 
 - **Anggota** hanya bisa membatalkan **perubahannya sendiri**. Membatalkan perubahan orang lain hanya untuk asisten dengan izin `batalkan_orang_lain` dan admin.
 - Undo berlaku untuk satu batch utuh. Undo ditolak kalau data sudah diubah lagi sesudahnya: "Data ini sudah diubah lagi oleh Ratna pada 14.20."
-- Undo untuk "tambah" berarti memindahkan ke tempat sampah. Undo sendiri juga tercatat, sehingga bisa dibatalkan lagi.
+- Undo untuk "tambah" berarti menyisihkan data itu. Undo sendiri juga tercatat, sehingga bisa dibatalkan lagi.
 - Setelah setiap simpan muncul *toast* "Tersimpan. [Batalkan]".
 
 ### 8.3 Laporkan kesalahan
 
 - Anggota biasa **tidak bisa menghapus apa pun**. Di setiap kartu, detail, dan kabar ada tombol **"Laporkan kesalahan"** dengan pilihan alasan (data salah, data ganda, salah cabang, lainnya) dan pesan.
-- Asisten dengan izin `tindak_laporan` dan admin menerima notifikasi. Mereka menindaklanjuti dengan memperbaiki, memindahkan anak ke orang tua yang benar, atau membuang ke tempat sampah, lalu menutup laporan. Pelapor diberi tahu hasilnya.
+- Asisten dengan izin `tindak_laporan` dan admin menerima notifikasi. Mereka menindaklanjuti dengan memperbaiki, memindahkan anak ke orang tua yang benar, atau menyisihkan data yang salah input, lalu menutup laporan. Pelapor diberi tahu hasilnya.
 
-### 8.4 Tempat sampah
+### 8.4 Data yang disisihkan
 
-- **Hanya untuk kesalahan input** (data ganda, salah cabang). Keturunan yang sah tidak pernah dibuang. Aplikasi mengingatkan hal ini di dialog hapus.
-- **Memindahkan ke sampah dan memulihkan**: asisten dengan izin `tempat_sampah` dan admin. Orang yang masih punya keturunan aktif tidak bisa dibuang sebelum anak-anaknya dipindahkan.
-- **Hapus permanen dan mengosongkan sampah**: **hanya admin utama**, dengan konfirmasi mengetik "HAPUS". Sebelumnya dibuat snapshot otomatis.
+**Istilah (Oktober 2026):** kata "tempat sampah" tidak dipakai di tulisan mana pun karena kurang sopan untuk data keluarga. Tombolnya **"Sisihkan"**, layarnya **"Data yang disisihkan"**, izinnya `sisihkan`, dan file SQL-nya `007_disisihkan_laporan.sql`. Nama fungsi teknis (`move_to_trash`, `empty_trash`) tetap, karena tidak pernah tampil.
+
+- **Hanya untuk kesalahan input** (data ganda, salah cabang). Keturunan yang sah tidak pernah disisihkan. Aplikasi mengingatkan hal ini di dialog "Sisihkan".
+- **Menyisihkan dan memulihkan**: asisten dengan izin `sisihkan` dan admin. Orang yang masih punya keturunan aktif tidak bisa disisihkan sebelum anak-anaknya dipindahkan.
+- **Hapus permanen** (satu kelompok, atau semua data yang disisihkan sekaligus): **hanya admin utama**, dengan konfirmasi mengetik "HAPUS". Sebelumnya dibuat snapshot otomatis.
 - Salah cabang biasanya diperbaiki dengan **"Pindahkan ke orang tua lain"**. Ini dihitung edit biasa, jadi anggota bisa melakukannya, dan perubahan itu tercatat serta bisa dibatalkan.
 
 ### 8.5 Edit bersamaan dan sinkron live
@@ -789,7 +791,7 @@ Klien tidak bisa menulis atau mengubah riwayat. Ada dua pengecualian:
 - Peringatan "Data ini baru saja diubah oleh Ratna 3 menit lalu" muncul saat membuka form. Banner muncul kalau ada perubahan saat sedang mengedit.
 - Saat menyimpan, aplikasi hanya mengirim kolom yang diubah, dengan syarat `version` masih sama. Kalau berbeda, dilakukan merge per kolom: kolom yang bentrok ditampilkan "Versi Anda" berdampingan dengan "Versi Ratna" untuk dipilih.
 - Tidak ada penulisan saat offline.
-- **Ditetapkan di langkah 1.20:** semua data silsilah dimuat per halaman (batas 1.000 baris per permintaan di Supabase), hanya dengan kolom yang terdaftar di `src/lib/data/kolom.js`. Realtime menghormati RLS, sehingga baris yang dibuang ke tempat sampah tidak pernah "terkirim" ke anggota biasa; karena itu SQL 014 menambah tabel penanda `sync_removals` (hanya nama tabel + id, tanpa isi, dihapus sendiri setelah 1 hari). Data diambil ulang saat sambungan live pulih, saat internet tersambung lagi, dan saat aplikasi dibuka kembali setelah lebih dari 1 menit. Perubahan akses pohon keluarga asal baru terlihat setelah data diambil ulang.
+- **Ditetapkan di langkah 1.20:** semua data silsilah dimuat per halaman (batas 1.000 baris per permintaan di Supabase), hanya dengan kolom yang terdaftar di `src/lib/data/kolom.js`. Realtime menghormati RLS, sehingga baris yang disisihkan tidak pernah "terkirim" ke anggota biasa; karena itu SQL 014 menambah tabel penanda `sync_removals` (hanya nama tabel + id, tanpa isi, dihapus sendiri setelah 1 hari). Data diambil ulang saat sambungan live pulih, saat internet tersambung lagi, dan saat aplikasi dibuka kembali setelah lebih dari 1 menit. Perubahan akses pohon keluarga asal baru terlihat setelah data diambil ulang.
 
 ### 8.6 Deteksi aktivitas tidak wajar
 
@@ -1020,7 +1022,7 @@ Tempat semua anggota keluarga cepat mengetahui kabar penting.
 | 14 | **Kas** | Untuk semua: total, per kategori, dan daftar pengeluaran. Untuk bendahara: pencatatan dan foto bukti. Tutup buku, laporan PDF. |
 | 15 | **Riwayat perubahan** | Siapa/apa/kapan + Batalkan (sesuai hak) |
 | 16 | **Laporan** | Untuk asisten/admin: daftar laporan dan tindak lanjut |
-| 17 | **Tempat sampah** | Pulihkan (izin); Hapus permanen/Kosongkan (admin utama) |
+| 17 | **Data yang disisihkan** | Pulihkan (izin); Hapus permanen satu kelompok atau semuanya (admin utama) |
 | 18 | **Cetak/PDF cabang** | Format Daftar atau Bagan, berhalaman-halaman, tanpa kontak |
 | 19 | **Kotak masuk** | Semua notifikasi |
 | 20 | **Saya / Pengaturan** | Ukuran huruf, kontras, notifikasi, "Sedang berada di …", Tambah perangkat, Perangkat saya, Google, Keluar |
@@ -1052,7 +1054,14 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
   - keturunan laki-laki biru, keturunan perempuan pink, pasangan laki-laki hijau sage, pasangan perempuan peach, jenis kelamin tidak diketahui abu;
   - **kedua** kartu pasangan pangkal emas (latar krem keemasan, bingkai emas); kalau wafat tetap emas, tanda wafat cukup strip atas dan lingkaran simbol hitam arang, ditambah "Alm./Almh.";
   - keturunan wafat: seluruh kartu hitam arang tua dengan tulisan terang; pasangan wafat: hitam arang yang lebih muda dengan tulisan putih; simbol ♂/♀ tetap berwarna sesuai jenis kelamin.
-- **Garis**: setiap pernikahan punya ikon hati di antara kedua pasangan; garis ke anak keluar dari hati itu (turun lurus, lalu bercabang siku-siku ke setiap anak). **Garis putus-putus hanya untuk pernikahan yang berakhir karena berpisah**; ditinggal wafat atau masih menikah memakai garis biasa.
+- **Garis**: setiap pernikahan punya ikon hati di antara kedua pasangan; garis ke anak keluar dari hati itu (turun lurus, lalu bercabang siku-siku ke setiap anak). Pernikahan yang berakhir karena berpisah: **ikon hati patah** (terbelah dua) **dan garis putus-putus**. Ditinggal wafat atau masih menikah: hati utuh, garis biasa.
+- **Bagan** (putaran kedua tinjauan, Oktober 2026):
+  - **Pernikahan berulang** disusun dari KIRI ke KANAN menurut waktu terjadinya, satu hati per pernikahan: istri ke-1 → istri ke-2 → istri ke-1 (menikah kembali) → istri ke-3. Pernikahan kembali tampil sebagai hati tersendiri dengan kartu pasangan yang muncul lagi, diberi keterangan kecil **"menikah kembali"** (label "Istri ke-n" tetap menurut pasangan yang berbeda). Anak-anak berada di bawah hati pernikahannya masing-masing, sehingga membaca bagan dari kiri ke kanan menghasilkan urutan kelahiran.
+  - **Nomor urut** kecil (1, 2, 3, …) di pojok **kiri atas** kartu setiap anak **kandung** (sama dengan "Putra/Putri ke-n"; GEN.n tetap di pojok kanan atas). Anak sambung/angkat tanpa nomor.
+  - Di bawah setiap pasangan orang tua, **semua** anak (kandung, sambung, angkat) diurutkan menurut **umur**, paling tua di kiri. Urutan anak kandung tidak pernah berubah; anak sambung/angkat disisipkan sebelum anak kandung pertama yang pasti lahir sesudahnya; anak kandung tanpa tanggal lahir tetap di tempat nomornya; anak sambung/angkat tanpa tanggal lahir di paling kanan (`src/lib/silsilah/anak.js`).
+  - **Belum dewasa**: tunas daun kecil di pojok **kanan bawah** kartu, dengan baris legenda "Belum dewasa (di bawah 18 tahun)". Dihitung otomatis dari tanggal lahir paling akhir yang mungkin (sama dengan aturan undangan), hilang sendiri saat berusia 18 tahun, dan tidak tampil kalau tanggal lahir tidak diketahui atau orangnya sudah wafat.
+  - **Legenda**: baris "Jenis kelamin tidak diketahui" **hanya** muncul selama masih ada orang yang jenis kelaminnya belum diketahui, hilang otomatis saat semuanya sudah diisi, dan muncul lagi kalau ada data baru yang belum lengkap (kartu abu tetap dipakai untuk mereka). Baris "Belum dewasa" juga hanya selama ada. Selalu ada: warna kartu, "Berpisah" (hati patah + garis putus-putus), dan "Putra/Putri ke-n (anak kandung)".
+  - **Tampilan awal**: di laptop seluruh bagan terlihat tetapi **tidak tertutup legenda atau bilah atas** (bagan diletakkan di atas legenda atau di kanannya, mana yang lebih besar). Di HP (lebar < 640 px) bagan **tidak** diperkecil sampai kartu tak terbaca: mulai dari ukuran yang terbaca dengan pasangan pangkal (atau pangkal cabang) di tengah, tepat di bawah bilah atas; tombol **"Lihat seluruh bagan"** menampilkan seluruh pohon. "Pusatkan" kembali ke tampilan awal.
 - **Istilah generasi Jawa** tampil jelas, dengan label kecil **"GEN.n"**:
   - GEN.0 Pangkal, GEN.1 Anak, GEN.2 Putu, GEN.3 Buyut, GEN.4 Canggah, GEN.5 Wareng;
   - GEN.6 Udheg-udheg, GEN.7 Gantung siwur, GEN.8 Gropak senthe, GEN.9 Debog bosok, GEN.10 Galih asem;
@@ -1119,7 +1128,7 @@ Aturan tetap (prinsip 10): tampilan mengikuti aplikasi lama. Perubahan besar har
 
 - **Bilah atas** melayang di kiri atas: judul "SILSILAH KELUARGA" (Cinzel, emas), subjudul kecil "ARSIP WARISAN & SEJARAH", status kecil hijau tentang sinkronisasi; lalu kotak cari, tombol cari, + dan −, "Pusatkan", dan tombol aksi emas. Ada × untuk menyembunyikan bilah. Tombol untuk fitur yang belum ada (Tambah Anggota, Unduh PDF) baru ditampilkan saat fiturnya dibuat.
 - **Legenda** di kiri bawah, bisa ditutup; saat ditutup tersisa tombol bulat kecil di pojok kiri bawah.
-- Saat dibuka, **bagan tampil utuh** (diperkecil supaya seluruh pohon terlihat), lalu bisa diperbesar.
+- Saat dibuka, **bagan tampil utuh** (diperkecil supaya seluruh pohon terlihat), lalu bisa diperbesar. (Sejak Oktober 2026: di HP mulai dari ukuran terbaca dengan tombol "Lihat seluruh bagan", lihat bagian 15.1.)
 - **Kartu**: strip warna tipis di tepi atas, lingkaran kecil berisi simbol ♂/♀ menempel di tengah atas, NAMA kapital Cinzel (boleh dua baris), dan di bawahnya satu label kecil kapital (istilah). Kartu terpilih/hover: bingkai emas.
 - **Pasangan** duduk tepat di samping keturunannya, dengan ikon **hati** di dalam lingkaran kecil di antara keduanya. Garis ke anak keluar dari ikon hati: turun lurus, lalu bercabang siku-siku ke setiap anak; garis tipis cokelat keemasan.
 - **Panel detail** di sisi kanan, berlatar putih (di HP: lembar dari bawah atau layar penuh): avatar emoji di dalam lingkaran berbingkai emas, NAMA (Cinzel), istilah di bawahnya, lalu bagian "INFORMASI ANGGOTA" (sejak Oktober 2026 bernama "KETERANGAN PRIBADI") dan "RIWAYAT HIDUP" dengan judul kecil kapital berwarna emas. Tombol utama emas berbentuk kotak membulat; tombol hapus bergaris merah.
@@ -1147,6 +1156,8 @@ Satu objek JSON bersarang berisi `id`, `name`, `gender`, `relation` (teks manual
 
 **Tidak** dipindahkan: kolom baru (gelar religius, gelar pendidikan, pekerjaan, alamat, nomor HP). Kolom-kolom ini tetap kosong dan dilengkapi sendiri oleh anggota.
 
+**Jenis kelamin yang belum diketahui** (Oktober 2026): laporan migrasi (`laporan.md`) **wajib** mendaftar semua nama yang jenis kelaminnya belum diketahui, supaya Anda bisa memperbaikinya sendiri. Jenis kelamin **tidak pernah diisi asal** (misalnya ditebak dari nama); selama belum diisi, kartunya abu dan legenda menampilkan "Jenis kelamin tidak diketahui".
+
 | Lama | Baru |
 |---|---|
 | simpul | `people` (+ `legacy_id`) |
@@ -1166,7 +1177,7 @@ Satu objek JSON bersarang berisi `id`, `name`, `gender`, `relation` (teks manual
 ### 16.3 Langkah
 
 1. CSV backup 5 Oktober 2026 diletakkan di `data-pribadi/lama/`. Ini dilakukan **setelah** `.gitignore` dan pemindai aktif.
-2. Skrip `scripts/migrasi-lama/ubah.js` (dites dengan data fiktif yang meniru bentuk lama) menghasilkan `data-pribadi/migrasi/hasil.json` dan `laporan.md`. Laporan berisi jumlah data, daftar "perlu dicek", dan selisih urutan anak.
+2. Skrip `scripts/migrasi-lama/ubah.js` (dites dengan data fiktif yang meniru bentuk lama) menghasilkan `data-pribadi/migrasi/hasil.json` dan `laporan.md`. Laporan berisi jumlah data, daftar "perlu dicek", selisih urutan anak, dan **daftar semua nama yang jenis kelaminnya belum diketahui** (wajib; tidak pernah diisi asal).
 3. Anda meninjau laporan. Koreksi ditulis di `data-pribadi/migrasi/koreksi.json`, lalu skrip dijalankan ulang. Data sumber tidak diedit tangan.
 4. **Uji di PGlite**: hasil diimpor ke database tes lengkap dengan semua file SQL. Skrip verifikasi membangun ulang pohon dan membandingkannya 100% dengan JSON lama (nama, pasangan orang tua–anak, pernikahan, status, jumlah).
 5. Anda menelusuri hasilnya di **mode contoh** yang memuat file hasil lokal (tidak pernah di-*deploy*).
@@ -1236,7 +1247,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 | 1.8 | SQL 004: `members` (admin utama kebal), `devices` (jenis perangkat, kota/negara perkiraan), `invites` (aturan dewasa: 18+ atau menikah), `device_codes`, `auth_events`, `login_ips` (dihapus setelah 30 hari), fungsi `current_member/can_edit/has_perm/is_owner` | PGlite: perangkat dicabut/kedaluwarsa → tidak ada data; admin tanpa `aal2` → bukan admin; IP berumur > 30 hari terhapus; undangan untuk anak 16 tahun yang belum menikah ditolak. |
 | 1.9 | SQL 005: RLS + hak silsilah dan pohon keluarga asal (`grant_all_descendants` dinamis, izinkan/tolak) | PGlite: matriks peran lengkap; keturunan baru otomatis mendapat akses. |
 | 1.10 | SQL 006: `change_log`, undo (sendiri vs izin), deteksi aktivitas tidak wajar + penahanan | PGlite: anggota tidak bisa undo milik orang lain; penahanan aktif setelah ambang. |
-| 1.11 | SQL 007: `reports`, tempat sampah (izin), pulihkan, hapus permanen/kosongkan (admin utama), "pindahkan ke orang tua lain" | PGlite. |
+| 1.11 | SQL 007: `reports`, menyisihkan data (izin), pulihkan, hapus permanen satu kelompok/semuanya (admin utama), "pindahkan ke orang tua lain" | PGlite. |
 | 1.12 | SQL 008: `snapshots` (berdasarkan perubahan, bertingkat, khusus) + file jadwal `pg_cron` | PGlite: tanpa perubahan → tidak ada snapshot baru; perapian sesuai 30/12/12. |
 | 1.13 | Logika murni: tanggal, "ke-n", graf, GEN + istilah Jawa (GEN.11+ tanpa istilah), jalur terdekat untuk pasangan sepupu, urutan lahir lintas pernikahan per orang tua, "istri/suami ke-n", label kartu dan detail, Alm./Almh., nomor silsilah, istilah kerabat pohon keluarga asal (`kerabat.js`) | Vitest dengan keluarga fiktif, termasuk contoh 1–3/4–5/6–7/8–11, pernikahan antarsepupu, dan Pakdhe/Paklik. |
 | 1.14 | `teks/id.js` + pemetaan error + deteksi "sedang dipulihkan" dan "database belum diperbarui" | Tes: tidak ada pesan bahasa Inggris yang lolos. |
@@ -1246,11 +1257,11 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 | 1.17 | Layar Masuk, Undangan/Kode, Selamat datang, Tambah perangkat (QR), Perangkat saya, Keluar (hapus data lokal), **halaman Privasi** | Manual: Android, iPhone (Safari + layar utama), laptop. Halaman Privasi bisa dibuka tanpa login dan tidak memuat data. |
 | 1.18 | Akses sementara + hitung mundur + hapus data otomatis + notifikasi admin (kotak masuk) | Manual: akses 30 menit habis → keluar dan data terhapus; RLS menolak. |
 | 1.19 | Verifikasi dua langkah admin (TOTP; passkey kalau tersedia) | Admin tanpa `aal2` tidak bisa membuka fungsi admin. |
-| 1.20 | Lapisan data: muat semua, Realtime, cache offline tanpa kontak, layar error, **tanpa penulisan otomatis** (+ SQL 014: Realtime dan penanda tempat sampah) | Tes: Supabase gagal → tidak ada panggilan insert/update. |
+| 1.20 | Lapisan data: muat semua, Realtime, cache offline tanpa kontak, layar error, **tanpa penulisan otomatis** (+ SQL 014: Realtime dan penanda data yang disisihkan) | Tes: Supabase gagal → tidak ada panggilan insert/update. |
 | 1.21 | Layar Daftar + Detail (termasuk kedua jalur untuk pasangan sepupu) | Tes komponen dengan data fiktif. |
 | 1.22 | Bagan kartu dasar (istilah Jawa, GEN, keterangan anak ke-n) | Dicek dengan data fiktif yang rumit. |
 | 1.23 | Form orang/pernikahan/anak + `version` + merge + peringatan "baru saja diubah" | Dua browser. |
-| 1.24 | Riwayat + Batalkan, Laporkan kesalahan + layar Laporan, Tempat sampah | Manual + tes. |
+| 1.24 | Riwayat + Batalkan, Laporkan kesalahan + layar Laporan, Data yang disisihkan | Manual + tes. |
 | 1.25 | Admin: Anggota & Undangan (aturan dewasa + centang "sudah dewasa"), izin asisten (centang), perangkat, cabut, log login | Manual. |
 | 1.26 | Pohon keluarga asal: editor admin, istilah dari sudut pandang pasangan khusus, layar akses + tombol "Beri akses ke semua keturunan …" | PGlite + manual: yang tidak diberi akses tidak melihat apa pun. |
 | 1.27 | Skrip migrasi `ubah` + `verifikasi` (struktur, tanggal/tempat lahir-wafat, bio → catatan) | Tes data fiktif, termasuk tanggal teks yang aneh; laporan dari CSV asli (lokal). |

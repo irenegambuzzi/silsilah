@@ -10,7 +10,7 @@ import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { configure, fireEvent, screen, within } from '@testing-library/react'
 import { pasang } from '../test/pembantu.jsx'
-import { klienKeluarga } from '../test/klienKeluarga.js'
+import { keluargaFiktif, klienKeluarga, tabelKeluarga } from '../test/klienKeluarga.js'
 
 configure({ asyncUtilTimeout: 5000 })
 beforeEach(() => {
@@ -55,9 +55,57 @@ describe('Bagan: isi kartu', () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('eka').textContent).not.toContain('GEN')
-    expect(screen.getByText('Istri ke-1')).toBeTruthy()
+    expect(screen.getAllByText('Istri ke-1')).toHaveLength(2) // Eka, dan Eka lagi (menikah kembali)
     expect(screen.getByText('Istri ke-3')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Istri ke-2: Fitri' })).toBe(k('fitri'))
+  })
+
+  it('pernikahan kembali: kartu pasangan muncul lagi dengan "menikah kembali"; mengetuknya memilih orang yang sama', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const ulang = document.querySelector('[data-orang-ulang="eka"]')
+    expect(ulang).toBeTruthy()
+    expect(ulang.getAttribute('aria-label')).toBe('Istri ke-1: Eka (menikah kembali)')
+    expect(screen.getByText('menikah kembali')).toBeTruthy()
+    await aksi.click(ulang)
+    const panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(within(panel).getByRole('heading', { name: 'Eka', level: 2 })).toBeTruthy()
+  })
+
+  it('nomor urut kecil di pojok kartu anak kandung; anak sambung/angkat tanpa nomor', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(k('mega').querySelector('.kartu-urut').textContent).toBe('6')
+    expect(k('mega').textContent).toContain('Putri ke-6') // untuk pembaca layar
+    expect(k('rangga').querySelector('.kartu-urut').textContent).toBe('11')
+    expect(k('wati').querySelector('.kartu-urut').textContent).toBe('1')
+    for (const id of ['vino', 'yoga', 'raksa', 'eka']) expect(k(id).querySelector('.kartu-urut'), id).toBeNull()
+    // Pojok berbeda dari GEN.n (kelas dan letak sendiri).
+    expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.2')
+  })
+
+  it('tunas daun di pojok kartu anak di bawah umur; tidak untuk yang dewasa atau tanpa tanggal lahir', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    for (const id of ['bayu', 'nala', 'hasna']) expect(k(id).querySelector('[data-tunas]'), id).toBeTruthy()
+    for (const id of ['bima', 'dorvi', 'sekar']) expect(k(id).querySelector('[data-tunas]'), id).toBeNull()
+    const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
+    expect(within(legenda).getByText('Belum dewasa (di bawah 18 tahun)')).toBeTruthy()
+  })
+
+  it('legenda "Jenis kelamin tidak diketahui" hanya selama masih ada yang belum diketahui', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(within(screen.getByRole('region', { name: 'Keterangan warna' })).getByText('Jenis kelamin tidak diketahui')).toBeTruthy()
+  })
+
+  it('setelah semua jenis kelamin diisi, baris legenda itu hilang sendiri', async () => {
+    const lengkap = tabelKeluarga()
+    for (const p of lengkap.people) if (!p.sex) p.sex = 'L'
+    pasang('/bagan', klienKeluarga({ tabel: lengkap }))
+    await tunggu()
+    expect(within(screen.getByRole('region', { name: 'Keterangan warna' })).queryByText('Jenis kelamin tidak diketahui')).toBeNull()
+    expect(keluargaFiktif.people.some((p) => !p.sex)).toBe(true) // data asal tidak berubah
   })
 
   it('kartu tidak memuat tahun atau "Anak ke-n"; kartu pasangan hanya simbol dan nama', async () => {
@@ -114,11 +162,14 @@ describe('Bagan: isi kartu', () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(document.querySelector('[data-hati="h:cahya:0"]')).toBeTruthy()
-    expect(document.querySelectorAll('[data-hati^="h:bima:"]')).toHaveLength(3)
+    expect(document.querySelectorAll('[data-hati^="h:bima:"]')).toHaveLength(4)
+    // Hati patah hanya untuk pernikahan yang berakhir karena berpisah; ditinggal wafat tetap utuh.
+    expect([...document.querySelectorAll('[data-hati^="h:bima:"]')].map((h) => Boolean(h.dataset.patah))).toEqual([true, true, true, false])
+    expect(document.querySelector('[data-hati="h:tirwan:0"]').dataset.patah).toBeUndefined()
     expect(document.querySelectorAll('path[data-putus]').length).toBeGreaterThan(0)
     for (const p of document.querySelectorAll('path[data-putus]')) expect(p.getAttribute('data-garis')).toBe('nikah')
     // pembaca layar tetap mendengar bahwa pernikahan itu berakhir karena berpisah
-    expect(screen.getAllByText('Pasangan Bima (berpisah)')).toHaveLength(2)
+    expect(screen.getAllByText(/^Pasangan Bima \(berpisah\)/)).toHaveLength(3)
     expect(document.body.textContent).not.toMatch(/cerai/i)
   })
 })
@@ -185,6 +236,7 @@ describe('Bagan: bilah atas dan legenda', () => {
     expect(screen.getByText('Arsip Warisan & Sejarah')).toBeTruthy()
     expect(screen.getByRole('searchbox', { name: 'Cari nama' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Pusatkan' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Lihat seluruh bagan' })).toBeTruthy()
     // fitur yang belum ada tidak ditampilkan
     expect(screen.queryByRole('button', { name: /Tambah Anggota|Unduh PDF/i })).toBeNull()
     await aksi.click(screen.getByRole('button', { name: 'Sembunyikan menu bagan' }))

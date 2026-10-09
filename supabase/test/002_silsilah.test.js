@@ -77,7 +77,7 @@ describe('people', () => {
     await expect(orang('Uji Enam', { sex: 'X' })).rejects.toThrow(/check/)
     expect(await orang('Uji Tujuh', { sex: 'P' })).toBeTruthy()
   })
-  it('kolom tempat sampah selalu terisi bersamaan', async () => {
+  it('kolom penyisihan selalu terisi bersamaan', async () => {
     await expect(orang('Uji Delapan', { deleted_at: new Date().toISOString() })).rejects.toThrow(/people_trash_consistent/)
   })
 })
@@ -191,7 +191,7 @@ describe('anak kandung, sambung, dan angkat', () => {
     expect(await anak(lain, c, 'angkat', null)).toBeTruthy()
   })
 
-  it('hubungan yang ada di tempat sampah tidak menghalangi pencatatan ulang', async () => {
+  it('hubungan yang disisihkan tidak menghalangi pencatatan ulang', async () => {
     const c = await orang('Salah Cabang Contoh')
     const id = await anak(u, c)
     await db.query(`update public.children set deleted_at = now(), delete_batch = gen_random_uuid() where id = $1`, [id])

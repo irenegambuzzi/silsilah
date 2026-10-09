@@ -110,7 +110,7 @@ create table if not exists public.people (
   -- Wafat tidak mungkin sebelum lahir (dibandingkan per tahun).
   constraint people_death_after_birth check (
     death_y is null or birth_y is null or death_y >= birth_y),
-  -- Tempat sampah: tanggal dan kelompok hapus selalu terisi bersamaan.
+  -- Disisihkan: tanggal dan kelompok penyisihan selalu terisi bersamaan.
   constraint people_trash_consistent check ((deleted_at is null) = (delete_batch is null))
 );
 
@@ -217,7 +217,7 @@ create table if not exists public.children (
   constraint children_trash_consistent check ((deleted_at is null) = (delete_batch is null))
 );
 
--- Satu anak hanya sekali per pernikahan (yang tidak di tempat sampah).
+-- Satu anak hanya sekali per pernikahan (yang tidak disisihkan).
 create unique index if not exists children_union_child_active
   on public.children (union_id, child_id) where deleted_at is null;
 -- Satu hubungan KANDUNG aktif per anak. (Anak angkat/sambung di

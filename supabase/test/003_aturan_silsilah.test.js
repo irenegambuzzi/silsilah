@@ -149,7 +149,7 @@ describe('urutan lahir otomatis', () => {
     expect(await h.urutan(ibu1)).toEqual([])
   })
 
-  it('dibuang ke tempat sampah → urutan dirapikan; dipulihkan → kembali ke tempatnya', async () => {
+  it('didisisihkan → urutan dirapikan; dipulihkan → kembali ke tempatnya', async () => {
     await db.query(`update public.children set deleted_at = now(), delete_batch = gen_random_uuid() where child_id = $1`, [k1958])
     expect((await h.urutan(ayah)).map((r) => r.child_id)).toEqual([k1955, k1960, kTanpa, k1965])
     await db.query(`update public.children set deleted_at = null, delete_batch = null where child_id = $1`, [k1958])
@@ -255,11 +255,11 @@ describe('pernikahan antarsepupu', () => {
   })
 })
 
-describe('tempat sampah', () => {
-  it('anak tidak bisa ditambahkan ke pernikahan yang ada di tempat sampah', async () => {
-    const uSampah = await h.nikah(a, await h.orang('Calon Contoh', { sex: 'P' }))
-    await db.query(`update public.unions set deleted_at = now(), delete_batch = gen_random_uuid() where id = $1`, [uSampah])
-    await ditolak(h.anak(uSampah, await h.orang('Anak Sampah Contoh')), 'SL008')
+describe('data yang disisihkan', () => {
+  it('anak tidak bisa ditambahkan ke pernikahan yang disisihkan', async () => {
+    const uSisih = await h.nikah(a, await h.orang('Calon Contoh', { sex: 'P' }))
+    await db.query(`update public.unions set deleted_at = now(), delete_batch = gen_random_uuid() where id = $1`, [uSisih])
+    await ditolak(h.anak(uSisih, await h.orang('Anak Disisihkan Contoh')), 'SL008')
   })
 })
 

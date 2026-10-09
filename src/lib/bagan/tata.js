@@ -3,22 +3,25 @@
 // simpul dari susunBagan, keluarannya koordinat.
 //
 // Seperti aplikasi lama:
-// - Satu pasangan: [keturunan] ─♥─ [pasangan], anak-anak turun dari ikon hati.
-// - Lebih dari satu pasangan: keturunan di atas, di bawahnya pasangan-
-//   pasangannya berjajar (masing-masing dengan "Istri/Suami ke-n" dan ikon
-//   hatinya sendiri), dan anak setiap pernikahan turun dari hatinya sendiri.
+// - Satu pernikahan: [keturunan] ─♥─ [pasangan], anak-anak turun dari ikon hati.
+// - Lebih dari satu pernikahan: keturunan di atas, di bawahnya setiap
+//   pernikahan berjajar dari kiri ke kanan menurut waktu (masing-masing
+//   dengan "Istri/Suami ke-n", ikon hatinya sendiri, dan "menikah kembali"
+//   kalau pasangannya sudah tampil di kiri), dan anak setiap pernikahan
+//   turun dari hatinya sendiri.
 // - Tanpa pasangan yang diketahui: anak turun langsung dari kartu.
 // Garis ke anak: turun lurus, lalu bercabang siku-siku ke setiap anak.
-// Garis pernikahan putus-putus hanya untuk yang berakhir karena berpisah.
+// Pernikahan yang berakhir karena berpisah: ikon hati patah dan garis
+// putus-putus. Ditinggal wafat atau masih menikah: hati utuh, garis biasa.
 //
 // Keluaran:
 //   lebar, tinggi
 //   letak   Map kunci → { x, y } (sudut kiri atas). Kunci:
 //             o:<id>        kartu keturunan
 //             p:<id>:<i>    kartu pasangan ke-i dari keturunan <id>
-//             l:<id>:<i>    label "Istri ke-n" di atas kartu itu
+//             l:<id>:<i>    label "Istri ke-n" (dan "menikah kembali") di atas kartu itu
 //             c:<id>:<i>    catatan "Anak mereka …" (pernikahan antarsepupu)
-//   hati    [{ kunci, x, y }] (titik tengah)
+//   hati    [{ kunci, x, y, patah }] (titik tengah; patah = berakhir karena berpisah)
 //   garis   [{ kunci, jenis: 'nikah' | 'anak', putus, titik: [[x, y], …] }]
 export const UKURAN = {
   lebarKartu: 10,
@@ -28,6 +31,7 @@ export const UKURAN = {
   jariHati: 0.75,
   turun: 3, // dari dasar kartu/hati ke atas kartu anak
   tinggiLabel: 1.35, // ruang "Istri ke-n" di atas kartu pasangan
+  tinggiLabelUlang: 2.3, // ruang "Istri ke-n" + "menikah kembali"
   kolomHati: 2.5, // lebar kolom hati di kiri kartu pasangan (susunan berjajar)
   jarakKelompok: 2,
   busKipas: 1, // dari dasar kartu keturunan ke garis datar ke para pasangan
@@ -129,7 +133,7 @@ function tataSimpul(simpul) {
     const r = U.jariHati
     b.letak.push({ kunci: `o:${simpul.id}`, x: 0, y: 0 })
     b.letak.push({ kunci: `p:${simpul.id}:0`, x: W + U.jarakHati, y: 0 })
-    b.hati.push({ kunci: `h:${simpul.id}:0`, x: hx, y: hy })
+    b.hati.push({ kunci: `h:${simpul.id}:0`, x: hx, y: hy, patah: k.berpisah })
     b.garis.push(
       { kunci: `n:${simpul.id}:0:a`, jenis: 'nikah', putus: k.berpisah, titik: [[W, hy], [hx - r, hy]] },
       { kunci: `n:${simpul.id}:0:b`, jenis: 'nikah', putus: k.berpisah, titik: [[hx + r, hy], [W + U.jarakHati, hy]] }
@@ -140,17 +144,17 @@ function tataSimpul(simpul) {
     return rapikan(b)
   }
 
-  // Lebih dari satu pasangan: berjajar di bawah kartu keturunan.
+  // Lebih dari satu pernikahan: berjajar di bawah kartu keturunan.
   const atasBaris = H + U.busKipas + 0.6
-  const kartuY = U.tinggiLabel // di dalam blok kelompok
+  const kartuY = simpul.pasangan.some((k) => k.ulang) ? U.tinggiLabelUlang : U.tinggiLabel // di dalam blok kelompok
   const kelompok = simpul.pasangan.map((k, i) => {
     const g = blokKosong()
     const hx = U.jariHati + 0.25
     const hy = kartuY + H / 2
     const r = U.jariHati
     g.letak.push({ kunci: `p:${simpul.id}:${i}`, x: U.kolomHati, y: kartuY })
-    if (k.label) g.letak.push({ kunci: `l:${simpul.id}:${i}`, x: U.kolomHati, y: 0, lebar: W, tinggi: U.tinggiLabel })
-    g.hati.push({ kunci: `h:${simpul.id}:${i}`, x: hx, y: hy })
+    if (k.label || k.ulang) g.letak.push({ kunci: `l:${simpul.id}:${i}`, x: U.kolomHati, y: 0, lebar: W, tinggi: kartuY })
+    g.hati.push({ kunci: `h:${simpul.id}:${i}`, x: hx, y: hy, patah: k.berpisah })
     g.garis.push({ kunci: `n:${simpul.id}:${i}:b`, jenis: 'nikah', putus: k.berpisah, titik: [[hx + r, hy], [U.kolomHati, hy]] })
     g.masukX = hx
     pasangCatatan(g, simpul, i, k, { hx: U.kolomHati + W / 2, y: kartuY + H + 0.75 })
@@ -211,7 +215,7 @@ export function tataBagan(akar) {
   return {
     lebar: b.lebar,
     tinggi: b.tinggi,
-    letak: new Map(b.letak.map((e) => [e.kunci, { x: e.x, y: e.y }])),
+    letak: new Map(b.letak.map((e) => [e.kunci, { x: e.x, y: e.y, ...(e.tinggi ? { tinggi: e.tinggi } : {}) }])),
     hati: b.hati,
     garis: b.garis,
   }
