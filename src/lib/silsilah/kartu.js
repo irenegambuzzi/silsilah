@@ -2,8 +2,8 @@
 //
 // Kartu dibuat SEDERHANA seperti aplikasi lama: nama (dengan Alm./Almh. dan
 // gelar) dan SATU label kecil, yaitu istilah Jawa ("Putu") untuk keturunan
-// dengan "GEN.n" di pojok, "Pangkal" untuk pasangan pangkal, dan TANPA label
-// untuk pasangan (warnanya sudah menandakan pasangan). Tahun lahir–wafat,
+// dengan "GEN.n" di pojok, "Pangkal" untuk pasangan pangkal, dan "Pasangan"
+// (tanpa GEN) untuk pasangan yang bukan keturunan. Tahun lahir–wafat,
 // "Putra/Putri ke-n", "dari istri ke-n", dan "Pasangan dari …" ada di panel
 // keterangan dan Daftar. Anak sambung dan anak angkat memakai kartu yang
 // sama dengan saudaranya, tetapi tidak bernomor (hanya anak kandung yang
@@ -78,7 +78,7 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
     gen,
     labelGen: gen === null ? null : labelGen(gen),
     istilahGen: istilah,
-    label: jenis === 'pasangan' ? null : istilah,
+    label: jenis === 'pasangan' ? KATA.labelPasangan : istilah,
     pojok: jenis === 'keturunan' ? labelGen(gen) : null,
     belumDewasa: belumDewasa(orang, hariIni),
   }

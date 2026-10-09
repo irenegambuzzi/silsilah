@@ -31,6 +31,6 @@ describe('fokus cabang: generasi dihitung dari orang yang difokuskan', () => {
   })
 
   it('pasangan tetap tanpa GEN', () => {
-    expect(labelKartu(c, 'sinta')).toMatchObject({ jenis: 'pasangan', gen: null, label: null })
+    expect(labelKartu(c, 'sinta')).toMatchObject({ jenis: 'pasangan', gen: null, label: 'Pasangan' })
   })
 })

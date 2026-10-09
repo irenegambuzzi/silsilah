@@ -441,6 +441,8 @@ html[data-kontras='tinggi'] .kartu-orang {
   --k-latar: var(--c-k-wafat-pasangan);
   --k-strip: var(--c-k-wafat-pasangan);
   --k-tepi: var(--c-k-wafat-pasangan);
+  /* Label "Pasangan": putih, karena warna redup kurang kontras di sini. */
+  --k-redup: var(--c-k-wafat-teks);
 }
 [data-warna$='-wafat'][data-sex='L'] {
   --k-simbol: var(--c-k-wafat-simbol-l);

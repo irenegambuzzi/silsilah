@@ -1047,7 +1047,7 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 - **Bagan dengan kartu sederhana** seperti aplikasi lama (ditetapkan saat perbaikan tampilan, Oktober 2026):
   - **Keturunan**: lingkaran simbol ♂/♀, NAMA (dengan "Alm./Almh." otomatis dan gelar), istilah Jawa kapital kecil (misalnya "PUTU"), dan "GEN.n" kecil di **pojok** kartu.
   - **Pangkal**: lingkaran simbol, NAMA, dan label "PANGKAL" (tanpa GEN).
-  - **Pasangan**: **hanya** lingkaran simbol dan NAMA, tanpa label dan tanpa GEN; warnanya sudah menandakan pasangan.
+  - **Pasangan** (bukan keturunan): lingkaran simbol, NAMA, dan **satu** label kecil kapital **"PASANGAN"** (gaya sama dengan label istilah Jawa), tanpa GEN. Berlaku juga untuk pasangan khusus dengan pohon keluarga asal. (Putaran ketiga tinjauan, Oktober 2026; sebelumnya kartu pasangan tanpa label.)
   - Tahun lahir–wafat, nama panggilan, "Putra/Putri ke-n · dari istri ke-n", dan "Pasangan dari … · berpisah" **tidak** di kartu, tetapi di panel keterangan.
   - Label "Istri ke-n"/"Suami ke-n" di atas kartu pasangan **hanya** kalau orang itu menikah dengan lebih dari satu orang.
 - **Warna kartu** (latar lembut + strip atas + lingkaran simbol), semuanya lolos tes kontras biasa dan kontras tinggi (`src/kontras.test.js`):

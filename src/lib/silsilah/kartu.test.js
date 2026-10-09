@@ -125,10 +125,18 @@ describe('isi kartu sederhana seperti aplikasi lama', () => {
     expect(labelKartu(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenis: 'pangkal', label: 'Pangkal', pojok: null })
     expect(labelKartu(s, 'selara')).toMatchObject({ jenis: 'pangkal', label: 'Pangkal', pojok: null })
   })
-  it('kartu pasangan: hanya nama, tanpa label dan tanpa GEN', () => {
-    for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila']) {
-      expect(labelKartu(s, id)).toMatchObject({ jenis: 'pasangan', label: null, pojok: null })
+  it('kartu pasangan (bukan keturunan): nama dan SATU label "Pasangan", tanpa GEN', () => {
+    for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila', 'harvel', 'halvin', 'dara']) {
+      expect(labelKartu(s, id)).toMatchObject({ jenis: 'pasangan', label: 'Pasangan', pojok: null, labelGen: null })
     }
+  })
+  it('pasangan khusus dengan pohon keluarga asal tetap "Pasangan"; kedua pangkal utama tetap "Pangkal"', () => {
+    for (const id of s.graf.orang.keys()) {
+      const k = labelKartu(s, id)
+      if (k.jenis === 'pasangan') expect(k.label, id).toBe('Pasangan')
+    }
+    expect(['eka', 'dara'].map((id) => labelKartu(s, id).label)).toEqual(['Pasangan', 'Pasangan'])
+    expect(['raksa', 'selara'].map((id) => labelKartu(s, id).label)).toEqual(['Pangkal', 'Pangkal'])
   })
   it('tidak ada kartu yang memuat tahun, "Putra/Putri ke-n", atau "Pasangan dari"', () => {
     for (const id of semua) {

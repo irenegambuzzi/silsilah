@@ -669,6 +669,8 @@ export const teks = {
     },
     lewat: 'Lewat {nama}: {generasi}',
     pangkalCabang: 'Pangkal cabang',
+    // Label kecil di kartu pasangan (bukan keturunan) di Bagan.
+    labelPasangan: 'Pasangan',
     menikahPertama: 'menikah',
     menikahLagi: 'menikah lagi',
     jenisKelamin: { L: 'Laki-laki', P: 'Perempuan', x: 'Tidak diketahui' },

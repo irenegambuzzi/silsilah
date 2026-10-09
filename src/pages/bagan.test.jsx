@@ -108,14 +108,15 @@ describe('Bagan: isi kartu', () => {
     expect(keluargaFiktif.people.some((p) => !p.sex)).toBe(true) // data asal tidak berubah
   })
 
-  it('kartu tidak memuat tahun atau "Anak ke-n"; kartu pasangan hanya simbol dan nama', async () => {
+  it('kartu tidak memuat tahun atau "Anak ke-n"; kartu pasangan: simbol, nama, dan label "Pasangan" tanpa GEN', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     for (const kartu of semuaKartu()) {
       expect(kartu.textContent, kartu.dataset.orang).not.toMatch(/\d{4}|anak ke-|pasangan dari|dari istri|dari suami/i)
     }
     for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila']) {
-      expect(k(id).querySelector('.kartu-label'), id).toBeNull()
+      expect(k(id).querySelector('.kartu-label').textContent, id).toBe('Pasangan')
+      expect(k(id).querySelectorAll('.kartu-label'), id).toHaveLength(1)
       expect(k(id).querySelector('.kartu-gen'), id).toBeNull()
       expect(k(id).querySelector('.kartu-simbol')).toBeTruthy()
     }

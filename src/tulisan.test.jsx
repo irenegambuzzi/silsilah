@@ -140,12 +140,12 @@ describe('label silsilah untuk SETIAP orang di keluarga fiktif', () => {
     }
   })
 
-  it('kartu tidak memuat tahun atau "anak ke-n"; kartu pasangan tanpa label', () => {
+  it('kartu tidak memuat tahun atau "anak ke-n"; kartu pasangan hanya label "Pasangan", tanpa GEN', () => {
     for (const id of utama) {
       const k = labelKartu(s, id)
       const tampil = [k.nama, k.label, k.pojok].filter(Boolean).join(' ')
       expect(tampil, id).not.toMatch(/\d{4}|anak ke-|istri ke-|suami ke-|pasangan dari/i)
-      if (k.jenis === 'pasangan') expect([k.label, k.pojok], id).toEqual([null, null])
+      if (k.jenis === 'pasangan') expect([k.label, k.pojok], id).toEqual(['Pasangan', null])
     }
   })
 })

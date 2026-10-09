@@ -67,7 +67,7 @@ const PASANGAN = [
   // Kartu wafat: tulisan terang, simbol biru/pink terang.
   ['k-wafat-teks', 'k-wafat', 7, 'nama di kartu keturunan wafat'],
   ['k-wafat-redup', 'k-wafat', 7, 'label kecil di kartu keturunan wafat'],
-  ['k-wafat-teks', 'k-wafat-pasangan', 7, 'nama di kartu pasangan wafat'],
+  ['k-wafat-teks', 'k-wafat-pasangan', 7, 'nama dan label "Pasangan" di kartu pasangan wafat'],
   ...['k-wafat-simbol-l', 'k-wafat-simbol-p', 'k-wafat-simbol-x'].flatMap((simbol) => [
     [simbol, 'k-wafat', 3, `simbol ${simbol} di kartu keturunan wafat`],
     [simbol, 'k-wafat-pasangan', 3, `simbol ${simbol} di kartu pasangan wafat`],
