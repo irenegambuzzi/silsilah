@@ -156,11 +156,19 @@ describe('Keterangan orang (halaman sendiri)', () => {
     pasang('/orang/kirana', klienKeluarga())
     await screen.findByRole('heading', { name: 'Kirana', level: 1 })
     expect(within(bagian('Anak')).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      '1.Celvia · dari suami ke-1', 'Elvina · anak sambung · dari suami ke-2', '2.Fajrin · dari suami ke-2',
+      '1.Celvia · dari suami ke-1', 'Galen · anak sambung · dari suami ke-2', 'Elvina · anak sambung · dari suami ke-2', '2.Fajrin · dari suami ke-2',
     ])
     const info = bagian('Keterangan Pribadi')
     expect(info.textContent).toContain('Status pernikahan: Menikah')
     expect(info.textContent).toContain('Suami ke-1: Danuarta (berpisah)')
+  })
+
+  it('pasangan (bukan keturunan): SEMUA anaknya, bernomor dari sudut pandangnya, anak dari pernikahan sebelumnya ditandai', async () => {
+    pasang('/orang/harvel', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Harvel', level: 1 })
+    expect(within(bagian('Anak')).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      '1.Galen · dari pernikahan sebelumnya', '2.Elvina · dari pernikahan sebelumnya', '3.Fajrin',
+    ])
   })
 
   it('"Belum menikah" yang dipilih sendiri', async () => {

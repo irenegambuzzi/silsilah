@@ -122,7 +122,8 @@ export function keteranganDaftar(s, id) {
 //   lahir        "Kota, 12 Maret 1950" (null kalau tidak diketahui)
 //   sudahWafat, wafat   baris "Wafat" hanya untuk yang sudah wafat
 //   anak         [{ id, nama, ke (null untuk anak sambung/angkat), jenis
-//                   ("anak sambung"/"anak angkat"), dari ("dari istri ke-2") }]
+//                   ("anak sambung"/"anak angkat"), dari ("dari istri ke-2",
+//                   "dari pernikahan sebelumnya") }]
 //                menurut umur: anak kandung bernomor, anak sambung/angkat
 //                disisipkan menurut tanggal lahirnya
 //   masihAnak    belum 18 tahun, atau wafat sebelum 18 tahun
@@ -199,8 +200,11 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
     }
   })
 
-  // Anak dari semua pernikahan, menurut umur. Anak kandung bernomor; "dari
-  // istri ke-n" hanya kalau orang tua ini pernah punya lebih dari satu pasangan.
+  // Anak dari semua pernikahan, menurut umur, SAMA untuk keturunan dan
+  // pasangan: nomor dihitung dari sudut pandang orang ini. Anak kandung
+  // bernomor; "dari istri ke-n" hanya kalau orang tua ini pernah punya lebih
+  // dari satu pasangan; anak kandung yang dibawanya ke pernikahan (anak
+  // sambung bagi pasangannya): "dari pernikahan sebelumnya".
   const { ke, semua } = anakOrangTua(s.graf, id)
   const pasanganKe = new Map()
   berurutan.forEach((p, i) => {
@@ -213,7 +217,7 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
     nama: nama(a.id),
     ke: a.kandung ? ke.get(a.id) : null,
     jenis: a.kandung ? null : (KATA.jenisAnakKecil[a.kind] ?? null),
-    dari: teksDariPasangan(pasanganKe.get(a.unionId)),
+    dari: a.lain ? KATA.dariSebelumnya : teksDariPasangan(pasanganKe.get(a.unionId)),
   }))
 
   const subjudul =

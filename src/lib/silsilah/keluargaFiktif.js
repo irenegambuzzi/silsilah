@@ -20,9 +20,10 @@
 //   Lintang: pasangan tidak diketahui, satu anak (Arya).
 //   Kirana: berpisah dari suami ke-1 (Danuarta) tanpa jalur resmi, lalu
 //         menikah lagi (Harvel). Anak: Celvia (2001, dari suami ke-1),
-//         Elvina (anak sambung, anak Harvel, 2006: LEBIH MUDA dari Celvia
-//         dan LEBIH TUA dari Fajrin), Fajrin (2010, tanggal lengkap, di
-//         bawah umur).
+//         Galen (2003) dan Elvina (2006), anak sambung: anak Harvel dari
+//         pernikahan sebelumnya, LEBIH MUDA dari Celvia dan LEBIH TUA dari
+//         Fajrin; Fajrin (2010, tanggal lengkap, di bawah umur). Dari sudut
+//         pandang Harvel (pasangan): Galen 1, Elvina 2, Fajrin 3.
 //   Qori: menikah lagi (Ravela) tanpa pernikahan pertamanya (Nadira)
 //         ditandai berakhir: keduanya tetap "menikah".
 //   Putri: memilih sendiri "Belum menikah". Oka: dewasa tanpa data
@@ -238,6 +239,8 @@ export function bangunKeluargaFiktif() {
   anak('u14', 'celvia')
   orang('harvel', 'Harvel', 'L', 1972, { occupation: 'Penjahit' })
   nikah('u15', 'kirana', 'harvel', { marriage_y: 2008 })
+  orang('galen', 'Galen', 'L', 2003)
+  anak('u15', 'galen', 'sambung')
   orang('elvina', 'Elvina', 'P', 2006)
   anak('u15', 'elvina', 'sambung')
   orang('fajrin', 'Fajrin', 'L', 2010, { birth_m: 7, birth_d: 4, birth_place: 'Kota Contoh' })

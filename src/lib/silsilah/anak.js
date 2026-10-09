@@ -61,18 +61,27 @@ const simpanan = new WeakMap()
 // Semua anak `p` di silsilah graf ini (dihitung sekali per graf):
 //   kandung  id anak kandung, berurutan
 //   ke       Map anak kandung → nomor (1, 2, 3, …)
-//   semua    [{ id, kandung, kind, unionId }] menurut umur (lihat di atas)
+//   semua    [{ id, kandung, kind, unionId, lain }] menurut umur (lihat di
+//            atas). lain: anak kandung `p` yang dibawa ke pernikahan itu
+//            (anak sambung bagi pasangannya), jadi BUKAN anak dari pasangan
+//            di pernikahan itu: anak dari pernikahan sebelumnya.
+//
+// Berlaku sama untuk keturunan dan pasangan (bukan keturunan). Pasangan
+// tidak punya birth_ranks, jadi anak kandungnya diurutkan menurut tanggal lahir.
 export function anakOrangTua(graf, p) {
   let peta = simpanan.get(graf)
   if (!peta) simpanan.set(graf, (peta = new Map()))
   if (peta.has(p)) return peta.get(p)
 
-  const tautan = new Map() // anak → { kandung, kind, unionId } (kandung diutamakan)
+  const tautan = new Map() // anak → { kandung, kind, unionId, lain } (kandung diutamakan)
   for (const u of graf.pernikahan.get(p) ?? []) {
     for (const c of graf.anakUnion.get(u.id) ?? []) {
       const kandung = kandungUntuk(c, u, p)
+      const lain = kandung && c.biological_parent !== 'keduanya'
       const lama = tautan.get(c.child_id)
-      if (!lama || (kandung && !lama.kandung)) tautan.set(c.child_id, { kandung, kind: c.kind, unionId: u.id })
+      if (!lama || (kandung && !lama.kandung) || (lama.lain && kandung && !lain)) {
+        tautan.set(c.child_id, { kandung, kind: c.kind, unionId: u.id, lain })
+      }
     }
   }
   const rank = (id) => graf.ranks.get(`${p}|${id}`) ?? Infinity

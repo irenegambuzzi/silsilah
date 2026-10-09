@@ -248,8 +248,10 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
       { id: 'kelvan', nama: 'Kelvan', ke: 1, jenis: null, dari: null },
       { id: 'yoga', nama: 'Yoga', ke: null, jenis: 'anak angkat', dari: null },
     ])
-    // Umar: Vino anak kandungnya (anak sambung bagi Cahya).
-    expect(labelDetail(s, 'umar').anak.map((a) => [a.nama, a.ke, a.jenis])).toEqual([['Vino', 1, null], ['Wati', 2, null]])
+    // Umar: Vino anak kandungnya (anak sambung bagi Cahya) dari pernikahan sebelumnya.
+    expect(labelDetail(s, 'umar').anak.map((a) => [a.nama, a.ke, a.jenis, a.dari])).toEqual([
+      ['Vino', 1, null, 'dari pernikahan sebelumnya'], ['Wati', 2, null, null],
+    ])
   })
 
   it('antarsepupu: orang tua satu baris, "Putri ke-n" untuk masing-masing (pihak …), satu baris singkat kalau GEN berbeda', () => {
@@ -307,6 +309,51 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     const t = susunSilsilah(d)
     expect(labelDetail(t, 'cahya').pasangan[0].waktu).toBe('Menikah pada 2 Juni 1974')
     expect(labelDetail(t, 'lorvan').pasangan[0].waktu).toBe('Menikah sekitar tahun 1975')
+  })
+})
+
+describe('anak di panel pasangan (bukan keturunan): aturan yang sama dengan keturunan', () => {
+  const pasangan = utamaSemua.filter((id) => !s.gen.has(id))
+  // Semua anak dari semua pernikahan orang itu (tanpa melihat jenis hubungan).
+  const anakDariData = (id) => {
+    const hasil = new Set()
+    for (const u of s.graf.pernikahan.get(id) ?? []) for (const c of s.graf.anakUnion.get(u.id) ?? []) hasil.add(c.child_id)
+    return hasil
+  }
+
+  it('Harvel: anaknya dari pernikahan sebelumnya DAN anaknya bersama Kirana, bernomor dari sudut pandang Harvel', () => {
+    expect(labelDetail(s, 'harvel').anak).toEqual([
+      { id: 'galen', nama: 'Galen', ke: 1, jenis: null, dari: 'dari pernikahan sebelumnya' },
+      { id: 'elvina', nama: 'Elvina', ke: 2, jenis: null, dari: 'dari pernikahan sebelumnya' },
+      { id: 'fajrin', nama: 'Fajrin', ke: 3, jenis: null, dari: null },
+    ])
+    // Bagi Kirana, Fajrin anak kandung ke-2; Galen dan Elvina anak sambung tanpa nomor.
+    expect(labelDetail(s, 'kirana').anak.map((a) => [a.nama, a.ke, a.jenis])).toEqual([
+      ['Celvia', 1, null], ['Galen', null, 'anak sambung'], ['Elvina', null, 'anak sambung'], ['Fajrin', 2, null],
+    ])
+  })
+
+  it.each(pasangan.filter((id) => anakDariData(id).size > 0))('%s: semua anak tampil, anak kandung bernomor 1..n menurut umur, sisanya dengan keterangan', (id) => {
+    const anak = labelDetail(s, id).anak
+    expect(new Set(anak.map((a) => a.id))).toEqual(anakDariData(id))
+    const kandung = anak.filter((a) => a.ke != null)
+    expect(kandung.map((a) => a.ke)).toEqual(kandung.map((_, i) => i + 1))
+    const tahun = kandung.map((a) => s.graf.orang.get(a.id).birth_y).filter((y) => y != null)
+    expect(tahun).toEqual([...tahun].sort((a, b) => a - b))
+    for (const a of anak) if (a.ke == null) expect(a.jenis, a.id).toMatch(/^anak (sambung|angkat)$/)
+  })
+
+  it('pasangan yang menikah dengan dua keturunan: "dari suami ke-n" seperti keturunan', () => {
+    const d = bangunKeluargaFiktif()
+    d.unions.push({
+      id: 'ux', tree_id: null, partner1_id: 'lintang', partner2_id: 'dara', status: 'menikah',
+      marriage_y: 2018, deleted_at: null, created_at: '2026-03-01T00:00:00Z',
+    })
+    d.people.push({ ...d.people.find((p) => p.id === 'arya'), id: 'bungsu', full_name: 'Bungsu', birth_y: 2019 })
+    d.children.push({ id: 'c-ux', tree_id: null, union_id: 'ux', child_id: 'bungsu', kind: 'kandung', biological_parent: 'keduanya', deleted_at: null })
+    expect(labelDetail(susunSilsilah(d), 'dara').anak.map((a) => [a.ke, a.nama, a.dari])).toEqual([
+      [1, 'Rinzo', 'dari suami ke-1'], [2, 'Nala', 'dari suami ke-1'], [3, 'Ragil', 'dari suami ke-1'], [4, 'Bungsu', 'dari suami ke-2'],
+    ])
   })
 })
 

@@ -646,6 +646,9 @@ export const teks = {
     // atau ditinggal tanpa kabar) selalu ditulis dengan kata netral ini.
     berpisah: 'berpisah',
     dari: 'dari',
+    // Di daftar anak: anak kandung yang dibawa ke pernikahan ini (anak
+    // sambung bagi pasangannya).
+    dariSebelumnya: 'dari pernikahan sebelumnya',
     dan: 'dan',
     diriSendiri: 'Diri sendiri',
     sekitar: 'sekitar',

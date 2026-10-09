@@ -84,6 +84,15 @@ describe('data contoh memuat semua kasus yang didukung', () => {
     expect(lebihMuda).toBe(true)
   })
 
+  it('pasangan (bukan keturunan) dengan anak dari pernikahan sebelumnya dan anak bersama keturunan', () => {
+    const ada = [...s.graf.orang.keys()].some((id) => {
+      if (s.gen.has(id)) return false
+      const { semua } = anakOrangTua(s.graf, id)
+      return semua.some((a) => a.lain) && semua.some((a) => a.kandung && !a.lain)
+    })
+    expect(ada).toBe(true)
+  })
+
   it('pernikahan baru sementara pernikahan sebelumnya belum ditandai berakhir', () => {
     expect([...s.graf.pernikahan.entries()].some(([id, us]) =>
       s.gen.has(id) && us.filter((u) => u.status === 'menikah' && u.partner2_id && !orang.get(u.partner2_id).is_deceased).length > 1)).toBe(true)
