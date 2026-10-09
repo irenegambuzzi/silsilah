@@ -58,15 +58,17 @@ export function keteranganPasangan(s, id) {
 // label: satu label kecil di bawah nama; pojok: "GEN.n" di pojok kartu.
 // Di cabang yang dihitung dari orang tertentu (bagan/cabang.js), orang itu
 // berlabel "Pangkal cabang" dengan GEN.0, tetapi warnanya tetap warna
-// keturunan (emas hanya untuk pasangan pangkal utama).
+// keturunan (emas hanya untuk pasangan pangkal utama). Pasangannya (yang
+// bukan keturunan) juga "Pangkal cabang" dengan GEN.0, berwarna pasangan.
 // belumDewasa: penanda tunas daun di pojok kartu (di bawah 18 tahun).
 // panggilan hanya untuk pencarian, tidak tampil di kartu.
 export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
-  const gen = s.gen.get(id) ?? null
-  const pangkalCabang = s.pangkalCabang === id
-  const jenis = gen === null ? 'pasangan' : gen === 0 && !pangkalCabang ? 'pangkal' : 'keturunan'
+  const pasanganCabang = Boolean(s.pasanganCabang?.has(id))
+  const gen = pasanganCabang ? 0 : (s.gen.get(id) ?? null)
+  const pangkalCabang = s.pangkalCabang === id || pasanganCabang
+  const jenis = pasanganCabang || gen === null ? 'pasangan' : gen === 0 && !pangkalCabang ? 'pangkal' : 'keturunan'
   const istilah = gen === null ? null : pangkalCabang ? KATA.pangkalCabang : istilahGenerasi(gen, s.daftarGenerasi)
   return {
     id,
@@ -78,8 +80,8 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
     gen,
     labelGen: gen === null ? null : labelGen(gen),
     istilahGen: istilah,
-    label: jenis === 'pasangan' ? KATA.labelPasangan : istilah,
-    pojok: jenis === 'keturunan' ? labelGen(gen) : null,
+    label: pangkalCabang ? istilah : jenis === 'pasangan' ? KATA.labelPasangan : istilah,
+    pojok: jenis === 'keturunan' || pangkalCabang ? labelGen(gen) : null,
     belumDewasa: belumDewasa(orang, hariIni),
   }
 }
@@ -227,10 +229,10 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   }))
 
   const subjudul =
-    gen === null
-      ? keteranganPasangan(s, id)
-      : s.pangkalCabang === id
-        ? KATA.pangkalCabang
+    s.pangkalCabang === id || s.pasanganCabang?.has(id)
+      ? KATA.pangkalCabang
+      : gen === null
+        ? keteranganPasangan(s, id)
         : gen === 0
         ? (istilahGenerasi(0, s.daftarGenerasi) ?? teksGenerasi(0, s.daftarGenerasi))
         : teksGenerasi(gen, s.daftarGenerasi)

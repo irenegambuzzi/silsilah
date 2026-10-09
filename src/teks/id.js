@@ -323,7 +323,7 @@ export const teks = {
     hitungDari: 'Hitung dari {nama}',
     pitaCabang: 'Generasi dihitung dari {nama}',
     kembaliKePangkal: 'Kembali ke pangkal utama',
-    tampilkanSemua: 'Tampilkan semua',
+    keluarFokus: 'Keluar dari fokus',
     naikKe: 'Naik ke {nama}',
     panel: 'Orang terpilih',
     fokusCabang: 'Fokus pada cabang ini',

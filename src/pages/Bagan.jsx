@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUp, Expand, Menu, Minus, Network, Plus, Search, X } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
+import { ArrowUp, Expand, LogOut, Menu, Minus, Network, Plus, Search, X } from 'lucide-react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { GambarBagan } from '../components/bagan/GambarBagan.jsx'
 import { Legenda } from '../components/bagan/Legenda.jsx'
 import { GerbangData } from '../components/GerbangData.jsx'
@@ -114,11 +114,11 @@ function Pencarian({ kartu, saatKetemu }) {
   )
 }
 
-// Bilah atas yang melayang di kiri atas, seperti aplikasi lama. `turun`:
-// ada pita keterangan cabang di atasnya.
-function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, turun, ref }) {
+// Bilah atas yang melayang di kiri atas, seperti aplikasi lama (di bawah
+// pita fokus kalau ada).
+function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, ref }) {
   return (
-    <div ref={ref} className={`absolute left-3 right-3 z-20 flex flex-col gap-3 p-4 pr-14 sm:right-auto sm:max-w-[calc(100%-1.5rem)] ${turun ? 'top-16' : 'top-3'} ${BINGKAI}`}>
+    <div ref={ref} className={`pointer-events-auto relative mx-3 mt-3 flex flex-col gap-3 p-4 pr-14 sm:mr-auto sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
       <button
         type="button"
         onClick={saatTutup}
@@ -158,14 +158,28 @@ function BilahAtas({ kartu, aksi, saatKetemu, fokus, saatTutup, turun, ref }) {
   )
 }
 
-// Pita di atas bagan selama generasi dihitung dari orang yang difokuskan.
-function PitaCabang({ nama, saatKembali }) {
+// Pita di atas bagan SELAMA mode fokus aktif: cabang mana yang tampil (atau
+// dari siapa generasi dihitung), "Kembali ke pangkal utama" (hanya kalau
+// generasi dihitung dari orang itu), dan tombol "Keluar dari fokus" yang
+// selalu terlihat. `sisiKanan`: panel keterangan terbuka di kanan (layar
+// lebar), jadi isi pita tidak boleh tertutup panel.
+function PitaFokus({ nama, hitungCabang, saatKembali, saatKeluar, sisiKanan }) {
   return (
-    <div role="status" className="absolute inset-x-0 top-0 z-20 flex min-h-14 flex-wrap items-center justify-center gap-x-2 border-b-2 border-emas bg-kertas px-4 py-1 text-center text-lg font-semibold shadow-lembut">
-      <span>{isiTeks(T.pitaCabang, { nama })}</span>
-      <span aria-hidden="true" className="text-redup">·</span>
-      <button type="button" onClick={saatKembali} className="min-h-12 font-bold text-emas-teks underline underline-offset-2">
-        {T.kembaliKePangkal}
+    <div className={`pointer-events-auto flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 border-b-2 border-emas bg-kertas px-4 py-1 text-lg font-semibold shadow-lembut ${sisiKanan ? 'md:pr-[27rem]' : ''}`}>
+      <p role="status" className="flex flex-wrap items-center gap-x-2">
+        <span>{isiTeks(hitungCabang ? T.pitaCabang : T.fokusJudul, { nama })}</span>
+        {hitungCabang && (
+          <>
+            <span aria-hidden="true" className="text-redup">·</span>
+            <button type="button" onClick={saatKembali} className="min-h-12 font-bold text-emas-teks underline underline-offset-2">
+              {T.kembaliKePangkal}
+            </button>
+          </>
+        )}
+      </p>
+      <button type="button" onClick={saatKeluar} className={TOMBOL_KECIL} data-keluar-fokus>
+        <LogOut aria-hidden="true" className="size-5" />
+        {T.keluarFokus}
       </button>
     </div>
   )
@@ -230,6 +244,11 @@ function IsiBagan() {
   const silsilah = useSilsilah()
   const bagan = useMemo(() => susunBagan(silsilah), [silsilah])
   const [params, setParams] = useSearchParams()
+  const lokasi = useLocation()
+  const navigasi = useNavigate()
+  // Masuk ke mode fokus selalu menambah satu langkah di riwayat browser, jadi
+  // tombol Kembali di browser keluar dari fokus (state.masukFokus menandai
+  // langkah itu). Perpindahan di dalam mode fokus menggantikan langkah itu.
   const [terpilih, setTerpilih] = useState(params.get('pilih'))
   const [bilah, setBilah] = useState(true)
   const pengukur = useRef(null)
@@ -262,6 +281,17 @@ function IsiBagan() {
   const pangkal = akar ? [akar.id, akar.pasangan[0]?.id].filter(Boolean) : []
   const { pandang, props, isi, aksi } = useGeserZoom({ kunci: `${fokusId ?? ''}|${hitungCabang}`, pusat, pangkal, halangan })
   const kartu = useMemo(() => (akar ? semuaKartu(akar) : []), [akar])
+  const langkahFokus = Boolean(lokasi.state?.masukFokus)
+  // Dibuka langsung dari alamat yang sudah berisi fokus (link yang dibagikan):
+  // sisipkan bagan lengkap di riwayat, supaya Kembali juga keluar dari fokus.
+  useEffect(() => {
+    if (!fokusId || langkahFokus) return
+    const tanpa = new URLSearchParams(params)
+    tanpa.delete('fokus')
+    tanpa.delete('hitung')
+    navigasi({ search: tanpa.toString() ? `?${tanpa}` : '' }, { replace: true })
+    navigasi({ search: `?${params}` }, { state: { masukFokus: true } })
+  }, [fokusId, langkahFokus, params, navigasi])
   const ada = useMemo(
     () => ({ tanpaJenisKelamin: kartu.some((k) => !k.sex), belumDewasa: kartu.some((k) => k.belumDewasa) }),
     [kartu]
@@ -282,7 +312,8 @@ function IsiBagan() {
   const cabang = kartuTerpilih ? (bagan.simpul.has(kartuTerpilih.id) ? kartuTerpilih.id : bagan.tempat.get(kartuTerpilih.id)) : null
 
   // Mengubah parameter alamat (fokus, hitung). Tanpa fokus, tidak ada
-  // hitungan cabang.
+  // hitungan cabang. Masuk ke fokus: langkah baru di riwayat; di dalam mode
+  // fokus: menggantikan langkah itu.
   const ubah = (ganti) => {
     const baru = new URLSearchParams(params)
     for (const [kunci, nilai] of Object.entries(ganti)) {
@@ -291,7 +322,15 @@ function IsiBagan() {
     }
     if (!baru.get('fokus')) baru.delete('hitung')
     baru.delete('pilih')
-    setParams(baru, { replace: true })
+    if (!fokusId && baru.get('fokus')) setParams(baru, { state: { masukFokus: true } })
+    else setParams(baru, { replace: true, state: baru.get('fokus') ? lokasi.state : null })
+  }
+  // "Keluar dari fokus": kembali ke bagan lengkap dengan hitungan pangkal
+  // utama, sama dengan tombol Kembali di browser.
+  const keluarFokus = () => {
+    setTerpilih(null)
+    if (langkahFokus) navigasi(-1)
+    else ubah({ fokus: null })
   }
   const indukId = fokusId ? bagan.induk.get(fokusId) : null
   // Ke kartu utama seseorang. Kalau kartunya tidak ada di cabang yang sedang
@@ -307,10 +346,9 @@ function IsiBagan() {
 
   const fokus = fokusId && (
     <div className="flex flex-col gap-2 border-t border-tepi pt-3">
-      <p className="text-lg font-semibold">{isiTeks(T.fokusJudul, { nama: akar.kartu.nama })}</p>
       <div className="flex flex-wrap gap-2">
-        <Tombol varian="sekunder" onClick={() => ubah({ fokus: null })}>
-          {T.tampilkanSemua}
+        <Tombol varian="sekunder" ikon={LogOut} onClick={keluarFokus}>
+          {T.keluarFokus}
         </Tombol>
         {indukId && (
           <Tombol varian="sekunder" ikon={ArrowUp} onClick={() => ubah({ fokus: indukId })}>
@@ -344,17 +382,28 @@ function IsiBagan() {
           />
         </div>
       </div>
-      {hitungCabang && <PitaCabang nama={akar.kartu.nama} saatKembali={() => ubah({ hitung: null })} />}
-      {bilah ? (
-        <BilahAtas ref={atasRef} kartu={kartu} aksi={aksi} saatKetemu={lompat} fokus={fokus} turun={hitungCabang} saatTutup={() => setBilah(false)} />
-      ) : (
-        <>
-          <h1 className="sr-only">{teks.aplikasi.nama}</h1>
-          <button ref={atasRef} type="button" onClick={() => setBilah(true)} aria-label={T.tampilkanMenu} className={`${TOMBOL_BULAT} left-3 ${hitungCabang ? 'top-16' : 'top-3'}`}>
-            <Menu aria-hidden="true" className="size-6" />
-          </button>
-        </>
-      )}
+      {/* Pita fokus dan bilah atas bertumpuk di atas bagan (pita tidak pernah menutupi bilah). */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col">
+        {fokusId && (
+          <PitaFokus
+            nama={akar.kartu.nama}
+            hitungCabang={hitungCabang}
+            saatKembali={() => ubah({ hitung: null })}
+            saatKeluar={keluarFokus}
+            sisiKanan={Boolean(kartuTerpilih)}
+          />
+        )}
+        {bilah ? (
+          <BilahAtas ref={atasRef} kartu={kartu} aksi={aksi} saatKetemu={lompat} fokus={fokus} saatTutup={() => setBilah(false)} />
+        ) : (
+          <>
+            <h1 className="sr-only">{teks.aplikasi.nama}</h1>
+            <button ref={atasRef} type="button" onClick={() => setBilah(true)} aria-label={T.tampilkanMenu} className={`${TOMBOL_BULAT.replace('absolute ', '')} pointer-events-auto relative ml-3 mt-3`}>
+              <Menu aria-hidden="true" className="size-6" />
+            </button>
+          </>
+        )}
+      </div>
       <div ref={pengukur} aria-hidden="true" className="pointer-events-none invisible absolute h-0 w-[26rem]" />
       <Legenda ref={legendaRef} bingkai={BINGKAI} tombolBulat={TOMBOL_BULAT} ada={ada} />
       {kartuTerpilih && (

@@ -8,8 +8,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { configure, fireEvent, screen, within } from '@testing-library/react'
-import { pasang } from '../test/pembantu.jsx'
+import { act, configure, fireEvent, screen, within } from '@testing-library/react'
+import { lokasiSaatIni, pasang, riwayat } from '../test/pembantu.jsx'
 import { keluargaFiktif, klienKeluarga, tabelKeluarga } from '../test/klienKeluarga.js'
 
 configure({ asyncUtilTimeout: 5000 })
@@ -330,7 +330,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Sinta', level: 2 })).toBeTruthy()
   })
 
-  it('fokus cabang: hanya orang itu dan keturunannya; "Tampilkan semua" mengembalikan', async () => {
+  it('fokus cabang: hanya orang itu dan keturunannya; "Keluar dari fokus" mengembalikan', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     const semua = semuaKartu().length
@@ -345,8 +345,56 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(k('kelvan')).toBeTruthy()
     expect(k('gendis')).toBeTruthy()
     expect(semuaKartu().length).toBeLessThan(semua)
-    await aksi.click(screen.getByRole('button', { name: 'Tampilkan semua' }))
+    // Tombol keluar ada di pita dan di bilah atas.
+    expect(screen.getAllByRole('button', { name: 'Keluar dari fokus' })).toHaveLength(2)
+    await aksi.click(screen.getAllByRole('button', { name: 'Keluar dari fokus' })[1])
     expect(semuaKartu().length).toBe(semua)
+    expect(screen.queryByRole('button', { name: 'Keluar dari fokus' })).toBeNull()
+  })
+
+  it('"Keluar dari fokus" selalu terlihat di pita selama mode fokus, juga saat bilah atas disembunyikan; kembali ke bagan lengkap dan hitungan pangkal utama', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const semua = semuaKartu().length
+    await aksi.click(k('bima'))
+    await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari Bima' }))
+    await aksi.click(screen.getByRole('button', { name: 'Sembunyikan menu bagan' }))
+    const tombol = screen.getAllByRole('button', { name: 'Keluar dari fokus' })
+    expect(tombol).toHaveLength(1)
+    await aksi.click(tombol[0])
+    expect(semuaKartu().length).toBe(semua)
+    expect(screen.queryByText(/Generasi dihitung dari|Menampilkan satu cabang/)).toBeNull()
+    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Anak')
+    expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.2')
+    expect(lokasiSaatIni.search).toBe('')
+  })
+
+  it('tombol Kembali di browser keluar dari fokus (juga dari "Hitung dari [nama]")', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const semua = semuaKartu().length
+    await aksi.click(k('bima'))
+    await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari Bima' }))
+    expect(screen.getByText('Generasi dihitung dari Bima')).toBeTruthy()
+    // Berpindah di dalam mode fokus tidak menambah langkah: satu kali Kembali tetap keluar.
+    await aksi.click(screen.getByRole('button', { name: 'Kembali ke pangkal utama' }))
+    expect(screen.getByText('Menampilkan satu cabang: Bima')).toBeTruthy()
+    act(() => riwayat.kembali())
+    expect(await screen.findByRole('button', { name: /Hasna/ })).toBeTruthy()
+    expect(screen.queryByText(/Generasi dihitung dari|Menampilkan satu cabang/)).toBeNull()
+    expect(semuaKartu().length).toBe(semua)
+    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Anak')
+  })
+
+  it('dibuka dari alamat yang berisi fokus: tombol Kembali di browser juga keluar dari fokus', async () => {
+    pasang('/bagan?fokus=kelvan&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Kelvan')).toBeTruthy()
+    act(() => riwayat.kembali())
+    expect(await screen.findByRole('button', { name: /Hasna/ })).toBeTruthy()
+    expect(screen.queryByText(/Generasi dihitung dari|Menampilkan satu cabang/)).toBeNull()
+    expect(k('kelvan').querySelector('.kartu-gen').textContent).toBe('GEN.2')
   })
 
   it('di cabang, "Naik ke …" ke cabang orang tuanya', async () => {
@@ -362,7 +410,8 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await aksi.click(k('sinta'))
     await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
     await aksi.click(screen.getByRole('button', { name: 'Hitung dari Lorvan' }))
-    expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
+    expect(screen.getByText('Generasi dihitung dari Lorvan')).toBeTruthy()
+    expect(k('sinta').querySelector('.kartu-label').textContent).toBe('Pangkal cabang')
   })
 
   it('"Hitung dari [nama]": orang itu PANGKAL CABANG GEN.0, keturunannya dihitung ulang, dengan pita keterangan', async () => {
@@ -378,6 +427,12 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.1')
     expect(k('hasna').querySelector('.kartu-label').textContent).toBe('Putu')
     expect(screen.getByText('Generasi dihitung dari Bima')).toBeTruthy()
+    // Pasangan Bima juga PANGKAL CABANG GEN.0 (warna tetap warna pasangan).
+    for (const id of ['eka', 'fitri', 'gita']) {
+      expect(k(id).querySelector('.kartu-label').textContent, id).toBe('Pangkal cabang')
+      expect(k(id).querySelector('.kartu-gen').textContent, id).toBe('GEN.0')
+      expect(k(id).dataset.warna, id).toBe('pasangan-p')
+    }
     // Panel ikut dihitung ulang.
     await aksi.click(k('mega'))
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByText('Anak · Generasi ke-1')).toBeTruthy()
