@@ -86,6 +86,31 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   }
 }
 
+// Keterangan pembeda di daftar hasil pencarian, supaya nama yang sama di
+// cabang berbeda bisa dibedakan: keturunan "Buyut · putra Vino" (orang tua
+// di jalur yang menentukan GEN-nya), pasangan pangkal "Pangkal", pasangan
+// (tanpa orang tua di silsilah) "pasangan Vino" (keturunan yang dinikahinya).
+// Selalu dari silsilah utama, juga saat generasi dihitung dari cabang.
+export function keteranganCari(s, id) {
+  const orang = s.graf.orang.get(id)
+  if (!orang) return ''
+  const nama = (pid) => namaTampil(s.graf.orang.get(pid))
+  if (!s.gen.has(id)) {
+    const pasangan = []
+    for (const u of s.graf.pernikahan.get(id) ?? []) {
+      const p = pasanganDi(u, id)
+      if (p && s.gen.has(p) && !pasangan.includes(p)) pasangan.push(p)
+    }
+    return pasangan.length > 0 ? isiTeks(KATA.cariPasangan, { nama: gabungNama(pasangan.map(nama)) }) : ''
+  }
+  const gen = s.gen.get(id)
+  const istilah = istilahGenerasi(gen, s.daftarGenerasi) ?? labelGen(gen)
+  const ortu = s.jalur.get(id)?.[0]?.orangTuaId
+  if (!ortu) return istilah
+  const sex = orang.sex === 'L' || orang.sex === 'P' ? orang.sex : 'x'
+  return `${istilah} · ${isiTeks(KATA.cariAnak[sex], { nama: nama(ortu) })}`
+}
+
 // Untuk Daftar: tahun lahir–wafat dan keterangan singkat ("Putra ke-6 ·
 // dari istri ke-1", atau "Pasangan dari …").
 export function keteranganDaftar(s, id) {

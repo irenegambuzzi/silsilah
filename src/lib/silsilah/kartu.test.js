@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from './keluargaFiktif.js'
 import { susunSilsilah } from './silsilah.js'
-import { keteranganDaftar, labelDetail, labelKartu } from './kartu.js'
+import { keteranganDaftar, labelDetail, labelKartu, keteranganCari } from './kartu.js'
 import { awalanAlmarhum, namaTampil } from './nama.js'
 
 const s = susunSilsilah(bangunKeluargaFiktif())
@@ -501,5 +501,30 @@ describe('baris yang selalu tampil dan yang hanya tampil kalau berlaku', () => {
     for (const id of utamaSemua) {
       if (!s.graf.orang.get(id).marital_choice) expect(labelDetail(s, id).statusPernikahan, id).not.toBe('Belum menikah')
     }
+  })
+})
+
+describe('keteranganCari: pembeda di hasil pencarian', () => {
+  it.each([
+    ['sadevan-b', 'Buyut · putra Vino'],
+    ['sadevan-a', 'Buyut · putra Nanda'],
+    ['ratrisa-k', 'pasangan Vino'],
+    ['ratrisa-a', 'Buyut · putri Yoga'],
+    ['raksa', 'Pangkal'],
+    ['bima', 'Anak · putra Alm. Raksa'],
+    ['ragil', 'Buyut · anak Alm. Tirwan'], // jenis kelamin belum diketahui
+    ['bintang', 'Canggah · putra Dorvi, S.Kom.'], // antarsepupu: lewat ayah, sama dengan GEN-nya
+    ['eka', 'pasangan Bima'], // menikah dua kali dengan orang yang sama: sekali
+  ])('%s: "%s"', (id, harapan) => {
+    expect(keteranganCari(s, id)).toBe(harapan)
+  })
+  it('nama yang sama di cabang berbeda selalu punya keterangan berbeda', () => {
+    const per = new Map()
+    for (const [id, p] of s.graf.orang) {
+      if (p.tree_id !== null) continue
+      const kunci = `${p.full_name.split(' ')[0]}`
+      per.set(kunci, [...(per.get(kunci) ?? []), keteranganCari(s, id)])
+    }
+    for (const [nama, ket] of per) if (ket.length > 1) expect(new Set(ket).size, nama).toBe(ket.length)
   })
 })

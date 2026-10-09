@@ -302,7 +302,10 @@ export const teks = {
     cariHasil: '{ke} dari {n}: {nama}',
     // Orang yang cocok lewat nama panggilannya: "1 dari 1: Elvina (panggilan: Ovi)".
     cariPanggilan: 'panggilan: {panggilan}',
-    cariTidakAda: 'Tidak ada nama yang cocok.',
+    cariTidakAda: 'Tidak ada nama yang cocok. Periksa ejaannya, atau coba nama panggilan.',
+    // Saat mengetik, sebelum memilih: daftar hasil di bawah kolom cari.
+    cariJumlah: '{n} nama cocok. Pilih dari daftar, atau tekan Enter.',
+    cariDaftar: 'Hasil pencarian',
     sembunyikanMenu: 'Sembunyikan menu bagan',
     tampilkanMenu: 'Tampilkan menu bagan',
     statusLive: 'Tersambung · data terbaru',
@@ -667,6 +670,9 @@ export const teks = {
     jenisPasangan: { istri: 'istri', suami: 'suami', pasangan: 'pasangan' },
     anakSambungDari: 'Anak sambung {nama}',
     anakAngkatDari: 'Anak angkat {nama}',
+    // Keterangan pembeda di hasil pencarian: "Buyut · putra Vino", "pasangan Vino".
+    cariAnak: { L: 'putra {nama}', P: 'putri {nama}', x: 'anak {nama}' },
+    cariPasangan: 'pasangan {nama}',
     // Keterangan kecil di daftar anak milik orang tuanya.
     jenisAnakKecil: { sambung: 'anak sambung', angkat: 'anak angkat' },
     statusPernikahan: {

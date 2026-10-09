@@ -16,6 +16,8 @@ const ukuranNama = (nama) => (nama.length > 30 ? 'panjang' : nama.length > 16 ? 
 //   kiri atas   nomor urut (hanya anak KANDUNG; anak sambung/angkat tanpa nomor)
 //   kanan bawah tunas daun: belum dewasa (di bawah 18 tahun)
 // Nama panjang memakai huruf lebih kecil (ukuranNama) supaya tidak terpotong.
+// disorot: hasil pencarian yang sedang ditunjuk (cincin emas tebal), tanpa
+// membuka panel; terpilih: kartu yang diketuk (panelnya terbuka).
 // Warnanya menurut warnaKartu (keturunan/pasangan, jenis kelamin, pangkal,
 // wafat). Gaya: .kartu-orang di index.css. Letak (rem) dari tata letak bagan.
 //
@@ -24,7 +26,7 @@ const ukuranNama = (nama) => (nama.length > 30 ? 'panjang' : nama.length > 16 ? 
 // labelnya "Dari cabang lain", dan mengetuknya melompat ke kartu utamanya.
 // Kartu ULANG: pasangan yang dinikahi kembali, tampil lagi di pernikahan
 // berikutnya; mengetuknya memilih orang yang sama.
-export function KartuOrang({ kartu, letak, terpilih = false, rujukan = null, ulang = false, saatKetuk, ...sisa }) {
+export function KartuOrang({ kartu, letak, terpilih = false, disorot = false, rujukan = null, ulang = false, saatKetuk, ...sisa }) {
   const penanda = rujukan
     ? { 'data-rujukan': kartu.id, 'aria-label': rujukan.aria }
     : ulang
@@ -38,6 +40,8 @@ export function KartuOrang({ kartu, letak, terpilih = false, rujukan = null, ula
       data-sex={kartu.sex ?? 'x'}
       data-wafat={kartu.wafat || undefined}
       data-belum-dewasa={kartu.belumDewasa || undefined}
+      data-sorot={disorot || undefined}
+      aria-current={disorot || undefined}
       onClick={() => saatKetuk(kartu.id)}
       className="kartu-orang absolute"
       style={{ left: `${letak.x}rem`, top: `${letak.y}rem` }}

@@ -8,9 +8,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { act, configure, fireEvent, screen, within } from '@testing-library/react'
+import { act, configure, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { lokasiSaatIni, pasang, riwayat } from '../test/pembantu.jsx'
 import { keluargaFiktif, klienKeluarga, tabelKeluarga } from '../test/klienKeluarga.js'
+import { cariOrang } from '../lib/silsilah/cari.js'
+import { namaTampil } from '../lib/silsilah/nama.js'
 
 configure({ asyncUtilTimeout: 5000 })
 beforeEach(() => {
@@ -256,65 +258,245 @@ describe('Bagan: pernikahan antarsepupu', () => {
   })
 })
 
+// Putaran kelima, bagian C: daftar hasil langsung saat mengetik, keterangan
+// pembeda, Enter berputar, papan ketik, tanpa jaringan.
+describe('Bagan: pencarian dengan daftar hasil', () => {
+  const kolom = () => screen.getByRole('combobox', { name: 'Cari nama' })
+  const hasil = () => within(screen.getByRole('listbox', { name: 'Hasil pencarian' })).getAllByRole('option')
+  const namaHasil = () => hasil().map((o) => o.querySelector('span').textContent)
+  const ketHasil = () => hasil().map((o) => o.querySelectorAll('span')[1].textContent)
+  const status = () => document.getElementById('cari-status').textContent
+  const disorot = () => [...document.querySelectorAll('[data-sorot]')].map((x) => x.dataset.orang)
+  const terpilih = () => [...semuaKartu()].filter((x) => x.getAttribute('aria-pressed') === 'true').map((x) => x.dataset.orang)
+
+  // Aturan pencocokan tidak diubah (potongan huruf yang berurutan), jadi "ka"
+  // TIDAK memuat Kirana dan Raksa (keputusan Anda, putaran kelima); keduanya
+  // ketemu lewat "kir" dan "rak".
+  it('"ka": daftar langsung muncul saat mengetik dan memuat SEMUA yang cocok (Eka, Ika, Oka, Almh. Sekar, …)', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'ka')
+    expect(kolom().getAttribute('aria-expanded')).toBe('true')
+    for (const nama of ['Eka', 'Ika', 'Oka', 'Almh. Sekar', 'Alm. H. Bagaskara Wiryawan Adinata Mahardika, S.H.', 'Sadevan Arkanata']) expect(namaHasil(), nama).toContain(nama)
+    expect(namaHasil()).not.toContain('Kirana')
+    // Semua orang silsilah utama yang namanya/panggilannya cocok, tidak ada yang tertinggal.
+    const utama = keluargaFiktif.people.filter((p) => p.tree_id === null)
+    const harapan = cariOrang(utama.map((p) => ({ nama: namaTampil(p), panggilan: p.nickname })), 'ka').map((o) => o.nama)
+    expect([...namaHasil()].sort()).toEqual([...harapan].sort())
+    expect(status()).toBe(`${harapan.length} nama cocok. Pilih dari daftar, atau tekan Enter.`)
+  })
+
+  it('Kirana dan Raksa ketemu lewat potongan nama yang berurutan ("kir", "rak")', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'kir')
+    expect(namaHasil()).toEqual(['Kirana'])
+    await aksi.clear(kolom())
+    await aksi.type(kolom(), 'rak')
+    expect(namaHasil()).toEqual(['Alm. Raksa'])
+  })
+
+  it('"sadevan": dua hasil dengan keterangan pembeda "putra Vino" dan "putra Nanda"', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'sadevan')
+    expect(hasil()).toHaveLength(2)
+    const ket = ketHasil()
+    expect(ket.some((k) => k.includes('putra Vino'))).toBe(true)
+    expect(ket.some((k) => k.includes('putra Nanda'))).toBe(true)
+    expect(ket[0]).not.toBe(ket[1])
+  })
+
+  it('"ratrisa": dua hasil, "pasangan Vino" dan "putri Yoga"', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'ratrisa')
+    expect(hasil()).toHaveLength(2)
+    expect(ketHasil().sort()).toEqual(['Buyut · putri Yoga', 'pasangan Vino'])
+  })
+
+  it('memilih hasil: kartunya disorot, daftar tertutup, panel tidak menutupi bagan; mengetuk kartu itu membuka panelnya', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(k('mega'))
+    expect(screen.getByRole('region', { name: 'Orang terpilih' })).toBeTruthy()
+    await aksi.type(kolom(), 'ratrisa')
+    const putri = hasil().find((o) => o.textContent.includes('putri Yoga'))
+    await aksi.click(putri)
+    expect(disorot()).toEqual(['ratrisa-a'])
+    expect(k('ratrisa-a').getAttribute('aria-current')).toBe('true')
+    expect(screen.queryByRole('listbox')).toBeNull()
+    // Panel orang lain (Mega) ditutup; panel tidak dibuka otomatis.
+    expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
+    expect(document.activeElement).toBe(kolom())
+    await aksi.click(k('ratrisa-a'))
+    expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { level: 2 }).textContent).toBe('Ratrisa Anindya Maharsi Wijayakusuma')
+    expect(disorot()).toEqual(['ratrisa-a'])
+    expect(status()).toMatch(/^\d dari 2: Ratrisa Anindya Maharsi Wijayakusuma · Buyut · putri Yoga$/)
+  })
+
+  it('Enter dan tombol cari berulang: "n dari m" berputar, sorotan ikut pindah, sesudah yang terakhir kembali ke "1 dari m"', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'ka')
+    const m = hasil().length
+    expect(m).toBeGreaterThan(3)
+    const urutan = []
+    for (let i = 1; i <= m + 1; i++) {
+      if (i % 2) await aksi.keyboard('{Enter}')
+      else await aksi.click(screen.getByRole('button', { name: 'Cari nama' }))
+      expect(status(), `tekan ke-${i}`).toMatch(new RegExp(`^${i > m ? 1 : i} dari ${m}: `))
+      expect(disorot(), `tekan ke-${i}`).toHaveLength(1)
+      urutan.push(disorot()[0])
+    }
+    expect(new Set(urutan.slice(0, m)).size).toBe(m) // setiap hasil sekali
+    expect(urutan[m]).toBe(urutan[0]) // kembali ke yang pertama
+  })
+
+  it('papan ketik: panah bawah/atas memilih di daftar (berputar), Enter memilihnya, Esc menutup lalu mengosongkan', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'sadevan')
+    const ids = hasil().map((o) => o.dataset.hasil)
+    await aksi.keyboard('{ArrowDown}{ArrowDown}')
+    expect(kolom().getAttribute('aria-activedescendant')).toBe('cari-hasil-1')
+    expect(hasil()[1].getAttribute('aria-selected')).toBe('true')
+    await aksi.keyboard('{ArrowDown}')
+    expect(kolom().getAttribute('aria-activedescendant')).toBe('cari-hasil-0')
+    await aksi.keyboard('{ArrowUp}')
+    expect(kolom().getAttribute('aria-activedescendant')).toBe('cari-hasil-1')
+    await aksi.keyboard('{Enter}')
+    expect(disorot()).toEqual([ids[1]])
+    expect(status()).toMatch(/^2 dari 2: /)
+    // Daftar dibuka lagi dengan panah; Esc menutupnya, Esc berikutnya mengosongkan kolom dan sorotan.
+    await aksi.keyboard('{ArrowDown}')
+    expect(screen.getByRole('listbox')).toBeTruthy()
+    await aksi.keyboard('{Escape}')
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(kolom().value).toBe('sadevan')
+    await aksi.keyboard('{Escape}')
+    expect(kolom().value).toBe('')
+    expect(disorot()).toEqual([])
+    expect(status()).toBe('')
+  })
+
+  it('mengosongkan kolom: daftar dan sorotan hilang', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'sadevan{Enter}')
+    expect(disorot()).toHaveLength(1)
+    await aksi.clear(kolom())
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(disorot()).toEqual([])
+    expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
+    expect(status()).toBe('')
+  })
+
+  it('kartu yang diketuk sendiri tetap terpilih walaupun kolom cari dikosongkan', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.type(kolom(), 'sad{Enter}')
+    await aksi.click(k('mega'))
+    await aksi.clear(kolom())
+    expect(disorot()).toEqual([])
+    expect(terpilih()).toEqual(['mega'])
+  })
+
+  it('saat fokus cabang: tetap mencari di seluruh silsilah; memilih orang di cabang lain menampilkannya', async () => {
+    const { aksi } = pasang('/bagan?fokus=lorvan', klienKeluarga())
+    await screen.findByText('Menampilkan satu cabang: Lorvan')
+    await aksi.type(kolom(), 'sadevan')
+    expect(hasil()).toHaveLength(2)
+    await aksi.click(hasil().find((o) => o.textContent.includes('putra Nanda')))
+    await waitFor(() => expect(screen.queryByText('Menampilkan satu cabang: Lorvan')).toBeNull())
+    expect(k('sadevan-a')).toBeTruthy()
+    expect(disorot()).toEqual(['sadevan-a'])
+  })
+
+  it('tanpa jaringan dan tanpa data kontak: mengetik dan memilih tidak memanggil server sama sekali', async () => {
+    const klien = klienKeluarga()
+    const { aksi } = pasang('/bagan', klien)
+    await tunggu()
+    const sebelum = klien.panggilan.length
+    await aksi.type(kolom(), 'ka{Enter}{Enter}')
+    await aksi.click(screen.getByRole('button', { name: 'Cari nama' }))
+    await aksi.clear(kolom())
+    await aksi.type(kolom(), 'ratrisa')
+    await aksi.click(hasil()[0])
+    expect(klien.panggilan.slice(sebelum)).toEqual([])
+    expect(klien.panggilan.some((p) => /kontak|contact/i.test(`${p.nama}`))).toBe(false)
+  })
+
+  it('di HP: kolom cari selebar bilah, setiap hasil cukup besar untuk diketuk', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(kolom().className).toContain('w-full')
+    expect(kolom().getAttribute('enterkeyhint')).toBe('search')
+    await aksi.type(kolom(), 'ka')
+    for (const o of hasil()) expect(o.className).toContain('min-h-12')
+  })
+})
+
 describe('Bagan: bilah atas dan legenda', () => {
   it('bilah atas: judul, status, cari, perbesar/perkecil, Pusatkan; bisa disembunyikan', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(screen.getByText('Arsip Warisan & Sejarah')).toBeTruthy()
-    expect(screen.getByRole('searchbox', { name: 'Cari nama' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: 'Cari nama' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Pusatkan' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Lihat seluruh bagan' })).toBeTruthy()
     // fitur yang belum ada tidak ditampilkan
     expect(screen.queryByRole('button', { name: /Tambah Anggota|Unduh PDF/i })).toBeNull()
     await aksi.click(screen.getByRole('button', { name: 'Sembunyikan menu bagan' }))
-    expect(screen.queryByRole('searchbox')).toBeNull()
+    expect(screen.queryByRole('combobox')).toBeNull()
     await aksi.click(screen.getByRole('button', { name: 'Tampilkan menu bagan' }))
-    expect(screen.getByRole('searchbox', { name: 'Cari nama' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: 'Cari nama' })).toBeTruthy()
   })
 
-  it('cari nama: kartu yang cocok terpilih; Cari lagi ke hasil berikutnya', async () => {
+  it('cari nama: kartu yang cocok disorot; Cari lagi ke hasil berikutnya', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
-    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'ga{Enter}')
+    await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'ga{Enter}')
     // "ga" cocok dengan beberapa nama (Mega, Rangga, Yoga)
-    const panel = screen.getByRole('region', { name: 'Orang terpilih' })
-    const pertama = within(panel).getByRole('heading', { level: 2 }).textContent
+    const pertama = document.querySelector('[data-sorot]').dataset.orang
     await aksi.click(screen.getByRole('button', { name: 'Cari nama' }))
-    const kedua = within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { level: 2 }).textContent
+    const kedua = document.querySelector('[data-sorot]').dataset.orang
     expect(kedua).not.toBe(pertama)
+    expect(document.querySelectorAll('[data-sorot]')).toHaveLength(1)
     expect(screen.getByText(/^2 dari \d+: /)).toBeTruthy()
   })
 
-  it('cari nama panggilan: kartunya terpilih dan hasilnya menyebut "panggilan: Ovi"', async () => {
+  it('cari nama panggilan: kartunya disorot dan hasilnya menyebut "panggilan: Ovi"', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
-    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'Ovi{Enter}')
-    expect(screen.getByText('1 dari 1: Elvina (panggilan: Ovi)')).toBeTruthy()
-    expect(k('elvina').getAttribute('aria-pressed')).toBe('true')
+    await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'Ovi{Enter}')
+    expect(screen.getByText('1 dari 1: Elvina · Buyut · putri Kirana (panggilan: Ovi)')).toBeTruthy()
+    expect(k('elvina').hasAttribute('data-sorot')).toBe(true)
   })
 
   it('cari: tahan gelar, tanda baca, ejaan lama; menemukan pasangan', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
-    const kotak = screen.getByRole('searchbox', { name: 'Cari nama' })
+    const kotak = screen.getByRole('combobox', { name: 'Cari nama' })
     for (const [kata, id, hasil] of [
-      ['H. halvin', 'halvin', '1 dari 1: Alm. H. Halvin'],
-      ['Tjahya', 'cahya', '1 dari 1: Cahya'],
-      ['oemar', 'umar', '1 dari 1: Umar'],
-      ['harvel', 'harvel', '1 dari 1: Harvel'],
+      ['H. halvin', 'halvin', '1 dari 1: Alm. H. Halvin · pasangan Ika'],
+      ['Tjahya', 'cahya', '1 dari 1: Cahya · Anak · putri Alm. Raksa'],
+      ['oemar', 'umar', '1 dari 1: Umar · pasangan Cahya'],
+      ['harvel', 'harvel', '1 dari 1: Harvel · pasangan Kirana'],
     ]) {
       await aksi.clear(kotak)
       await aksi.type(kotak, `${kata}{Enter}`)
       expect(screen.getByText(hasil), kata).toBeTruthy()
-      expect(k(id).getAttribute('aria-pressed'), kata).toBe('true')
+      expect(k(id).hasAttribute('data-sorot'), kata).toBe(true)
     }
   })
 
-  it('cari nama yang tidak ada: pesan jelas', async () => {
+  it('cari nama yang tidak ada: pesan jelas, langsung saat mengetik, tanpa daftar', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
-    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'xqvj{Enter}')
-    expect(screen.getByText('Tidak ada nama yang cocok.')).toBeTruthy()
+    await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'xqvj')
+    expect(screen.getByText('Tidak ada nama yang cocok. Periksa ejaannya, atau coba nama panggilan.')).toBeTruthy()
+    expect(screen.queryByRole('listbox')).toBeNull()
   })
 
   it('legenda di kiri bawah bisa ditutup dan dibuka lagi', async () => {

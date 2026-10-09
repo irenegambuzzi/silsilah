@@ -272,6 +272,15 @@ html[data-kontras='tinggi'] .kartu-orang {
     0 0 0 2px var(--c-emas),
     0 8px 18px rgb(44 34 30 / 0.18);
 }
+/* Hasil pencarian yang sedang ditunjuk: cincin emas tebal dengan lingkar
+   luar, supaya terlihat jelas walaupun bagan diperkecil. */
+.kartu-orang[data-sorot] {
+  border-color: var(--c-emas);
+  box-shadow:
+    0 0 0 3px var(--c-emas),
+    0 0 0 8px color-mix(in srgb, var(--c-emas) 35%, transparent),
+    0 8px 18px rgb(44 34 30 / 0.18);
+}
 .kartu-simbol {
   position: absolute;
   top: 0.55rem;
