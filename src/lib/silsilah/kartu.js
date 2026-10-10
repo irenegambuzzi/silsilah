@@ -101,10 +101,29 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
 }
 
 // Keterangan pembeda di daftar hasil pencarian, supaya nama yang sama di
-// cabang berbeda bisa dibedakan: keturunan "Buyut · putra Vino" (orang tua
-// di jalur yang menentukan GEN-nya), pasangan pangkal "Pangkal", pasangan
-// (tanpa orang tua di silsilah) "pasangan Vino" (keturunan yang dinikahinya).
-// Selalu dari silsilah utama, juga saat generasi dihitung dari cabang.
+// cabang berbeda bisa dibedakan: keturunan "Buyut · putra Vino", pasangan
+// pangkal "Leluhur", pasangan (tanpa orang tua di silsilah) "pasangan Vino"
+// (keturunan yang dinikahinya). Keturunan tanpa GEN (tanpaGen): tanpa
+// istilah ("putra Harvel"). Selalu dari silsilah utama, juga saat generasi
+// dihitung dari cabang.
+//
+// Orang tuanya selalu orang tua KANDUNG (putaran keenam): kalau keduanya
+// tercatat, yang keturunan, di jalur yang menentukan GEN-nya (antarsepupu:
+// ayah); anak bawaan pasangan: orang tua kandungnya ("Galen · putra
+// Harvel", bukan ibu sambungnya Kirana). Tanpa orang tua kandung yang
+// tercatat (anak angkat): orang tua di jalurnya ("Putu · putra Lorvan").
+function orangTuaCari(s, id) {
+  const jalur = s.jalur.get(id) ?? []
+  const lewatJalur = jalur.find((j) => j.kandung)
+  if (lewatJalur) return lewatJalur.orangTuaId
+  for (const t of s.graf.tautan.get(id) ?? []) {
+    const u = s.graf.unions.get(t.union_id)
+    const p = orangTuaUnion(u).find((x) => kandungUntuk(t, u, x))
+    if (p) return p
+  }
+  return jalur[0]?.orangTuaId ?? null
+}
+
 export function keteranganCari(s, id) {
   const orang = s.graf.orang.get(id)
   if (!orang) return ''
@@ -120,7 +139,7 @@ export function keteranganCari(s, id) {
   const gen = s.gen.get(id)
   // Keturunan tanpa GEN (generasi.js, tanpaGen): tanpa istilah.
   const istilah = s.tanpaGen?.has(id) ? null : (istilahGenerasi(gen, s.daftarGenerasi) ?? labelGen(gen))
-  const ortu = s.jalur.get(id)?.[0]?.orangTuaId
+  const ortu = orangTuaCari(s, id)
   const sex = orang.sex === 'L' || orang.sex === 'P' ? orang.sex : 'x'
   return [istilah, ortu ? isiTeks(KATA.cariAnak[sex], { nama: nama(ortu) }) : null].filter(Boolean).join(' · ')
 }

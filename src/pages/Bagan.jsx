@@ -70,21 +70,31 @@ function semuaKartu(akar) {
 
 // Pencarian di bilah atas (PLAN.md 15.2; pencocokan di cari.js). Daftar hasil
 // langsung muncul saat mengetik dan memuat SEMUA yang cocok, masing-masing
-// dengan keterangan pembeda ("Buyut · putra Vino", "pasangan Vino").
+// dengan keterangan pembeda ("Buyut · putra Vino", "pasangan Vino") dan nama
+// panggilannya kalau ada ("(panggilan: Bram)"), apa pun yang diketik.
+// Saat fokus cabang (`cabang`: id kartu di cabang itu), daftar hanya memuat
+// hasil di cabang itu, ditambah satu baris "2 hasil lain di luar cabang ini";
+// mengetuk baris itu (atau Enter padanya) menampilkan hasil-hasil tersebut,
+// dan memilih salah satunya keluar dari fokus lalu menyorot kartunya.
 // Memilih hasil (ketuk, atau panah lalu Enter) memindahkan Bagan ke kartunya
 // dan menyorotnya. Enter atau tombol cari berulang: hasil berikutnya
 // ("2 dari 5"), sesudah yang terakhir kembali ke yang pertama. Esc menutup
 // daftar; Esc sekali lagi mengosongkan kolom. Kolom kosong: daftar dan
 // sorotan hilang. Semuanya dari data di perangkat (tanpa jaringan, tanpa
 // data kontak).
-function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
+function Pencarian({ kartu, cabang, keterangan, saatKetemu, saatKosong }) {
   const [kata, setKata] = useState('')
-  const [ke, setKe] = useState(null) // hasil yang sedang disorot
-  const [aktif, setAktif] = useState(null) // pilihan dengan panah di daftar
+  // Hasil yang sedang disorot, menurut id: tetap benar walaupun daftarnya
+  // berubah (misalnya sesudah keluar dari fokus cabang).
+  const [pilihanId, setPilihanId] = useState(null)
+  const [aktifMentah, setAktif] = useState(null) // pilihan dengan panah di daftar
   const [buka, setBuka] = useState(false)
+  // Cabang yang hasil luarnya sedang ditampilkan (berganti cabang: tersembunyi lagi).
+  const [luarUntuk, setLuarUntuk] = useState(null)
+  const lihatLuar = Boolean(cabang) && luarUntuk === cabang
   const kolom = useRef(null)
   const daftar = useRef(null)
-  const cocok = useMemo(() => {
+  const semua = useMemo(() => {
     const pencarian = siapkanPencarian(kata)
     if (!pencarian) return null
     return kartu.flatMap((k) => {
@@ -92,8 +102,17 @@ function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
       return c ? [{ ...k, lewat: c.lewat, keterangan: keterangan(k.id) }] : []
     })
   }, [kata, kartu, keterangan])
-  const ada = cocok !== null && cocok.length > 0
+  const dalam = semua && cabang ? semua.filter((h) => cabang.has(h.id)) : semua
+  const luar = semua && cabang ? semua.filter((h) => !cabang.has(h.id)) : []
+  const cocok = semua && (lihatLuar ? [...dalam, ...luar] : dalam)
+  // Baris "n hasil lain di luar cabang ini": pilihan terakhir di daftar.
+  const barisLuar = !lihatLuar && luar.length > 0
+  const nPilihan = (cocok?.length ?? 0) + (barisLuar ? 1 : 0)
+  const ada = nPilihan > 0
   const terbuka = buka && ada
+  const indeks = cocok ? cocok.findIndex((h) => h.id === pilihanId) : -1
+  const ke = indeks < 0 ? null : indeks
+  const aktif = aktifMentah !== null && aktifMentah < nPilihan ? aktifMentah : null
 
   useEffect(() => {
     if (aktif === null) return
@@ -102,20 +121,29 @@ function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
 
   const tulis = (nilai) => {
     setKata(nilai)
-    setKe(null)
+    setPilihanId(null)
     setAktif(null)
     setBuka(true)
+    setLuarUntuk(null)
     if (!siapkanPencarian(nilai)) saatKosong()
   }
   const pilih = (i) => {
-    setKe(i)
+    setPilihanId(cocok[i].id)
     setAktif(i)
     setBuka(false)
     saatKetemu(cocok[i].id)
   }
+  // Baris "n hasil lain di luar cabang ini": hasil-hasil itu ditambahkan ke
+  // daftar (di bawah hasil di cabang), dan yang pertama di antaranya aktif.
+  const tampilkanLuar = () => {
+    setAktif(cocok.length)
+    setLuarUntuk(cabang)
+    setBuka(true)
+  }
   // Enter / tombol cari: pilihan dengan panah kalau ada, selain itu hasil berikutnya.
   const berikutnya = () => {
     if (!ada) return
+    if (barisLuar && (aktif === cocok.length || cocok.length === 0)) return tampilkanLuar()
     pilih(aktif !== null && aktif !== ke ? aktif : ke === null ? 0 : (ke + 1) % cocok.length)
   }
   const tombol = (e) => {
@@ -127,7 +155,7 @@ function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
         setAktif(ke ?? 0)
         return
       }
-      const n = cocok.length
+      const n = nPilihan
       const dari = aktif ?? ke ?? (e.key === 'ArrowDown' ? -1 : 0)
       setAktif((dari + (e.key === 'ArrowDown' ? 1 : -1) + n) % n)
     } else if (e.key === 'Escape') {
@@ -136,17 +164,21 @@ function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
       else if (kata) tulis('')
     }
   }
-  const sebab = (h) => (h.lewat === 'panggilan' ? isiTeks(T.cariPanggilan, { panggilan: h.panggilan }) : null)
+  // "(panggilan: Bram)": selalu, kalau orangnya punya nama panggilan.
+  const panggilan = (h) => (h.panggilan ? `(${isiTeks(T.cariPanggilan, { panggilan: h.panggilan })})` : null)
+  const teksLuar = isiTeks(T.cariLuarCabang, { n: luar.length })
   const status =
     cocok === null
       ? ''
       : cocok.length === 0
-        ? T.cariTidakAda
+        ? barisLuar
+          ? `${T.cariTidakAdaCabang} ${teksLuar}.`
+          : T.cariTidakAda
         : ke !== null && cocok[ke]
           ? isiTeks(T.cariHasil, { ke: ke + 1, n: cocok.length, nama: cocok[ke].nama }) +
             (cocok[ke].keterangan ? ` · ${cocok[ke].keterangan}` : '') +
-            (sebab(cocok[ke]) ? ` (${sebab(cocok[ke])})` : '')
-          : isiTeks(T.cariJumlah, { n: cocok.length })
+            (panggilan(cocok[ke]) ? ` ${panggilan(cocok[ke])}` : '')
+          : isiTeks(T.cariJumlah, { n: cocok.length }) + (barisLuar ? ` ${teksLuar}.` : '')
   return (
     <form
       role="search"
@@ -209,10 +241,23 @@ function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
             >
               <span className="font-semibold">{h.nama}</span>
               <span className="text-sm text-redup">
-                {[h.keterangan, sebab(h)].filter(Boolean).join(' · ')}
+                {[h.keterangan, panggilan(h)].filter(Boolean).join(' ')}
               </span>
             </li>
           ))}
+          {barisLuar && (
+            <li
+              id={`cari-hasil-${cocok.length}`}
+              role="option"
+              aria-selected={aktif === cocok.length}
+              data-hasil-luar
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={tampilkanLuar}
+              className={`flex min-h-12 cursor-pointer items-center border-t border-tepi px-4 py-2 font-semibold text-emas-teks ${aktif === cocok.length ? 'bg-latar outline-2 -outline-offset-2 outline-emas' : 'hover:bg-latar'}`}
+            >
+              {teksLuar}
+            </li>
+          )}
         </ul>
       )}
       {/* Saat daftar terbuka, jumlahnya hanya untuk pembaca layar (daftarnya sudah terlihat). */}
@@ -225,7 +270,7 @@ function Pencarian({ kartu, keterangan, saatKetemu, saatKosong }) {
 
 // Bilah atas yang melayang di kiri atas, seperti aplikasi lama (di bawah
 // pita fokus kalau ada).
-function BilahAtas({ kartu, keterangan, aksi, saatKetemu, saatKosong, fokus, saatTutup, ref }) {
+function BilahAtas({ kartu, cabang, keterangan, aksi, saatKetemu, saatKosong, fokus, saatTutup, ref }) {
   return (
     <div ref={ref} className={`pointer-events-auto relative mx-3 mt-3 flex flex-col gap-3 p-4 pr-14 sm:mr-auto sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
       <button
@@ -243,7 +288,7 @@ function BilahAtas({ kartu, keterangan, aksi, saatKetemu, saatKosong, fokus, saa
           <StatusData />
         </div>
         <div className="flex flex-wrap items-start gap-2">
-          <Pencarian kartu={kartu} keterangan={keterangan} saatKetemu={saatKetemu} saatKosong={saatKosong} />
+          <Pencarian kartu={kartu} cabang={cabang} keterangan={keterangan} saatKetemu={saatKetemu} saatKosong={saatKosong} />
           <div className="flex gap-2">
             <button type="button" className={TOMBOL_KECIL} onClick={aksi.perbesar} aria-label={T.perbesar}>
               <Plus aria-hidden="true" className="size-5" />
@@ -390,9 +435,11 @@ function IsiBagan() {
   const pangkal = akar ? [akar.id, akar.pasangan[0]?.id].filter(Boolean) : []
   const { pandang, props, isi, aksi } = useGeserZoom({ kunci: `${fokusId ?? ''}|${hitungCabang}`, pusat, pangkal, halangan })
   const kartu = useMemo(() => (akar ? semuaKartu(akar) : []), [akar])
-  // Pencarian selalu di SELURUH silsilah (juga saat fokus cabang); memilih
-  // orang di luar cabang itu menampilkan seluruh bagan lagi (lompat).
+  // Pencarian mencari di SELURUH silsilah; saat fokus cabang hasilnya dibatasi
+  // pada cabang itu (`cabangCari`), yang lain di balik baris "n hasil lain di
+  // luar cabang ini". Memilih orang di luar cabang keluar dari fokus.
   const kartuCari = useMemo(() => (bagan ? semuaKartu(bagan.akar) : []), [bagan])
+  const cabangCari = useMemo(() => (fokusId ? new Set(kartu.map((k) => k.id)) : null), [fokusId, kartu])
   const keterangan = useMemo(() => (id) => keteranganCari(silsilah, id), [silsilah])
   // Kartu yang disorot pencarian (tanpa membuka panel, supaya di HP kartu dan
   // "2 dari 5" tetap terlihat; mengetuk kartunya membuka panel).
@@ -526,6 +573,7 @@ function IsiBagan() {
           <BilahAtas
             ref={atasRef}
             kartu={kartuCari}
+            cabang={cabangCari}
             keterangan={keterangan}
             aksi={aksi}
             saatKetemu={sorotKe}

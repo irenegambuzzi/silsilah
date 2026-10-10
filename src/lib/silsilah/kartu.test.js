@@ -539,6 +539,13 @@ describe('keteranganCari: pembeda di hasil pencarian', () => {
     ['ragil', 'Buyut · anak Alm. Tirwan'], // jenis kelamin belum diketahui
     ['bintang', 'Canggah · putra Dorvi, S.Kom.'], // antarsepupu: lewat ayah, sama dengan GEN-nya
     ['eka', 'pasangan Bima'], // menikah dua kali dengan orang yang sama: sekali
+    // Putaran keenam: selalu orang tua KANDUNG; tanpa GEN tanpa istilah.
+    ['galen', 'putra Harvel'],
+    ['elvina', 'putri Harvel'],
+    ['vino', 'putra Umar'],
+    ['celvia', 'Buyut · putri Kirana'], // kedua orang tua kandung tercatat: yang keturunan
+    ['fajrin', 'Buyut · putra Kirana'],
+    ['yoga', 'Putu · putra Lorvan'], // anak angkat: tanpa orang tua kandung tercatat
   ])('%s: "%s"', (id, harapan) => {
     expect(keteranganCari(s, id)).toBe(harapan)
   })
