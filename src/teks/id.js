@@ -733,5 +733,5 @@ export const teks = {
       budheBulik: 'Budhe/Bulik',
       pamanBibi: 'Paman/Bibi',
     },
-  }
+  },
 }

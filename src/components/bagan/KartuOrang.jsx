@@ -5,9 +5,44 @@ import { teks } from '../../teks/id.js'
 
 const SIMBOL = { L: '♂', P: '♀' }
 
-// Nama panjang (3–4 kata, apalagi dengan gelar) diperkecil supaya tetap utuh
-// di kartu yang ukurannya tetap: sedang 3 baris, panjang 4 baris (index.css).
-const ukuranNama = (nama) => (nama.length > 30 ? 'panjang' : nama.length > 16 ? 'sedang' : undefined)
+// Nama di kartu (aturan tetap, namaKartu di lib/silsilah/nama.js): ukuran
+// hanya dari jumlah kata nama asli (besar/sedang/kecil), gelar di span
+// tersendiri dengan huruf biasa yang lebih kecil, 4 kata atau lebih dalam dua
+// baris. Nama tidak pernah dipotong (index.css, .kartu-nama).
+function NamaKartu({ kartu }) {
+  const n = kartu.namaKartu
+  if (!n) return <span className="kartu-nama">{kartu.nama}</span>
+  const akhir = n.baris.length - 1
+  // Gelar tidak pernah sendirian di satu baris: gelar depan menempel pada
+  // kata pertama, gelar belakang pada kata terakhir (.kartu-nama-utuh).
+  const isiBaris = (kata, i) =>
+    kata.map((k, j) => {
+      const depan = i === 0 && j === 0 && n.depan
+      const belakang = i === akhir && j === kata.length - 1 && n.belakang
+      const spasi = j < kata.length - 1 ? ' ' : ''
+      if (!depan && !belakang) return `${k}${spasi}`
+      return (
+        <span key={j}>
+          <span className="kartu-nama-utuh">
+            {depan && <span className="kartu-gelar">{`${n.depan} `}</span>}
+            {k}
+            {belakang && <span className="kartu-gelar">{`, ${n.belakang}`}</span>}
+          </span>
+          {spasi}
+        </span>
+      )
+    })
+  return (
+    <span className="kartu-nama" data-ukuran={n.ukuran} data-kata={n.jumlahKata}>
+      {n.baris.map((kata, i) => (
+        <span key={i} className="kartu-nama-baris">
+          {isiBaris(kata, i)}
+          {i < akhir && ' '}
+        </span>
+      ))}
+    </span>
+  )
+}
 
 // Satu kartu di Bagan, seperti aplikasi lama: strip warna tipis di tepi
 // atas, lingkaran kecil berisi simbol ♂/♀, NAMA kapital (Cinzel, boleh dua
@@ -15,7 +50,7 @@ const ukuranNama = (nama) => (nama.length > 30 ? 'panjang' : nama.length > 16 ? 
 //   kanan atas  GEN.n
 //   kiri atas   nomor urut (hanya anak KANDUNG; anak sambung/angkat tanpa nomor)
 //   kanan bawah tunas daun: belum dewasa (di bawah 18 tahun)
-// Nama panjang memakai huruf lebih kecil (ukuranNama) supaya tidak terpotong.
+// Ukuran nama hanya dari jumlah katanya (NamaKartu); nama tidak pernah terpotong.
 // disorot: hasil pencarian yang sedang ditunjuk (cincin emas tebal), tanpa
 // membuka panel; terpilih: kartu yang diketuk (panelnya terbuka).
 // Warnanya menurut warnaKartu (keturunan/pasangan, jenis kelamin, pangkal,
@@ -65,9 +100,7 @@ export function KartuOrang({ kartu, letak, terpilih = false, disorot = false, ru
           <span className="sr-only">{teksUrutanKe(kartu.sex, kartu.urut)}</span>
         </>
       )}
-      <span className="kartu-nama" data-ukuran={ukuranNama(kartu.nama)}>
-        {kartu.nama}
-      </span>
+      <NamaKartu kartu={kartu} />
       {rujukan ? (
         <span className="kartu-label">{rujukan.label}</span>
       ) : (

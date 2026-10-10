@@ -1,0 +1,18 @@
+/* Halaman perbandingan huruf (SEMENTARA, hanya mode contoh). Huruf dimuat
+   dari paket @fontsource yang dibundel (bukan dari Google Fonts), seperti
+   Cinzel di index.css: tanpa permintaan ke pihak ketiga. File ini hanya
+   dimuat oleh PerbandinganHuruf.jsx, jadi tidak ikut ke build produksi. */
+@import '@fontsource/marcellus/400.css';
+@import '@fontsource/lora/600.css';
+
+/* Aturan nama sama dengan Bagan (index.css); hanya huruf dan kapitalnya. */
+[data-huruf='marcellus'] {
+  --font-nama: 'Marcellus', ui-serif, Georgia, serif;
+  --nama-tebal: 400;
+  --nama-huruf: none;
+}
+[data-huruf='lora'] {
+  --font-nama: 'Lora', ui-serif, Georgia, serif;
+  --nama-tebal: 600;
+  --nama-huruf: none;
+}

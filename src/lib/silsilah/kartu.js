@@ -9,7 +9,7 @@
 // sama dengan saudaranya, tetapi tidak bernomor (hanya anak kandung yang
 // punya "Putra/Putri ke-n").
 import { isiTeks, teks } from '../../teks/id.js'
-import { namaTampil } from './nama.js'
+import { namaKartu, namaTampil } from './nama.js'
 import { tahunHidup, tanggalDari, teksPeristiwa, teksWaktu } from './tanggal.js'
 import { istilahGenerasi, labelGen, teksGenerasi } from './generasi.js'
 import { jenisPasangan, pasanganBerurutan, teksBersaudara, teksPasanganKe, teksUrutanKe } from './urutan.js'
@@ -87,6 +87,8 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   return {
     id,
     nama: namaTampil(orang),
+    // Bentuk nama di kartu Bagan: gelar terpisah, ukuran dari jumlah kata (nama.js).
+    namaKartu: namaKartu(orang),
     sex: orang.sex === 'L' || orang.sex === 'P' ? orang.sex : null,
     wafat: Boolean(orang.is_deceased),
     panggilan: orang.nickname ?? null,

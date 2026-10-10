@@ -81,8 +81,8 @@ describe('kartu keturunan', () => {
       expect(JSON.stringify(labelKartu(s, id)).toLowerCase()).not.toMatch(/sambung|angkat/)
     }
     // Anak angkat: bentuknya sama dengan saudara kandung (GEN dan istilah sama).
-    const { id: _a, nama: _b, panggilan: _c, ...yoga } = labelKartu(s, 'yoga')
-    const { id: _f, nama: _g, panggilan: _h, ...kelvan } = labelKartu(s, 'kelvan')
+    const { id: _a, nama: _b, panggilan: _c, namaKartu: _d, ...yoga } = labelKartu(s, 'yoga')
+    const { id: _f, nama: _g, panggilan: _h, namaKartu: _i, ...kelvan } = labelKartu(s, 'kelvan')
     expect(yoga).toEqual(kelvan)
     // Anak sambung bawaan pasangan (Vino): kartu keturunan yang sama, tetapi
     // tanpa GEN dan istilah (putaran keenam).

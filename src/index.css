@@ -337,30 +337,48 @@ html[data-kontras='tinggi'] .kartu-orang {
 .kartu-orang[data-belum-dewasa] .kartu-label {
   max-width: calc(100% - 2.6rem);
 }
+/* Nama di kartu (putaran keenam, namaKartu di lib/silsilah/nama.js): ukuran
+   HANYA dari jumlah kata nama asli, tidak pernah dari panjangnya: besar (1–2
+   kata), sedang (3), kecil (4 atau lebih). Tidak pernah dipotong: tanpa
+   line-clamp/overflow; nama yang tidak muat turun baris tanpa mengecil.
+   --font-nama dan --nama-huruf hanya untuk halaman perbandingan huruf (mode
+   contoh); Bagan memakai Cinzel kapital. */
 .kartu-nama {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  display: block;
   margin: auto 0;
-  font-family: var(--font-judul);
-  font-weight: 700;
+  font-family: var(--font-nama, var(--font-judul));
+  font-weight: var(--nama-tebal, 700);
   font-size: 0.85rem;
-  line-height: 1.25;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
+  line-height: 1.2;
+  text-transform: var(--nama-huruf, uppercase);
+  overflow-wrap: break-word;
 }
-/* Nama panjang (lihat ukuranNama di KartuOrang.jsx): huruf lebih kecil dan
-   lebih banyak baris, supaya nama 3–4 kata dengan gelar tetap utuh. */
 .kartu-nama[data-ukuran='sedang'] {
-  -webkit-line-clamp: 3;
   font-size: 0.75rem;
   line-height: 1.15;
 }
-.kartu-nama[data-ukuran='panjang'] {
-  -webkit-line-clamp: 4;
+.kartu-nama[data-ukuran='kecil'] {
   font-size: 0.66rem;
-  line-height: 1.1;
+  line-height: 1.12;
+}
+/* 4 kata atau lebih: dua baris (masing-masing boleh turun lagi kalau terpaksa). */
+.kartu-nama-baris {
+  display: block;
+}
+/* Gelar menempel pada kata di sebelahnya (tidak pernah sendirian di satu
+   baris); kalau keduanya tidak muat satu baris, isinya tetap turun baris. */
+.kartu-nama-utuh {
+  display: inline-block;
+  max-width: 100%;
+}
+/* Gelar: Plus Jakarta Sans, huruf besar-kecil biasa, lebih kecil dan lebih
+   tipis dari nama; tidak ikut menentukan ukuran nama. */
+.kartu-gelar {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.8em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .kartu-label {
   max-width: 100%;
