@@ -11,11 +11,11 @@ const bagan = susunBagan(s)
 const c = silsilahCabang(s, bagan.simpul.get('lorvan'))
 
 describe('fokus cabang: generasi dihitung dari orang yang difokuskan', () => {
-  it('orang itu GEN.0 dengan label "Pangkal cabang", warnanya tetap warna keturunan', () => {
+  it('orang itu GEN.0 dengan label "Awal cabang", warnanya tetap warna keturunan', () => {
     const k = labelKartu(c, 'lorvan')
-    expect(k).toMatchObject({ gen: 0, label: 'Pangkal cabang', pojok: 'GEN.0', jenis: 'keturunan' })
+    expect(k).toMatchObject({ gen: 0, label: 'Awal cabang', pojok: 'GEN.0', jenis: 'keturunan' })
     expect(warnaKartu(k)).toBe('keturunan-l')
-    expect(labelDetail(c, 'lorvan').subjudul).toBe('Pangkal cabang')
+    expect(labelDetail(c, 'lorvan').subjudul).toBe('Awal cabang')
   })
 
   it('anaknya GEN.1 · Anak, cucunya GEN.2 · Putu', () => {
@@ -30,15 +30,15 @@ describe('fokus cabang: generasi dihitung dari orang yang difokuskan', () => {
     expect(c.nomor.get('gendis')).toBe(s.nomor.get('gendis'))
   })
 
-  it('PASANGAN orang yang difokuskan juga "Pangkal cabang" GEN.0; warnanya tetap warna pasangan', () => {
+  it('PASANGAN orang yang difokuskan juga "Awal cabang" GEN.0; warnanya tetap warna pasangan', () => {
     const k = labelKartu(c, 'sinta')
-    expect(k).toMatchObject({ jenis: 'pasangan', gen: 0, label: 'Pangkal cabang', pojok: 'GEN.0' })
+    expect(k).toMatchObject({ jenis: 'pasangan', gen: 0, label: 'Awal cabang', pojok: 'GEN.0' })
     expect(warnaKartu(k)).toBe('pasangan-p')
-    expect(labelDetail(c, 'sinta').subjudul).toBe('Pangkal cabang')
+    expect(labelDetail(c, 'sinta').subjudul).toBe('Awal cabang')
     // Semua pasangannya, juga yang sudah berpisah.
     const b = silsilahCabang(s, bagan.simpul.get('bima'))
     for (const id of ['eka', 'fitri', 'gita']) {
-      expect(labelKartu(b, id), id).toMatchObject({ jenis: 'pasangan', gen: 0, label: 'Pangkal cabang', pojok: 'GEN.0' })
+      expect(labelKartu(b, id), id).toMatchObject({ jenis: 'pasangan', gen: 0, label: 'Awal cabang', pojok: 'GEN.0' })
     }
   })
 
@@ -63,8 +63,8 @@ describe('fokus cabang: keturunan tanpa GEN', () => {
 
   it('"Hitung dari Vino": label pangkal cabang tanpa GEN, juga pasangannya; anaknya tanpa GEN', () => {
     const cv = silsilahCabang(s, bagan.simpul.get('vino'))
-    expect(labelKartu(cv, 'vino')).toMatchObject({ jenis: 'keturunan', gen: null, label: 'Pangkal cabang', pojok: null })
-    expect(labelKartu(cv, 'ratrisa-k')).toMatchObject({ jenis: 'pasangan', gen: null, label: 'Pangkal cabang', pojok: null })
+    expect(labelKartu(cv, 'vino')).toMatchObject({ jenis: 'keturunan', gen: null, label: 'Awal cabang', pojok: null })
+    expect(labelKartu(cv, 'ratrisa-k')).toMatchObject({ jenis: 'pasangan', gen: null, label: 'Awal cabang', pojok: null })
     expect(labelKartu(cv, 'sadevan-b')).toMatchObject({ gen: null, label: null, pojok: null })
   })
 

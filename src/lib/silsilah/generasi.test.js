@@ -8,7 +8,7 @@ const hitung = (data) => hitungGenerasi(bangunGraf(data))
 describe('istilah generasi', () => {
   it('GEN.0 sampai GEN.10 punya istilah Jawa, GEN.11 dan seterusnya tidak', () => {
     expect(DAFTAR_GENERASI.map((_, i) => `${labelGen(i)} ${istilahGenerasi(i)}`)).toEqual([
-      'GEN.0 Pangkal',
+      'GEN.0 Leluhur',
       'GEN.1 Anak',
       'GEN.2 Putu',
       'GEN.3 Buyut',

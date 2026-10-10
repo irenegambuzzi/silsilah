@@ -52,13 +52,13 @@ describe('Bagan: isi kartu', () => {
     expect(k('bagaskara').querySelector('.kartu-nama').textContent).toBe('Alm. H. Bagaskara Wiryawan Adinata Mahardika, S.H.')
   })
 
-  it('kartu pangkal: nama dengan Alm./Almh. dan label "Pangkal"', async () => {
+  it('kartu pangkal: nama dengan Alm./Almh. dan label "Leluhur"', async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('raksa').textContent).toContain('Alm. Raksa')
-    expect(k('raksa').textContent).toContain('Pangkal')
+    expect(k('raksa').textContent).toContain('Leluhur')
     expect(k('selara').textContent).toContain('Almh. Selara')
-    expect(k('selara').textContent).toContain('Pangkal')
+    expect(k('selara').textContent).toContain('Leluhur')
   })
 
   it('anak sambung/angkat tampil sama persis dengan saudaranya, tanpa label khusus', async () => {
@@ -193,7 +193,7 @@ describe('Bagan: isi kartu', () => {
     expect(k('raksa').dataset.warna).toBe('pangkal')
     expect(k('raksa').dataset.wafat).toBe('true')
     const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
-    for (const nama of ['Keturunan laki-laki', 'Keturunan perempuan', 'Pasangan laki-laki', 'Pasangan perempuan', 'Pangkal', 'Wafat (keturunan)', 'Wafat (pasangan)', 'Berpisah']) {
+    for (const nama of ['Keturunan laki-laki', 'Keturunan perempuan', 'Pasangan laki-laki', 'Pasangan perempuan', 'Leluhur', 'Wafat (keturunan)', 'Wafat (pasangan)', 'Berpisah']) {
       expect(within(legenda).getByText(nama)).toBeTruthy()
     }
   })
@@ -595,7 +595,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     const semua = semuaKartu().length
     await aksi.click(k('lorvan'))
     await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
-    await aksi.click(screen.getByRole('button', { name: 'Hitung dari pangkal utama' }))
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari leluhur utama' }))
     expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
     expect(k('kelvan').querySelector('.kartu-gen').textContent).toBe('GEN.2') // tetap dari pangkal utama
     expect(screen.queryByText(/Generasi dihitung dari/)).toBeNull()
@@ -638,7 +638,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await aksi.click(screen.getByRole('button', { name: 'Hitung dari Bima' }))
     expect(screen.getByText('Generasi dihitung dari Bima')).toBeTruthy()
     // Berpindah di dalam mode fokus tidak menambah langkah: satu kali Kembali tetap keluar.
-    await aksi.click(screen.getByRole('button', { name: 'Kembali ke pangkal utama' }))
+    await aksi.click(screen.getByRole('button', { name: 'Kembali ke leluhur utama' }))
     expect(screen.getByText('Menampilkan satu cabang: Bima')).toBeTruthy()
     act(() => riwayat.kembali())
     expect(await screen.findByRole('button', { name: /Hasna/ })).toBeTruthy()
@@ -670,33 +670,33 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
     await aksi.click(screen.getByRole('button', { name: 'Hitung dari Lorvan' }))
     expect(screen.getByText('Generasi dihitung dari Lorvan')).toBeTruthy()
-    expect(k('sinta').querySelector('.kartu-label').textContent).toBe('Pangkal cabang')
+    expect(k('sinta').querySelector('.kartu-label').textContent).toBe('Awal cabang')
   })
 
-  it('"Hitung dari [nama]": orang itu PANGKAL CABANG GEN.0, keturunannya dihitung ulang, dengan pita keterangan', async () => {
+  it('"Hitung dari [nama]": orang itu AWAL CABANG GEN.0, keturunannya dihitung ulang, dengan pita keterangan', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('bima'))
     await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
-    expect(screen.getByRole('button', { name: 'Hitung dari pangkal utama' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Hitung dari leluhur utama' })).toBeTruthy()
     await aksi.click(screen.getByRole('button', { name: 'Hitung dari Bima' }))
-    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Pangkal cabang')
+    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Awal cabang')
     expect(k('bima').querySelector('.kartu-gen').textContent).toBe('GEN.0')
     expect(k('mega').querySelector('.kartu-label').textContent).toBe('Anak')
     expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.1')
     expect(k('hasna').querySelector('.kartu-label').textContent).toBe('Putu')
     expect(screen.getByText('Generasi dihitung dari Bima')).toBeTruthy()
-    // Pasangan Bima juga PANGKAL CABANG GEN.0 (warna tetap warna pasangan).
+    // Pasangan Bima juga AWAL CABANG GEN.0 (warna tetap warna pasangan).
     for (const id of ['eka', 'fitri', 'gita']) {
-      expect(k(id).querySelector('.kartu-label').textContent, id).toBe('Pangkal cabang')
+      expect(k(id).querySelector('.kartu-label').textContent, id).toBe('Awal cabang')
       expect(k(id).querySelector('.kartu-gen').textContent, id).toBe('GEN.0')
       expect(k(id).dataset.warna, id).toBe('pasangan-p')
     }
     // Panel ikut dihitung ulang.
     await aksi.click(k('mega'))
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByText('Anak · Generasi ke-1')).toBeTruthy()
-    // Kembali ke pangkal utama: tetap di cabang yang sama, GEN seperti biasa.
-    await aksi.click(screen.getByRole('button', { name: 'Kembali ke pangkal utama' }))
+    // Kembali ke leluhur utama: tetap di cabang yang sama, GEN seperti biasa.
+    await aksi.click(screen.getByRole('button', { name: 'Kembali ke leluhur utama' }))
     expect(screen.queryByText('Generasi dihitung dari Bima')).toBeNull()
     expect(screen.getByText('Menampilkan satu cabang: Bima')).toBeTruthy()
     expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.2')
@@ -707,6 +707,29 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     pasang('/bagan?fokus=kelvan&hitung=cabang', klienKeluarga())
     expect(await screen.findByText('Generasi dihitung dari Kelvan')).toBeTruthy()
     expect(k('gendis').querySelector('.kartu-gen').textContent).toBe('GEN.1')
+  })
+
+  // Putaran keenam: kata "pangkal" tidak pernah tampil lagi ("Leluhur",
+  // "Awal cabang", "Hitung dari leluhur utama", "Kembali ke leluhur utama").
+  it('kata "pangkal" tidak tampil: kartu, legenda, panel, pilihan fokus, pita, dan pencarian', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    expect(k('raksa').querySelector('.kartu-label').textContent).toBe('Leluhur')
+    expect(within(screen.getByRole('region', { name: 'Keterangan warna' })).getByText('Leluhur')).toBeTruthy()
+    await aksi.click(k('raksa'))
+    expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByText('Leluhur')).toBeTruthy()
+    await aksi.click(k('bima'))
+    await aksi.click(screen.getByRole('button', { name: 'Fokus pada cabang ini' }))
+    expect(screen.getByRole('button', { name: 'Hitung dari leluhur utama' })).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/pangkal/i)
+    await aksi.click(screen.getByRole('button', { name: 'Hitung dari Bima' }))
+    expect(k('bima').querySelector('.kartu-label').textContent).toBe('Awal cabang')
+    expect(screen.getByRole('button', { name: 'Kembali ke leluhur utama' })).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/pangkal/i)
+    await aksi.click(screen.getAllByRole('button', { name: 'Keluar dari fokus' })[0])
+    await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'raksa{Enter}')
+    expect(screen.getByText('1 dari 1: Alm. Raksa · Leluhur')).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/pangkal/i)
   })
 
   it('"hitung=cabang" tanpa fokus diabaikan', async () => {

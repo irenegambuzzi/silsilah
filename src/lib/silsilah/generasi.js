@@ -18,13 +18,15 @@ import { jenisPasangan, pasanganBerurutan } from './urutan.js'
 const KATA = teks.silsilah
 
 // Bawaan dari settings (PLAN.md bagian 5.4). Mulai GEN.11 tanpa istilah.
+// GEN.0 SELALU "Leluhur" (teks.silsilah.leluhur, putaran keenam), juga kalau
+// settings.generation_terms masih memuat "Pangkal" (bawaan SQL 001).
 export const DAFTAR_GENERASI = [
-  'Pangkal', 'Anak', 'Putu', 'Buyut', 'Canggah', 'Wareng',
+  KATA.leluhur, 'Anak', 'Putu', 'Buyut', 'Canggah', 'Wareng',
   'Udheg-udheg', 'Gantung siwur', 'Gropak senthe', 'Debog bosok', 'Galih asem',
 ]
 
 export const labelGen = (gen) => `GEN.${gen}`
-export const istilahGenerasi = (gen, daftar = DAFTAR_GENERASI) => daftar[gen] ?? null
+export const istilahGenerasi = (gen, daftar = DAFTAR_GENERASI) => (gen === 0 ? KATA.leluhur : (daftar[gen] ?? null))
 
 // "Buyut · Generasi ke-3" (istilah Jawa dulu), atau "Generasi ke-12" kalau
 // tidak ada istilahnya.

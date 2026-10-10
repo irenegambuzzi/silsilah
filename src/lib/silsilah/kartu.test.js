@@ -34,7 +34,7 @@ describe('kartu keturunan', () => {
       jenis: 'pangkal',
       gen: 0,
       labelGen: 'GEN.0',
-      istilahGen: 'Pangkal',
+      istilahGen: 'Leluhur',
       keterangan: '',
     })
     expect(labelKartu(s, 'selara').nama).toBe('Almh. Selara')
@@ -126,22 +126,22 @@ describe('isi kartu sederhana seperti aplikasi lama', () => {
   it('kartu keturunan: nama, istilah Jawa sebagai label, dan GEN di pojok', () => {
     expect(labelKartu(s, 'mega')).toMatchObject({ nama: 'Mega', jenis: 'keturunan', label: 'Putu', pojok: 'GEN.2' })
   })
-  it('kartu pangkal: nama dan label "Pangkal", tanpa GEN', () => {
-    expect(labelKartu(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenis: 'pangkal', label: 'Pangkal', pojok: null })
-    expect(labelKartu(s, 'selara')).toMatchObject({ jenis: 'pangkal', label: 'Pangkal', pojok: null })
+  it('kartu pangkal: nama dan label "Leluhur", tanpa GEN', () => {
+    expect(labelKartu(s, 'raksa')).toMatchObject({ nama: 'Alm. Raksa', jenis: 'pangkal', label: 'Leluhur', pojok: null })
+    expect(labelKartu(s, 'selara')).toMatchObject({ jenis: 'pangkal', label: 'Leluhur', pojok: null })
   })
   it('kartu pasangan (bukan keturunan): nama dan SATU label "Pasangan", tanpa GEN', () => {
     for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila', 'harvel', 'halvin', 'dara']) {
       expect(labelKartu(s, id)).toMatchObject({ jenis: 'pasangan', label: 'Pasangan', pojok: null, labelGen: null })
     }
   })
-  it('pasangan khusus dengan pohon keluarga asal tetap "Pasangan"; kedua pangkal utama tetap "Pangkal"', () => {
+  it('pasangan khusus dengan pohon keluarga asal tetap "Pasangan"; kedua pangkal utama tetap "Leluhur"', () => {
     for (const id of s.graf.orang.keys()) {
       const k = labelKartu(s, id)
       if (k.jenis === 'pasangan') expect(k.label, id).toBe('Pasangan')
     }
     expect(['eka', 'dara'].map((id) => labelKartu(s, id).label)).toEqual(['Pasangan', 'Pasangan'])
-    expect(['raksa', 'selara'].map((id) => labelKartu(s, id).label)).toEqual(['Pangkal', 'Pangkal'])
+    expect(['raksa', 'selara'].map((id) => labelKartu(s, id).label)).toEqual(['Leluhur', 'Leluhur'])
   })
   it('tidak ada kartu yang memuat tahun, "Putra/Putri ke-n", atau "Pasangan dari"', () => {
     for (const id of semua) {
@@ -204,7 +204,7 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
   it('subjudul: istilah Jawa dulu, lalu generasi; pangkal; pasangan', () => {
     expect(labelDetail(s, 'tamran').subjudul).toBe('Putu · Generasi ke-2')
     expect(labelDetail(s, 'bima').subjudul).toBe('Anak · Generasi ke-1')
-    expect(labelDetail(s, 'raksa').subjudul).toBe('Pangkal')
+    expect(labelDetail(s, 'raksa').subjudul).toBe('Leluhur')
     expect(labelDetail(s, 'eka').subjudul).toBe('Pasangan dari Bima · berpisah')
     expect(labelDetail(s, 'tamran').subjudul).not.toMatch(/\(/)
   })
@@ -534,7 +534,7 @@ describe('keteranganCari: pembeda di hasil pencarian', () => {
     ['sadevan-a', 'Buyut · putra Nanda'],
     ['ratrisa-k', 'pasangan Vino'],
     ['ratrisa-a', 'Buyut · putri Yoga'],
-    ['raksa', 'Pangkal'],
+    ['raksa', 'Leluhur'],
     ['bima', 'Anak · putra Alm. Raksa'],
     ['ragil', 'Buyut · anak Alm. Tirwan'], // jenis kelamin belum diketahui
     ['bintang', 'Canggah · putra Dorvi, S.Kom.'], // antarsepupu: lewat ayah, sama dengan GEN-nya
