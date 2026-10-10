@@ -103,14 +103,17 @@ describe('label silsilah untuk SETIAP orang di keluarga fiktif', () => {
     }
   })
 
-  it('anak sambung/angkat: "Anak sambung/angkat [nama]" di keterangannya sendiri, tanpa nomor di keterangan orang tuanya, dan tidak di Daftar', () => {
+  // Putaran keenam: kalimat "Anak sambung/angkat [nama]" tidak lagi ditulis;
+  // orang tua sambung/angkat tetap di barisnya sendiri.
+  it('anak sambung/angkat: baris orang tua sambung/angkat di keterangannya sendiri, tanpa nomor di keterangan orang tuanya, dan tidak di Daftar', () => {
     let diperiksa = 0
     for (const c of s.graf.tautan.values()) {
       for (const t of c) {
         if (t.kind === 'kandung') continue
         diperiksa++
         const d = labelDetail(s, t.child_id)
-        expect(d.urutan.some((u) => /^Anak (sambung|angkat) \S/.test(u)), t.child_id).toBe(true)
+        expect(d.urutan.some((u) => /Anak (sambung|angkat)/.test(u)), t.child_id).toBe(false)
+        expect(d.orangTua.some((o) => o.jenis === (t.kind === 'angkat' ? 'angkat' : 'sambung')), t.child_id).toBe(true)
         const u = s.graf.unions.get(t.union_id)
         // Di keterangan orang tua yang bukan orang tua kandungnya: tanpa nomor, dengan kata lembut.
         const bukanKandung = t.kind === 'angkat' ? [u.partner1_id, u.partner2_id] : [t.biological_parent === 'partner2' ? u.partner1_id : u.partner2_id]

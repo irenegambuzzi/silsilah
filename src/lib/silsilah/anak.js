@@ -180,8 +180,9 @@ export function orangTuaSambung(graf) {
   for (const p of graf.pernikahan.keys()) {
     for (const a of anakOrangTua(graf, p).panel) {
       if (a.kandung || a.kind !== 'sambung') continue
-      // Anak sambung yang orang tua kandungnya tidak diketahui: kedua orang
-      // tuanya ditulis sebagai orang tua biasa.
+      // Anak sambung yang orang tua kandungnya tidak tercatat (database
+      // menolaknya: children_biological_matches_kind): tidak ditulis sebagai
+      // orang tua sambung, dan juga tidak di baris "Orang tua" (kartu.js).
       if (!a.sambung && tercatat(a)?.biological_parent == null) continue
       if (!peta.has(a.id)) peta.set(a.id, [])
       peta.get(a.id).push({ id: p, unionId: a.unionId, nikahId: a.sambung ? a.nikahId : a.unionId, pasangan: Boolean(a.sambung) })

@@ -565,12 +565,12 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await aksi.click(k('vino'))
     let panel = screen.getByRole('region', { name: 'Orang terpilih' })
     expect(barisOrangTua(panel)).toEqual(['Orang tua: Umar', 'Ibu sambung: Cahya'])
-    expect(panel.textContent).toContain('Anak sambung Cahya')
+    expect(panel.textContent).not.toContain('Anak sambung') // putaran keenam
     expect(within(panel).getByRole('button', { name: 'Cahya' })).toBeTruthy()
     await aksi.click(k('yoga'))
     panel = screen.getByRole('region', { name: 'Orang terpilih' })
     expect(panel.textContent).toContain('Orang tua angkat: Lorvan & Sinta')
-    expect(panel.textContent).toContain('Anak angkat Lorvan & Sinta')
+    expect(panel.textContent).not.toContain('Anak angkat')
     await aksi.click(within(panel).getByRole('button', { name: 'Sinta' }))
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Sinta', level: 2 })).toBeTruthy()
   })
@@ -586,7 +586,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await aksi.click(k('celvia'))
     panel = screen.getByRole('region', { name: 'Orang terpilih' })
     expect(barisOrangTua(panel)).toEqual(['Orang tua: Danuarta & Kirana', 'Ayah sambung: Harvel'])
-    expect(panel.textContent).toContain('Anak sambung Harvel')
+    expect(panel.textContent).not.toContain('Anak sambung Harvel')
   })
 
   it('fokus cabang: hanya orang itu dan keturunannya; "Keluar dari fokus" mengembalikan', async () => {

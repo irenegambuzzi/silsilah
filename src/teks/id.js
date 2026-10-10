@@ -656,6 +656,10 @@ export const teks = {
     // Di daftar anak: anak kandung yang dibawa ke pernikahan ini (anak
     // sambung bagi pasangannya).
     dariSebelumnya: 'dari pernikahan sebelumnya',
+    // Di daftar anak, kalau orang tua itu menikah dengan lebih dari satu
+    // orang: "dari pernikahan dengan Eka" (putaran keenam; tanpa angka).
+    dariPernikahanDengan: 'dari pernikahan dengan {nama}',
+    dariPernikahanTanpaNama: 'dari pernikahan dengan pasangan yang tidak diketahui',
     dan: 'dan',
     diriSendiri: 'Diri sendiri',
     sekitar: 'sekitar',
@@ -668,8 +672,6 @@ export const teks = {
     bersaudara: '{urutan} dari {n} bersaudara',
     pihak: '{isi} (pihak {nama})',
     jenisPasangan: { istri: 'istri', suami: 'suami', pasangan: 'pasangan' },
-    anakSambungDari: 'Anak sambung {nama}',
-    anakAngkatDari: 'Anak angkat {nama}',
     // Keterangan pembeda di hasil pencarian: "Buyut · putra Vino", "pasangan Vino".
     cariAnak: { L: 'putra {nama}', P: 'putri {nama}', x: 'anak {nama}' },
     cariPasangan: 'pasangan {nama}',
