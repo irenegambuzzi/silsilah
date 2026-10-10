@@ -109,3 +109,23 @@ describe('labelDetail: orang tua', () => {
     expect(nama(labelDetail(s, 'hasna'))).toEqual(['Rangga & Gendis'])
   })
 })
+
+// Putaran keenam tinjauan: keturunan tanpa GEN (generasi.js, tanpaGen).
+describe('Daftar: keturunan tanpa GEN', () => {
+  const tanpa = ['galen', 'elvina', 'vino', 'sadevan-b', 'bagaskara']
+  it('baris tanpa GEN dan istilah, tetap di bagian keturunan', () => {
+    for (const id of tanpa) {
+      const b = daftar.keturunan.find((x) => x.id === id)
+      expect(b, id).toBeTruthy()
+      expect([b.gen, b.labelGen, b.istilahGen], id).toEqual([null, null, null])
+    }
+    for (const id of ['celvia', 'fajrin', 'yoga', 'ratrisa-a']) {
+      expect(daftar.keturunan.find((x) => x.id === id).labelGen, id).toMatch(/^GEN\.\d$/)
+    }
+  })
+  it('urutan Daftar tidak berubah', () => {
+    const ids = daftar.keturunan.map((b) => b.id)
+    expect(ids.slice(ids.indexOf('kirana'), ids.indexOf('kirana') + 5)).toEqual(['kirana', 'celvia', 'fajrin', 'galen', 'elvina'])
+    expect(ids.slice(ids.indexOf('cahya'), ids.indexOf('cahya') + 5)).toEqual(['cahya', 'wati', 'vino', 'sadevan-b', 'bagaskara'])
+  })
+})

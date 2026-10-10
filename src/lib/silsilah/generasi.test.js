@@ -50,7 +50,9 @@ describe('hitungGenerasi', () => {
     for (const id of ['eka', 'fitri', 'gita', 'umar', 'sinta', 'laila']) expect(gen.has(id)).toBe(false)
   })
 
-  it('anak sambung dan anak angkat sama GEN-nya dengan saudaranya', () => {
+  it('letak: anak sambung dan anak angkat di generasi yang sama dengan saudaranya', () => {
+    // `gen` menentukan letak di bagan dan nomor silsilah; apakah GEN-nya
+    // DITAMPILKAN diatur `tanpaGen` (di bawah).
     expect(gen.get('vino')).toBe(gen.get('wati'))
     expect(gen.get('yoga')).toBe(gen.get('kelvan'))
   })
@@ -165,5 +167,54 @@ describe('hitungGenerasi', () => {
     d.children.push({ id: 'c1', tree_id: null, union_id: 'ua', child_id: 'b', kind: 'kandung', deleted_at: null })
     d.children.push({ id: 'c2', tree_id: null, union_id: 'ub', child_id: 'a', kind: 'kandung', deleted_at: null })
     expect(hitung(d).gen.size).toBe(0)
+  })
+})
+
+// Putaran keenam tinjauan: GEN hanya lewat orang tua kandung atau angkat.
+describe('tanpaGen: keturunan tanpa garis darah atau angkat', () => {
+  const { gen, tanpaGen } = hitung(bangunKeluargaFiktif())
+
+  it('di data contoh: Galen, Elvina, Vino, dan anak-anak Vino; tidak ada yang lain', () => {
+    expect([...tanpaGen].sort()).toEqual(['bagaskara', 'elvina', 'galen', 'sadevan-b', 'vino'])
+    // Tetap di `gen` (letak di bagan dan urutan Daftar tidak berubah).
+    for (const id of tanpaGen) expect(gen.has(id), id).toBe(true)
+  })
+
+  it('anak sambung dengan orang tua kandung keturunan (Celvia), anak angkat (Yoga) dan keturunannya tetap ber-GEN', () => {
+    for (const id of ['celvia', 'fajrin', 'yoga', 'ratrisa-a', 'wati', 'kirana', 'cahya', 'raksa', 'selara']) {
+      expect(tanpaGen.has(id), id).toBe(false)
+    }
+  })
+
+  const kecil = () => {
+    const d = { people: [], unions: [], children: [], birth_ranks: [], root_union_id: 'u0' }
+    const p = (id, sex = 'L') => d.people.push({ id, full_name: id, sex, deleted_at: null })
+    const u = (id, a, b) => d.unions.push({ id, tree_id: null, partner1_id: a, partner2_id: b, deleted_at: null })
+    const c = (union, anak, kind = 'kandung', bio = { kandung: 'keduanya', angkat: null }[kind]) =>
+      d.children.push({ id: `${union}-${anak}`, tree_id: null, union_id: union, child_id: anak, kind, biological_parent: bio, deleted_at: null })
+    p('a'); p('b', 'P'); u('u0', 'a', 'b')
+    p('k'); c('u0', 'k') // keturunan
+    p('q', 'P'); u('u1', 'k', 'q')
+    return { d, p, u, c }
+  }
+
+  it('anak sambung yang orang tua kandungnya keturunan (partner1) tetap ber-GEN; bawaan pasangan (partner2) tidak', () => {
+    const { d, p, c } = kecil()
+    p('darah'); c('u1', 'darah', 'sambung', 'partner1')
+    p('bawaan'); c('u1', 'bawaan', 'sambung', 'partner2')
+    const h = hitung(d)
+    expect(h.tanpaGen.has('darah')).toBe(false)
+    expect(h.tanpaGen.has('bawaan')).toBe(true)
+  })
+
+  it('keturunan anak bawaan juga tanpa GEN, termasuk anak angkatnya', () => {
+    const { d, p, u, c } = kecil()
+    p('bawaan'); c('u1', 'bawaan', 'sambung', 'partner2')
+    p('r', 'P'); u('u2', 'bawaan', 'r')
+    p('cucu'); c('u2', 'cucu')
+    p('angkat'); c('u2', 'angkat', 'angkat')
+    const h = hitung(d)
+    for (const id of ['bawaan', 'cucu', 'angkat']) expect(h.tanpaGen.has(id), id).toBe(true)
+    expect(h.gen.get('cucu')).toBe(3) // letaknya tetap
   })
 })

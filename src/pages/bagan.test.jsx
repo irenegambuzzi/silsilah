@@ -65,7 +65,29 @@ describe('Bagan: isi kartu', () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(document.body.textContent).not.toMatch(/\bsambung\b|\bangkat\b/i)
-    expect(k('vino').querySelector('.kartu-label').textContent).toBe('Putu')
+    expect(k('yoga').querySelector('.kartu-label').textContent).toBe('Putu')
+    // Vino (anak bawaan Umar) tanpa istilah dan GEN (putaran keenam).
+    expect(k('vino').querySelector('.kartu-label')).toBeNull()
+  })
+
+  it('anak bawaan pasangan dan keturunannya: kartu tanpa GEN dan istilah, panel tanpa baris generasi (putaran keenam)', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    for (const id of ['galen', 'elvina', 'vino', 'sadevan-b', 'bagaskara']) {
+      expect(k(id).querySelector('.kartu-gen'), id).toBeNull()
+      expect(k(id).querySelector('.kartu-label'), id).toBeNull()
+      expect(k(id).textContent, id).not.toMatch(/GEN|Anak|Putu|Buyut/)
+    }
+    for (const [id, label, gen] of [['celvia', 'Buyut', 'GEN.3'], ['fajrin', 'Buyut', 'GEN.3'], ['yoga', 'Putu', 'GEN.2'], ['ratrisa-a', 'Buyut', 'GEN.3']]) {
+      expect(k(id).querySelector('.kartu-label').textContent, id).toBe(label)
+      expect(k(id).querySelector('.kartu-gen').textContent, id).toBe(gen)
+    }
+    await aksi.click(k('galen'))
+    const panel = screen.getByRole('region', { name: 'Orang terpilih' })
+    expect(within(panel).getByRole('heading', { name: 'Galen', level: 2 })).toBeTruthy()
+    expect(panel.textContent).not.toMatch(/Generasi ke-|GEN\./)
+    await aksi.click(k('celvia'))
+    expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByText('Buyut · Generasi ke-3')).toBeTruthy()
   })
 
   it('pasangan yang bukan keturunan: tanpa GEN, dengan "Istri ke-n" di atas kartunya', async () => {
@@ -470,7 +492,7 @@ describe('Bagan: bilah atas dan legenda', () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'Ovi{Enter}')
-    expect(screen.getByText('1 dari 1: Elvina · Buyut · putri Kirana (panggilan: Ovi)')).toBeTruthy()
+    expect(screen.getByText('1 dari 1: Elvina · putri Kirana (panggilan: Ovi)')).toBeTruthy()
     expect(k('elvina').hasAttribute('data-sorot')).toBe(true)
   })
 

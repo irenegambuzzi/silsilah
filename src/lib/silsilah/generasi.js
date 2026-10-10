@@ -44,6 +44,8 @@ export function teksGenerasi(gen, daftar = DAFTAR_GENERASI) {
 //            anakKe (urutan lahir di antara anak KANDUNG orang tua itu;
 //                    null untuk anak sambung/angkat),
 //            pasanganKe: { ke, jumlah, jenis } (pasangan orang tua yang mana) }
+//   tanpaGen Set keturunan yang GEN dan istilahnya tidak ditampilkan (lihat
+//          hitungTanpaGen)
 export function hitungGenerasi(graf) {
   const gen = new Map()
   const root = graf.rootUnionId ? graf.unions.get(graf.rootUnionId) : null
@@ -100,7 +102,28 @@ export function hitungGenerasi(graf) {
     daftar.sort((a, b) => Number(a.pihakIbu) - Number(b.pihakIbu) || a.gen - b.gen)
     jalur.set(id, daftar)
   }
-  return { gen, jalur }
+  return { gen, jalur, tanpaGen: hitungTanpaGen(gen, jalur) }
+}
+
+// Keturunan TANPA GEN dan istilah Jawa (putaran keenam tinjauan, Oktober
+// 2026): yang tidak punya satu pun jalur ke pangkal lewat orang tua KANDUNG
+// atau orang tua ANGKAT. Contohnya anak bawaan pasangan (Vino, anak Umar;
+// Cahya hanya ibu sambungnya), dan keturunan mereka. Anak sambung yang salah
+// satu orang tua kandungnya keturunan (Celvia) dan anak angkat (Yoga)
+// beserta keturunannya tetap ber-GEN. Orangnya tetap di `gen`/`jalur`, jadi
+// letak di bagan, warna kartu, dan nomor silsilah (urutan Daftar) tidak
+// berubah; hanya GEN dan istilahnya yang tidak ditampilkan.
+function hitungTanpaGen(gen, jalur) {
+  const bergaris = new Map()
+  const cek = (id) => {
+    if (gen.get(id) === 0) return true
+    if (bergaris.has(id)) return bergaris.get(id)
+    bergaris.set(id, false) // penjaga data rusak (siklus)
+    const hasil = (jalur.get(id) ?? []).some((j) => (j.kandung || j.kind === 'angkat') && cek(j.orangTuaId))
+    bergaris.set(id, hasil)
+    return hasil
+  }
+  return new Set([...gen.keys()].filter((id) => !cek(id)))
 }
 
 // Pernikahan `u` antara dua keturunan: id pihak perempuan kalau jenis

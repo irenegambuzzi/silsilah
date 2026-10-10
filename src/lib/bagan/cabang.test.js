@@ -48,3 +48,29 @@ describe('fokus cabang: generasi dihitung dari orang yang difokuskan', () => {
     expect(labelDetail(s, 'sinta').subjudul).toBe('Pasangan dari Lorvan')
   })
 })
+
+// Putaran keenam tinjauan: keturunan tanpa GEN (generasi.js, tanpaGen) juga
+// tanpa GEN saat generasi dihitung dari cabang; warnanya tidak berubah.
+describe('fokus cabang: keturunan tanpa GEN', () => {
+  it('"Hitung dari Cahya": Wati GEN.1 · Anak, Vino dan anak-anaknya tetap tanpa GEN', () => {
+    const cc = silsilahCabang(s, bagan.simpul.get('cahya'))
+    expect(labelKartu(cc, 'wati')).toMatchObject({ gen: 1, label: 'Anak' })
+    for (const id of ['vino', 'sadevan-b', 'bagaskara']) {
+      expect(labelKartu(cc, id), id).toMatchObject({ jenis: 'keturunan', gen: null, label: null, pojok: null })
+      expect(labelDetail(cc, id).subjudul, id).toBeNull()
+    }
+  })
+
+  it('"Hitung dari Vino": label pangkal cabang tanpa GEN, juga pasangannya; anaknya tanpa GEN', () => {
+    const cv = silsilahCabang(s, bagan.simpul.get('vino'))
+    expect(labelKartu(cv, 'vino')).toMatchObject({ jenis: 'keturunan', gen: null, label: 'Pangkal cabang', pojok: null })
+    expect(labelKartu(cv, 'ratrisa-k')).toMatchObject({ jenis: 'pasangan', gen: null, label: 'Pangkal cabang', pojok: null })
+    expect(labelKartu(cv, 'sadevan-b')).toMatchObject({ gen: null, label: null, pojok: null })
+  })
+
+  it('warna kartu tidak berubah: warna keturunan', () => {
+    expect(['galen', 'elvina', 'vino', 'sadevan-b', 'bagaskara'].map((id) => warnaKartu(labelKartu(s, id)))).toEqual([
+      'keturunan-l', 'keturunan-p', 'keturunan-l', 'keturunan-l', 'keturunan-wafat',
+    ])
+  })
+})

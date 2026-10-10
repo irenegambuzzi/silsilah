@@ -54,6 +54,15 @@ export function keteranganPasangan(s, id) {
   return `${KATA.pasanganDari} ${gabungNama(nama)}${berpisah ? ` · ${KATA.berpisah}` : ''}`
 }
 
+// true kalau GEN dan istilah orang ini tidak ditampilkan: keturunan tanpa
+// garis darah/angkat (generasi.js), atau pasangan pangkal cabang yang
+// pangkal cabangnya seperti itu.
+function tanpaGenDi(s, id) {
+  if (!s.tanpaGen) return false
+  if (s.tanpaGen.has(id)) return true
+  return Boolean(s.pasanganCabang?.has(id) && s.tanpaGen.has(s.pangkalCabang))
+}
+
 // jenis: 'pangkal' (GEN.0) | 'keturunan' | 'pasangan' (bukan keturunan).
 // label: satu label kecil di bawah nama; pojok: "GEN.n" di pojok kartu.
 // Di cabang yang dihitung dari orang tertentu (bagan/cabang.js), orang itu
@@ -66,10 +75,15 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const pasanganCabang = Boolean(s.pasanganCabang?.has(id))
-  const gen = pasanganCabang ? 0 : (s.gen.get(id) ?? null)
+  const genAsli = pasanganCabang ? 0 : (s.gen.get(id) ?? null)
   const pangkalCabang = s.pangkalCabang === id || pasanganCabang
-  const jenis = pasanganCabang || gen === null ? 'pasangan' : gen === 0 && !pangkalCabang ? 'pangkal' : 'keturunan'
-  const istilah = gen === null ? null : pangkalCabang ? KATA.pangkalCabang : istilahGenerasi(gen, s.daftarGenerasi)
+  const jenis = pasanganCabang || genAsli === null ? 'pasangan' : genAsli === 0 && !pangkalCabang ? 'pangkal' : 'keturunan'
+  // Keturunan tanpa garis darah/angkat (generasi.js, tanpaGen): kartu
+  // keturunan biasa, tetapi tanpa GEN dan istilah Jawa. Juga kalau ia
+  // pangkal cabang (dan pasangannya): label "Pangkal cabang" tanpa GEN.
+  const tanpaGen = tanpaGenDi(s, id)
+  const gen = tanpaGen ? null : genAsli
+  const istilah = pangkalCabang ? KATA.pangkalCabang : gen === null ? null : istilahGenerasi(gen, s.daftarGenerasi)
   return {
     id,
     nama: namaTampil(orang),
@@ -81,7 +95,7 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
     labelGen: gen === null ? null : labelGen(gen),
     istilahGen: istilah,
     label: pangkalCabang ? istilah : jenis === 'pasangan' ? KATA.labelPasangan : istilah,
-    pojok: jenis === 'keturunan' || pangkalCabang ? labelGen(gen) : null,
+    pojok: gen !== null && (jenis === 'keturunan' || pangkalCabang) ? labelGen(gen) : null,
     belumDewasa: belumDewasa(orang, hariIni),
   }
 }
@@ -104,11 +118,11 @@ export function keteranganCari(s, id) {
     return pasangan.length > 0 ? isiTeks(KATA.cariPasangan, { nama: gabungNama(pasangan.map(nama)) }) : ''
   }
   const gen = s.gen.get(id)
-  const istilah = istilahGenerasi(gen, s.daftarGenerasi) ?? labelGen(gen)
+  // Keturunan tanpa GEN (generasi.js, tanpaGen): tanpa istilah.
+  const istilah = s.tanpaGen?.has(id) ? null : (istilahGenerasi(gen, s.daftarGenerasi) ?? labelGen(gen))
   const ortu = s.jalur.get(id)?.[0]?.orangTuaId
-  if (!ortu) return istilah
   const sex = orang.sex === 'L' || orang.sex === 'P' ? orang.sex : 'x'
-  return `${istilah} · ${isiTeks(KATA.cariAnak[sex], { nama: nama(ortu) })}`
+  return [istilah, ortu ? isiTeks(KATA.cariAnak[sex], { nama: nama(ortu) }) : null].filter(Boolean).join(' · ')
 }
 
 // Untuk Daftar: tahun lahir–wafat dan keterangan singkat ("Putra ke-6 ·
@@ -125,7 +139,8 @@ export function keteranganDaftar(s, id) {
 // Panel keterangan (format aplikasi lama). Semua teks sudah jadi, siap
 // tampil; isian yang kosong (null) ditulis "-" oleh layar:
 //   subjudul     "Putu · Generasi ke-2" (istilah Jawa dulu), "Pangkal",
-//                atau "Pasangan dari Bima · berpisah"
+//                atau "Pasangan dari Bima · berpisah"; null (tidak tampil)
+//                untuk keturunan tanpa GEN (generasi.js, tanpaGen)
 //   jenisKelamin "Laki-laki" / "Perempuan" / "Tidak diketahui"
 //   panggilan, pekerjaan, catatan   (null kalau kosong)
 //   (Nomor silsilah sengaja tidak ada di sini: tidak pernah ditampilkan.)
@@ -165,6 +180,7 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return null
   const gen = s.gen.get(id) ?? null
+  const tanpaGen = tanpaGenDi(s, id)
   const nama = (pid) => namaTampil(s.graf.orang.get(pid))
   const gabungOrangTua = (u) => orangTuaUnion(u).map(nama).join(' & ')
 
@@ -228,7 +244,7 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
   const lain = jalur.find((j) => j.gen !== gen)
   // Di cabang yang dihitung ulang, GEN jalur lain tidak lagi sebanding.
   const lewat =
-    jalur.length > 1 && lain && !s.pangkalCabang
+    jalur.length > 1 && lain && !s.pangkalCabang && !tanpaGen
       ? isiTeks(KATA.lewat, { nama: nama(lain.orangTuaId), generasi: teksGenerasi(lain.gen, s.daftarGenerasi) })
       : null
 
@@ -282,6 +298,8 @@ export function labelDetail(s, id, { hariIni = new Date() } = {}) {
       ? KATA.pangkalCabang
       : gen === null
         ? keteranganPasangan(s, id)
+        : tanpaGen
+        ? null
         : gen === 0
         ? (istilahGenerasi(0, s.daftarGenerasi) ?? teksGenerasi(0, s.daftarGenerasi))
         : teksGenerasi(gen, s.daftarGenerasi)

@@ -80,10 +80,14 @@ describe('kartu keturunan', () => {
     for (const id of ['vino', 'yoga']) {
       expect(JSON.stringify(labelKartu(s, id)).toLowerCase()).not.toMatch(/sambung|angkat/)
     }
-    // Bentuknya sama dengan saudara kandung.
-    const { id: _a, nama: _b, panggilan: _c, sex: _k, ...vino } = labelKartu(s, 'vino')
-    const { id: _f, nama: _g, panggilan: _h, sex: _l, ...wati } = labelKartu(s, 'wati')
-    expect(vino).toEqual(wati)
+    // Anak angkat: bentuknya sama dengan saudara kandung (GEN dan istilah sama).
+    const { id: _a, nama: _b, panggilan: _c, ...yoga } = labelKartu(s, 'yoga')
+    const { id: _f, nama: _g, panggilan: _h, ...kelvan } = labelKartu(s, 'kelvan')
+    expect(yoga).toEqual(kelvan)
+    // Anak sambung bawaan pasangan (Vino): kartu keturunan yang sama, tetapi
+    // tanpa GEN dan istilah (putaran keenam).
+    expect(Object.keys(labelKartu(s, 'vino')).sort()).toEqual(Object.keys(labelKartu(s, 'wati')).sort())
+    expect(labelKartu(s, 'vino')).toMatchObject({ jenis: 'keturunan', gen: null, label: null, pojok: null })
   })
 
   it('pernikahan antarsepupu: GEN dan "Putra/Putri ke-n" mengikuti pihak laki-laki', () => {
@@ -506,7 +510,7 @@ describe('baris yang selalu tampil dan yang hanya tampil kalau berlaku', () => {
 
 describe('keteranganCari: pembeda di hasil pencarian', () => {
   it.each([
-    ['sadevan-b', 'Buyut · putra Vino'],
+    ['sadevan-b', 'putra Vino'], // tanpa GEN (putaran keenam): tanpa istilah
     ['sadevan-a', 'Buyut · putra Nanda'],
     ['ratrisa-k', 'pasangan Vino'],
     ['ratrisa-a', 'Buyut · putri Yoga'],
@@ -526,5 +530,44 @@ describe('keteranganCari: pembeda di hasil pencarian', () => {
       per.set(kunci, [...(per.get(kunci) ?? []), keteranganCari(s, id)])
     }
     for (const [nama, ket] of per) if (ket.length > 1) expect(new Set(ket).size, nama).toBe(ket.length)
+  })
+})
+
+// Putaran keenam tinjauan: anak bawaan pasangan (tanpa orang tua kandung
+// keturunan) dan keturunannya tanpa GEN dan istilah Jawa.
+describe('tanpa GEN: Galen, Elvina, Vino, Sadevan Bramasta, Bagaskara', () => {
+  const tanpa = ['galen', 'elvina', 'vino', 'sadevan-b', 'bagaskara']
+
+  it.each(tanpa)('%s: kartu keturunan tanpa GEN dan istilah, panel tanpa baris generasi', (id) => {
+    expect(labelKartu(s, id)).toMatchObject({ jenis: 'keturunan', gen: null, labelGen: null, istilahGen: null, label: null, pojok: null })
+    const d = labelDetail(s, id)
+    expect(d.subjudul).toBeNull()
+    expect(d.lewat).toBeNull()
+    expect(JSON.stringify(d)).not.toMatch(/Generasi ke-|GEN\.|Anak ·|Putu|Buyut|Canggah/)
+    expect(keteranganCari(s, id)).not.toMatch(/GEN\.|^(Anak|Putu|Buyut|Canggah)\b/)
+  })
+
+  it.each([
+    ['celvia', 'Buyut', 'GEN.3', 'Buyut · Generasi ke-3'],
+    ['fajrin', 'Buyut', 'GEN.3', 'Buyut · Generasi ke-3'],
+    ['yoga', 'Putu', 'GEN.2', 'Putu · Generasi ke-2'],
+    ['ratrisa-a', 'Buyut', 'GEN.3', 'Buyut · Generasi ke-3'],
+  ])('%s tidak berubah: %s, %s', (id, label, pojok, subjudul) => {
+    expect(labelKartu(s, id)).toMatchObject({ jenis: 'keturunan', label, pojok })
+    expect(labelDetail(s, id).subjudul).toBe(subjudul)
+  })
+
+  it('nomor urut anak kandung tidak berubah (panel Harvel)', () => {
+    expect(labelDetail(s, 'harvel').anak.map((a) => [a.ke, a.nama, a.jenis])).toEqual([
+      [null, 'Celvia', 'anak sambung'], [1, 'Galen', null], [2, 'Elvina', null], [3, 'Fajrin', null],
+    ])
+  })
+
+  it('Daftar: tanpa GEN dan istilah, tetap di bagian keturunan', () => {
+    for (const id of tanpa) {
+      const k = labelKartu(s, id)
+      expect([k.labelGen, k.istilahGen], id).toEqual([null, null])
+      expect(keteranganDaftar(s, id).keterangan, id).not.toMatch(/GEN|Generasi/)
+    }
   })
 })

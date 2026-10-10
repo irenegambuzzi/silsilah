@@ -71,7 +71,11 @@ describe('susunBagan', () => {
     expect(Object.keys(sambung).sort()).toEqual(Object.keys(kandung).sort())
     expect(JSON.stringify(sambung)).not.toMatch(/sambung|angkat/i)
     expect(JSON.stringify(bagan.simpul.get('yoga').kartu)).not.toMatch(/sambung|angkat/i)
-    expect(sambung.label).toBe(kandung.label)
+    // Anak angkat: label sama dengan saudara kandungnya. Anak sambung bawaan
+    // pasangan (Vino): tanpa GEN dan istilah (putaran keenam).
+    expect(bagan.simpul.get('yoga').kartu.label).toBe(bagan.simpul.get('kelvan').kartu.label)
+    expect(sambung.label).toBeNull()
+    expect(kandung.label).toBe('Putu')
   })
 
   it('pasangan yang bukan keturunan tidak punya simpul sendiri tetapi ada tempatnya', () => {

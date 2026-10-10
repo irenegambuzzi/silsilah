@@ -27,6 +27,17 @@ describe('Daftar', () => {
     expect(screen.getByRole('heading', { name: 'Pasangan' })).toBeTruthy()
   })
 
+  it('anak bawaan pasangan dan keturunannya tanpa GEN dan istilah (putaran keenam)', async () => {
+    pasang('/daftar', klienKeluarga())
+    await screen.findByRole('heading', { name: 'Daftar', level: 1 })
+    for (const nama of [/^Galen/, /^Elvina/, /^Vino/, /^Sadevan Bramasta/, /^Alm\. H\. Bagaskara/]) {
+      expect((await screen.findByRole('link', { name: nama })).textContent, String(nama)).not.toMatch(/GEN|Anak|Putu|Buyut/)
+    }
+    expect(screen.getByRole('link', { name: /^Celvia/ }).textContent).toContain('GEN.3 · Buyut')
+    expect(screen.getByRole('link', { name: /^Yoga/ }).textContent).toContain('GEN.2 · Putu')
+    expect(screen.getByRole('link', { name: /^Ratrisa Anindya/ }).textContent).toContain('GEN.3 · Buyut')
+  })
+
   it('pencarian menyaring nama dan mengumumkan jumlahnya', async () => {
     const { aksi } = pasang('/daftar', klienKeluarga())
     const kotak = await screen.findByRole('searchbox', { name: 'Cari nama' })
