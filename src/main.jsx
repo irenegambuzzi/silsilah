@@ -3,10 +3,15 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { modeContohAktif } from './lib/modeContoh'
 import { muatTampilanTersimpan } from './lib/tampilan'
+import { hashTanpaFokus } from './lib/fokus/alamatAwal'
 import './index.css'
 
 // Ukuran huruf dan kontras pilihan pengguna, sebelum layar pertama tampil.
 muatTampilanTersimpan()
+
+// Dibuka baru: selalu mulai tanpa fokus cabang, walaupun alamatnya berisi fokus.
+const hashBersih = hashTanpaFokus(window.location.hash)
+if (hashBersih !== null) window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}${hashBersih}`)
 
 async function mulai() {
   let klien

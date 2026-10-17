@@ -99,7 +99,7 @@ describe('susunBagan', () => {
     expect(bagan.induk.get('bintang')).toBe('dorvi')
     expect(bagan.simpul.get('dorvi').anak.map(nama)).toEqual(['Bintang'])
     expect(bagan.simpul.get('arum').anak).toEqual([])
-    expect(bagan.simpul.get('arum').pasangan.find((p) => p.id === 'dorvi').anakDi).toEqual({ id: 'dorvi', nama: 'Dorvi' })
+    expect(bagan.simpul.get('arum').pasangan.find((p) => p.id === 'dorvi').anakDi).toEqual({ id: 'dorvi', nama: 'Dorvi', anak: ['bintang'] })
     // Posisi di bagan cocok dengan GEN: kedalaman simpul = GEN.
     const kedalaman = (id) => { let d = 0; for (let x = id; bagan.induk.has(x); x = bagan.induk.get(x)) d++; return d }
     for (const id of ['nirvo', 'hasna', 'bintang']) expect(kedalaman(id), id).toBe(s.gen.get(id))
@@ -110,10 +110,10 @@ describe('susunBagan', () => {
     const gendis = bagan.simpul.get('rangga').pasangan.find((p) => p.id === 'gendis')
     expect(gendis.anakDi).toBeNull() // anak ada di bawah Rangga sendiri
     const rangga = bagan.simpul.get('gendis').pasangan.find((p) => p.id === 'rangga')
-    expect(rangga.anakDi).toEqual({ id: 'rangga', nama: 'Rangga' })
+    expect(rangga.anakDi).toEqual({ id: 'rangga', nama: 'Rangga', anak: ['hasna'] })
     const wati = bagan.simpul.get('tamran').pasangan.find((p) => p.id === 'wati')
     expect(wati.anakDi).toBeNull()
-    expect(bagan.simpul.get('wati').pasangan.find((p) => p.id === 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran' })
+    expect(bagan.simpul.get('wati').pasangan.find((p) => p.id === 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran', anak: ['nirvo'] })
   })
 
   it('anak di bawah hati pernikahannya masing-masing', () => {
@@ -201,15 +201,17 @@ describe('susunBagan dengan fokus', () => {
     expect(b.induk.get('hasna')).toBe('rangga')
     expect(b.induk.get('bintang')).toBe('dorvi')
     expect(b.induk.get('nirvo')).toBe('tamran')
-    // Mode fokus: tanpa catatan "Anak mereka ada di cabang …".
+    // Tujuannya di dalam cabang ini: catatan "Anak mereka ada di cabang …" tetap ada (putaran ketujuh, 3b).
     expect(kelompok(b, 'gendis', 'rangga').anak).toEqual([])
-    expect(kelompok(b, 'gendis', 'rangga').anakDi).toBeNull()
+    expect(kelompok(b, 'gendis', 'rangga').anakDi).toEqual({ id: 'rangga', nama: 'Rangga', anak: ['hasna'] })
+    expect(kelompok(b, 'wati', 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran', anak: ['nirvo'] })
+    expect(kelompok(b, 'arum', 'dorvi').anakDi).toEqual({ id: 'dorvi', nama: 'Dorvi', anak: ['bintang'] })
   })
 
   it('tanpa fokus: bagan lengkap tidak berubah', () => {
     expect(bagan.akar.id).toBe('raksa')
     expect(bagan.induk.get('nirvo')).toBe('tamran')
     expect(kelompok(bagan, 'wati', 'tamran').anak).toEqual([])
-    expect(kelompok(bagan, 'wati', 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran' })
+    expect(kelompok(bagan, 'wati', 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran', anak: ['nirvo'] })
   })
 })

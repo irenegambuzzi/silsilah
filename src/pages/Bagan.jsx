@@ -375,8 +375,9 @@ function IsiBagan() {
   // "2 dari 5" tetap terlihat; mengetuk kartunya membuka panel).
   const [sorot, setSorot] = useState(null)
   const langkahFokus = Boolean(lokasi.state?.masukFokus)
-  // Dibuka langsung dari alamat yang sudah berisi fokus (link yang dibagikan):
-  // sisipkan bagan lengkap di riwayat, supaya Kembali juga keluar dari fokus.
+  // Masuk ke alamat yang sudah berisi fokus (tautan dari Daftar atau halaman
+  // orang; saat aplikasi dibuka baru fokus sudah dibuang, main.jsx): sisipkan
+  // bagan lengkap di riwayat, supaya Kembali juga keluar dari fokus.
   useEffect(() => {
     if (!fokusId || langkahFokus) return
     const tanpa = new URLSearchParams(params)
@@ -444,6 +445,16 @@ function IsiBagan() {
     else setTerpilih((x) => (x === id ? null : id))
   }
 
+  // Catatan "Anak mereka ada di cabang …": saat fokus (tujuannya selalu di
+  // cabang ini, susun.js) bagan bergeser ke anak-anak itu dan menyorotnya,
+  // tetap di fokus; tanpa fokus, ke kartu pasangan itu.
+  const saatCatatan = (anakDi) => {
+    if (!fokusId) return lompat(anakDi.id)
+    setSorot(anakDi.anak)
+    setTerpilih(null)
+    aksi.pusatkanKe(anakDi.anak, { bilah: true })
+  }
+
   // Hasil pencarian: sorot kartunya dan pindahkan Bagan ke sana. Panel orang
   // lain yang sedang terbuka ditutup supaya tidak tertukar.
   const sorotKe = (id) => {
@@ -490,6 +501,7 @@ function IsiBagan() {
             saatKetuk={(id) => setTerpilih((x) => (x === id ? null : id))}
             saatLompat={lompat}
             saatRujukan={saatRujukan}
+            saatCatatan={saatCatatan}
             cabang={anggota}
           />
         </div>

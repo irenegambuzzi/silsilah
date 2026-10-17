@@ -324,12 +324,34 @@ describe('Bagan: pernikahan antarsepupu', () => {
     expect(k('hasna').getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('saat fokus: tidak ada catatan "Anak mereka ada di cabang …" dan tidak ada tombol ke luar cabang', async () => {
+  const sorotan = () => [...document.querySelectorAll('[data-sorot]')].map((x) => x.dataset.orang)
+  it('saat fokus: catatan "Anak mereka ada di cabang …" yang tujuannya di luar cabang tidak ada, juga tombol ke luar cabang', async () => {
     pasang('/bagan?fokus=cahya', klienKeluarga())
     expect(await screen.findByText('Menampilkan satu cabang: Cahya')).toBeTruthy()
     expect(screen.queryByRole('button', { name: /Anak mereka ada di cabang/ })).toBeNull()
     expect(screen.queryByRole('button', { name: /^Naik ke/ })).toBeNull()
     expect(document.querySelector('[data-catatan]')).toBeNull()
+  })
+
+  it('saat fokus: catatan "Anak mereka ada di cabang …" yang tujuannya di dalam cabang tetap ada; mengetuknya menggeser bagan ke anak-anak itu dan menyorotnya, tetap di fokus', async () => {
+    const { aksi } = pasang('/bagan?fokus=raksa', klienKeluarga())
+    expect(await screen.findByText('Menampilkan satu cabang: Alm. Raksa')).toBeTruthy()
+    for (const nama of ['Tamran', 'Rangga', 'Dorvi']) expect(screen.getByRole('button', { name: `Anak mereka ada di cabang ${nama}` })).toBeTruthy()
+    await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Tamran' }))
+    expect(sorotan()).toEqual(['nirvo'])
+    expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
+    expect(screen.getByText('Menampilkan satu cabang: Alm. Raksa')).toBeTruthy()
+    expect(lokasiSaatIni.search).toBe('?fokus=raksa')
+    await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Rangga' }))
+    expect(sorotan()).toEqual(['hasna'])
+  })
+
+  it('tanpa fokus: mengetuk catatan "Anak mereka ada di cabang …" tidak menyorot apa pun', async () => {
+    const { aksi } = pasang('/bagan', klienKeluarga())
+    await tunggu()
+    await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Rangga' }))
+    expect(k('rangga').getAttribute('aria-pressed')).toBe('true')
+    expect(sorotan()).toEqual([])
   })
 
   it('saat fokus: di panel, nama di luar cabang hanya teks biasa', async () => {

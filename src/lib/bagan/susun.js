@@ -54,8 +54,9 @@ const hurufBesarAwal = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 //   berpisah  pernikahan ini berakhir karena berpisah
 //   keturunan pasangan ini juga keturunan dengan tempatnya sendiri (antarsepupu)
 //   anak      anak dari pernikahan ini yang tampil di sini, menurut umur
-//   anakDi    { id, nama (singkat, tanpa gelar) } kalau anak mereka tampil di
-//             tempat pasangan itu (tidak pernah di mode fokus)
+//   anakDi    { id, nama (singkat, tanpa gelar), anak: [id] (menurut umur) }
+//             kalau anak mereka tampil di tempat pasangan itu; di mode fokus
+//             hanya kalau pasangan itu juga di cabang ini
 // }
 export function susunBagan(s, { hariIni = new Date(), fokus = null } = {}) {
   const root = s.graf.rootUnionId ? s.graf.unions.get(s.graf.rootUnionId) : null
@@ -96,7 +97,7 @@ export function susunBagan(s, { hariIni = new Date(), fokus = null } = {}) {
       if (pasanganId) sudahTampil.add(pasanganId)
       const anakSemua = [...new Set((s.graf.anakUnion.get(u.id) ?? []).map((c) => c.child_id))]
       const milikSini = anakPernikahanMenurutUmur(s.graf, u, id, anakSemua.filter((c) => pemilik(c) === id))
-      const milikPasangan = pasanganId && anakSemua.some((c) => pemilik(c) === pasanganId)
+      const anakPasangan = pasanganId ? anakSemua.filter((c) => pemilik(c) === pasanganId) : []
       const orang = pasanganId ? s.graf.orang.get(pasanganId) : null
       if (pasanganId && !s.gen.has(pasanganId) && !tempat.has(pasanganId)) tempat.set(pasanganId, id)
       return {
@@ -108,8 +109,12 @@ export function susunBagan(s, { hariIni = new Date(), fokus = null } = {}) {
         berpisah: u.status === 'cerai',
         keturunan: Boolean(pasanganId && punyaTempat(pasanganId)),
         anakId: milikSini,
-        // Mode fokus: tidak ada catatan "Anak mereka ada di cabang …" (cabang terisolasi).
-        anakDi: !cabang && milikPasangan && milikSini.length === 0 ? { id: pasanganId, nama: namaSingkat(s.graf, pasanganId) } : null,
+        // Mode fokus: catatan "Anak mereka ada di cabang …" hanya kalau
+        // tujuannya di dalam cabang ini (cabang terisolasi).
+        anakDi:
+          anakPasangan.length > 0 && milikSini.length === 0 && (!cabang || cabang.has(pasanganId))
+            ? { id: pasanganId, nama: namaSingkat(s.graf, pasanganId), anak: anakPernikahanMenurutUmur(s.graf, u, pasanganId, anakPasangan) }
+            : null,
       }
     })
 
