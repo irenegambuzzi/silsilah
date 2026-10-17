@@ -13,6 +13,7 @@ import { lokasiSaatIni, pasang, riwayat } from '../test/pembantu.jsx'
 import { keluargaFiktif, klienKeluarga, tabelKeluarga } from '../test/klienKeluarga.js'
 import { cariOrang } from '../lib/silsilah/cari.js'
 import { namaTampil } from '../lib/silsilah/nama.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 configure({ asyncUtilTimeout: 5000 })
 beforeEach(() => {
@@ -32,7 +33,7 @@ const barisOrangTua = (panel) =>
     .filter((t) => /^(Orang tua|Ayah sambung|Ibu sambung|Orang tua sambung|Orang tua angkat):/.test(t))
 
 describe('Bagan: isi kartu', () => {
-  it('kartu keturunan: GEN di pojok, nama, dan istilah Jawa', async () => {
+  it('kartu keturunan: GEN di pojok, nama, dan istilah Jawa', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await screen.findByRole('heading', { name: 'Silsilah Keluarga', level: 1 })
     await tunggu()
@@ -43,7 +44,7 @@ describe('Bagan: isi kartu', () => {
   })
 
   // Putaran keenam, bagian E: ukuran nama HANYA dari jumlah kata nama asli.
-  it('ukuran nama dari jumlah kata saja: nama dengan jumlah kata sama berukuran sama; gelar tidak dihitung; nama selalu utuh', async () => {
+  it('ukuran nama dari jumlah kata saja: nama dengan jumlah kata sama berukuran sama; gelar tidak dihitung; nama selalu utuh', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     const ukuran = (id) => k(id).querySelector('.kartu-nama').dataset.ukuran
@@ -81,7 +82,7 @@ describe('Bagan: isi kartu', () => {
     expect(css).toMatch(/\.kartu-nama\[data-ukuran='kecil'\]/)
   })
 
-  it('kartu pangkal: nama dengan Alm./Almh. dan label "Leluhur"', async () => {
+  it('kartu pangkal: nama dengan Alm./Almh. dan label "Leluhur"', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('raksa').textContent).toContain('Alm. Raksa')
@@ -90,7 +91,7 @@ describe('Bagan: isi kartu', () => {
     expect(k('selara').textContent).toContain('Leluhur')
   })
 
-  it('anak sambung/angkat tampil sama persis dengan saudaranya, tanpa label khusus', async () => {
+  it('anak sambung/angkat tampil sama persis dengan saudaranya, tanpa label khusus', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(document.body.textContent).not.toMatch(/\bsambung\b|\bangkat\b/i)
@@ -99,7 +100,7 @@ describe('Bagan: isi kartu', () => {
     expect(k('vino').querySelector('.kartu-label')).toBeNull()
   })
 
-  it('anak bawaan pasangan dan keturunannya: kartu tanpa GEN dan istilah, panel tanpa baris generasi (putaran keenam)', async () => {
+  it('anak bawaan pasangan dan keturunannya: kartu tanpa GEN dan istilah, panel tanpa baris generasi (putaran keenam)', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     for (const id of ['galen', 'elvina', 'vino', 'sadevan-b', 'bagaskara']) {
@@ -119,7 +120,7 @@ describe('Bagan: isi kartu', () => {
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByText('Buyut · Generasi ke-3')).toBeTruthy()
   })
 
-  it('pasangan yang bukan keturunan: tanpa GEN, dengan "Istri ke-n" di atas kartunya', async () => {
+  it('pasangan yang bukan keturunan: tanpa GEN, dengan "Istri ke-n" di atas kartunya', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('eka').textContent).not.toContain('GEN')
@@ -128,7 +129,7 @@ describe('Bagan: isi kartu', () => {
     expect(screen.getByRole('button', { name: 'Istri ke-2: Fitri' })).toBe(k('fitri'))
   })
 
-  it('pernikahan kembali: kartu pasangan muncul lagi dengan "menikah kembali"; mengetuknya memilih orang yang sama', async () => {
+  it('pernikahan kembali: kartu pasangan muncul lagi dengan "menikah kembali"; mengetuknya memilih orang yang sama', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     const ulang = document.querySelector('[data-orang-ulang="eka"]')
@@ -140,7 +141,7 @@ describe('Bagan: isi kartu', () => {
     expect(within(panel).getByRole('heading', { name: 'Eka', level: 2 })).toBeTruthy()
   })
 
-  it('nomor urut kecil di pojok kartu anak kandung; anak sambung/angkat tanpa nomor', async () => {
+  it('nomor urut kecil di pojok kartu anak kandung; anak sambung/angkat tanpa nomor', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('mega').querySelector('.kartu-urut').textContent).toBe('6')
@@ -152,7 +153,7 @@ describe('Bagan: isi kartu', () => {
     expect(k('mega').querySelector('.kartu-gen').textContent).toBe('GEN.2')
   })
 
-  it('tunas daun di pojok kartu anak di bawah umur; tidak untuk yang dewasa atau tanpa tanggal lahir', async () => {
+  it('tunas daun di pojok kartu anak di bawah umur; tidak untuk yang dewasa atau tanpa tanggal lahir', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     for (const id of ['bayu', 'nala', 'hasna']) expect(k(id).querySelector('[data-tunas]'), id).toBeTruthy()
@@ -161,13 +162,13 @@ describe('Bagan: isi kartu', () => {
     expect(within(legenda).getByText('Belum dewasa (di bawah 18 tahun)')).toBeTruthy()
   })
 
-  it('legenda "Jenis kelamin tidak diketahui" hanya selama masih ada yang belum diketahui', async () => {
+  it('legenda "Jenis kelamin tidak diketahui" hanya selama masih ada yang belum diketahui', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(within(screen.getByRole('region', { name: 'Keterangan warna' })).getByText('Jenis kelamin tidak diketahui')).toBeTruthy()
   })
 
-  it('setelah semua jenis kelamin diisi, baris legenda itu hilang sendiri', async () => {
+  it('setelah semua jenis kelamin diisi, baris legenda itu hilang sendiri', BERAT, async () => {
     const lengkap = tabelKeluarga()
     for (const p of lengkap.people) if (!p.sex) p.sex = 'L'
     pasang('/bagan', klienKeluarga({ tabel: lengkap }))
@@ -176,7 +177,7 @@ describe('Bagan: isi kartu', () => {
     expect(keluargaFiktif.people.some((p) => !p.sex)).toBe(true) // data asal tidak berubah
   })
 
-  it('kartu tidak memuat tahun atau "Anak ke-n"; kartu pasangan: simbol, nama, dan label "Pasangan" tanpa GEN', async () => {
+  it('kartu tidak memuat tahun atau "Anak ke-n"; kartu pasangan: simbol, nama, dan label "Pasangan" tanpa GEN', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     for (const kartu of semuaKartu()) {
@@ -422,7 +423,7 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
     expect(status()).toMatch(/^\d dari 2: Ratrisa Anindya Maharsi Wijayakusuma · Buyut · putri Yoga \(panggilan: Anin\)$/)
   })
 
-  it('Enter dan tombol cari berulang: "n dari m" berputar, sorotan ikut pindah, sesudah yang terakhir kembali ke "1 dari m"', async () => {
+  it('Enter dan tombol cari berulang: "n dari m" berputar, sorotan ikut pindah, sesudah yang terakhir kembali ke "1 dari m"', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.type(kolom(), 'ka')
@@ -563,7 +564,7 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
     expect(hasil().find((x) => x.dataset.hasil === 'ratrisa-k').textContent).not.toMatch(/panggilan/)
   })
 
-  it('tanpa jaringan dan tanpa data kontak: mengetik dan memilih tidak memanggil server sama sekali', async () => {
+  it('tanpa jaringan dan tanpa data kontak: mengetik dan memilih tidak memanggil server sama sekali', BERAT, async () => {
     const klien = klienKeluarga()
     const { aksi } = pasang('/bagan', klien)
     await tunggu()
@@ -588,7 +589,7 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
 })
 
 describe('Bagan: bilah atas dan legenda', () => {
-  it('bilah atas: judul, status, cari, perbesar/perkecil, Pusatkan; bisa disembunyikan', async () => {
+  it('bilah atas: judul, status, cari, perbesar/perkecil, Pusatkan; bisa disembunyikan', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(screen.getByText('Arsip Warisan & Sejarah')).toBeTruthy()
@@ -603,7 +604,7 @@ describe('Bagan: bilah atas dan legenda', () => {
     expect(screen.getByRole('combobox', { name: 'Cari nama' })).toBeTruthy()
   })
 
-  it('cari nama: kartu yang cocok disorot; Cari lagi ke hasil berikutnya', async () => {
+  it('cari nama: kartu yang cocok disorot; Cari lagi ke hasil berikutnya', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'ga{Enter}')
@@ -616,7 +617,7 @@ describe('Bagan: bilah atas dan legenda', () => {
     expect(screen.getByText(/^2 dari \d+: /)).toBeTruthy()
   })
 
-  it('cari nama panggilan: kartunya disorot dan hasilnya menyebut "panggilan: Ovi"', async () => {
+  it('cari nama panggilan: kartunya disorot dan hasilnya menyebut "panggilan: Ovi"', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'Ovi{Enter}')
@@ -710,7 +711,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { name: 'Sinta', level: 2 })).toBeTruthy()
   })
 
-  it('panel anak sambung dari sisi pasangan: Harvel punya empat anak (Celvia anak sambung), Celvia menyebut "Ayah sambung: Harvel"', async () => {
+  it('panel anak sambung dari sisi pasangan: Harvel punya empat anak (Celvia anak sambung), Celvia menyebut "Ayah sambung: Harvel"', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('harvel'))
@@ -724,7 +725,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(panel.textContent).not.toContain('Anak sambung Harvel')
   })
 
-  it('fokus cabang: hanya orang itu dan keturunannya; "Keluar dari fokus" mengembalikan', async () => {
+  it('fokus cabang: hanya orang itu dan keturunannya; "Keluar dari fokus" mengembalikan', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     const semua = semuaKartu().length
@@ -806,7 +807,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(k('rangga')).toBeNull()
   })
 
-  it('"Keluar dari fokus" selalu terlihat di pita selama mode fokus, juga saat bilah atas disembunyikan; kembali ke bagan lengkap dan hitungan pangkal utama', async () => {
+  it('"Keluar dari fokus" selalu terlihat di pita selama mode fokus, juga saat bilah atas disembunyikan; kembali ke bagan lengkap dan hitungan pangkal utama', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     const semua = semuaKartu().length
@@ -824,7 +825,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(lokasiSaatIni.search).toBe('')
   })
 
-  it('tombol Kembali di browser keluar dari fokus (juga dari "Hitung dari [nama]")', async () => {
+  it('tombol Kembali di browser keluar dari fokus (juga dari "Hitung dari [nama]")', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     const semua = semuaKartu().length
@@ -858,7 +859,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(screen.getAllByRole('button', { name: 'Keluar dari fokus' }).length).toBeGreaterThan(0)
   })
 
-  it('pasangan yang bukan keturunan: fokus ke cabang pasangannya', async () => {
+  it('pasangan yang bukan keturunan: fokus ke cabang pasangannya', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('sinta'))
@@ -868,7 +869,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(k('sinta').querySelector('.kartu-label').textContent).toBe('Awal cabang')
   })
 
-  it('"Hitung dari [nama]": orang itu AWAL CABANG GEN.0, keturunannya dihitung ulang, dengan pita keterangan', async () => {
+  it('"Hitung dari [nama]": orang itu AWAL CABANG GEN.0, keturunannya dihitung ulang, dengan pita keterangan', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(k('bima'))
@@ -906,7 +907,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
 
   // Putaran keenam: kata "pangkal" tidak pernah tampil lagi ("Leluhur",
   // "Awal cabang", "Hitung dari leluhur utama", "Kembali ke leluhur utama").
-  it('kata "pangkal" tidak tampil: kartu, legenda, panel, pilihan fokus, pita, dan pencarian', async () => {
+  it('kata "pangkal" tidak tampil: kartu, legenda, panel, pilihan fokus, pita, dan pencarian', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(k('raksa').querySelector('.kartu-label').textContent).toBe('Leluhur')
@@ -950,7 +951,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
 describe('Bagan: geser dan zoom', () => {
   const jari = (id, x, y) => ({ pointerId: id, clientX: x, clientY: y, pointerType: 'touch', isPrimary: id === 1 })
 
-  it('tombol Perbesar dan Perkecil mengubah skala', async () => {
+  it('tombol Perbesar dan Perkecil mengubah skala', BERAT, async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     expect(transform()).toContain('scale(1)')

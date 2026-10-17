@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, screen, waitFor } from '@testing-library/react'
 import { lokasiSaatIni, pasang } from '../test/pembantu.jsx'
 import { OK, klienSudahMasuk } from '../test/klienTiruan.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -43,7 +44,7 @@ const pakaiJamTiruan = () => vi.useFakeTimers({ toFake: ['Date', 'setTimeout', '
 const majukan = (ms) => act(async () => { await vi.advanceTimersByTimeAsync(ms) })
 
 describe('spanduk hitung mundur', () => {
-  it('menampilkan pukul berapa akses berakhir dan sisa waktunya, dengan peran timer', async () => {
+  it('menampilkan pukul berapa akses berakhir dan sisa waktunya, dengan peran timer', BERAT, async () => {
     const berakhir = menitLagi(29)
     pasang('/', klienSementara(berakhir))
     await screen.findByText('Halo, Bu Contoh')

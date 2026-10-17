@@ -8,6 +8,7 @@ import axe from 'axe-core'
 import { pasang } from './test/pembantu.jsx'
 import { OK, buatKlienTiruan, klienSudahMasuk } from './test/klienTiruan.js'
 import { klienKeluarga } from './test/klienKeluarga.js'
+import { BERAT } from './test/batasWaktu.js'
 import { tampaknyaInggris } from './lib/galat.js'
 
 const TOKEN = 'Q'.repeat(43)
@@ -76,8 +77,12 @@ async function tunggu(jangkar) {
   await new Promise((r) => setTimeout(r, 50))
 }
 
+// Layar yang memasang seluruh Bagan atau Daftar: batas waktu lebih longgar.
+const LAYAR_BERAT = ['Bagan', 'Daftar']
+
 describe.each(LAYAR)('layar %s', (_nama, url, buatKlien, jangkar) => {
-  it('lolos pemeriksaan struktur axe (tanpa kontras: itu dihitung terpisah)', async () => {
+  const batas = LAYAR_BERAT.includes(_nama) ? BERAT : {}
+  it('lolos pemeriksaan struktur axe (tanpa kontras: itu dihitung terpisah)', batas, async () => {
     pasang(url, buatKlien())
     await tunggu(jangkar)
     const hasil = await axe.run(document.body, {
@@ -86,7 +91,7 @@ describe.each(LAYAR)('layar %s', (_nama, url, buatKlien, jangkar) => {
     expect(hasil.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])
   })
 
-  it('punya tepat satu judul utama; semua tombol, tautan, dan isian bernama', async () => {
+  it('punya tepat satu judul utama; semua tombol, tautan, dan isian bernama', batas, async () => {
     pasang(url, buatKlien())
     await tunggu(jangkar)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)

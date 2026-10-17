@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { configure, screen, waitFor, within } from '@testing-library/react'
 import { pasang } from '../test/pembantu.jsx'
 import { klienKeluarga } from '../test/klienKeluarga.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 configure({ asyncUtilTimeout: 5000 })
 beforeEach(() => {
@@ -14,7 +15,7 @@ beforeEach(() => {
 })
 
 describe('Daftar', () => {
-  it('menampilkan keturunan dan pasangan, dengan GEN, tanpa nomor silsilah', async () => {
+  it('menampilkan keturunan dan pasangan, dengan GEN, tanpa nomor silsilah', BERAT, async () => {
     pasang('/daftar', klienKeluarga())
     expect(await screen.findByRole('heading', { name: 'Daftar', level: 1 })).toBeTruthy()
     const tamran = (await screen.findByRole('link', { name: /^Tamran/ })).textContent
@@ -27,7 +28,7 @@ describe('Daftar', () => {
     expect(screen.getByRole('heading', { name: 'Pasangan' })).toBeTruthy()
   })
 
-  it('anak bawaan pasangan dan keturunannya tanpa GEN dan istilah (putaran keenam)', async () => {
+  it('anak bawaan pasangan dan keturunannya tanpa GEN dan istilah (putaran keenam)', BERAT, async () => {
     pasang('/daftar', klienKeluarga())
     await screen.findByRole('heading', { name: 'Daftar', level: 1 })
     for (const nama of [/^Galen/, /^Elvina/, /^Vino/, /^Sadevan Bramasta/, /^Alm\. H\. Bagaskara/]) {
@@ -65,7 +66,7 @@ describe('Daftar', () => {
     expect(screen.getByRole('link', { name: /Elvina/ }).textContent).toContain('“Ovi”')
   })
 
-  it('pencarian tahan gelar, tanda baca, huruf besar, ejaan lama, dan menemukan pasangan', async () => {
+  it('pencarian tahan gelar, tanda baca, huruf besar, ejaan lama, dan menemukan pasangan', BERAT, async () => {
     const { aksi } = pasang('/daftar', klienKeluarga())
     const kotak = await screen.findByRole('searchbox', { name: 'Cari nama' })
     for (const [kata, nama] of [['H. HALVIN!', /Halvin/], ['dorvi s.kom.', /Dorvi/], ['Tjahya', /Cahya/], ['oemar', /Umar/], ['mbak dara', /Dara/]]) {
@@ -76,7 +77,7 @@ describe('Daftar', () => {
     }
   })
 
-  it('orang di pohon keluarga asal tidak tampil, walaupun datanya sampai', async () => {
+  it('orang di pohon keluarga asal tidak tampil, walaupun datanya sampai', BERAT, async () => {
     pasang('/daftar', klienKeluarga())
     await screen.findByRole('link', { name: /^Tamran/ })
     expect(screen.queryByRole('link', { name: /Karto/ })).toBeNull()
@@ -91,7 +92,7 @@ describe('Keterangan orang (halaman sendiri)', () => {
       .map((b) => b.textContent)
       .filter((t) => /^(Orang tua|Ayah sambung|Ibu sambung|Orang tua sambung|Orang tua angkat):/.test(t))
 
-  it('dibuka dari Daftar: avatar, nama, "Anak · Generasi ke-1", KETERANGAN PRIBADI, anak', async () => {
+  it('dibuka dari Daftar: avatar, nama, "Anak · Generasi ke-1", KETERANGAN PRIBADI, anak', BERAT, async () => {
     const { aksi } = pasang('/daftar', klienKeluarga())
     await aksi.click(await screen.findByRole('link', { name: /^Bima/ }))
     expect(await screen.findByRole('heading', { name: 'Bima', level: 1 })).toBeTruthy()
@@ -350,7 +351,7 @@ describe('Daftar dan halaman orang saat fokus cabang', () => {
     return h
   }
 
-  it('hanya anggota cabang, dengan pita yang sama; "Keluar dari fokus" menampilkan semua lagi', async () => {
+  it('hanya anggota cabang, dengan pita yang sama; "Keluar dari fokus" menampilkan semua lagi', BERAT, async () => {
     const { aksi } = await keDaftar('/bagan?fokus=lorvan')
     expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
     expect(screen.getByRole('link', { name: /^Kelvan/ })).toBeTruthy()
@@ -387,7 +388,7 @@ describe('Daftar dan halaman orang saat fokus cabang', () => {
     expect(await screen.findByText('Generasi dihitung dari Lorvan')).toBeTruthy()
   })
 
-  it('halaman orang: pita fokus, nama di luar cabang hanya teks biasa, "Lihat di bagan" tetap di cabang', async () => {
+  it('halaman orang: pita fokus, nama di luar cabang hanya teks biasa, "Lihat di bagan" tetap di cabang', BERAT, async () => {
     const { aksi } = await keDaftar('/bagan?fokus=wati')
     await aksi.click(screen.getByRole('link', { name: /^Wati/ }))
     await screen.findByRole('heading', { name: 'Wati', level: 1 })

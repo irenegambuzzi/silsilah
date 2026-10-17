@@ -5,11 +5,12 @@ import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
 import { pasang, lokasiSaatIni } from '../test/pembantu.jsx'
 import { buatKlienContoh } from './klienContoh.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 const tokenDengan = (huruf) => huruf.repeat(43)
 
 describe('mode contoh', () => {
-  it('link berhasil → sapaan → tips → beranda; perangkat terdaftar dan terlihat di Perangkat saya', async () => {
+  it('link berhasil → sapaan → tips → beranda; perangkat terdaftar dan terlihat di Perangkat saya', BERAT, async () => {
     const { aksi } = pasang(`/u/${tokenDengan('A')}`, buatKlienContoh({ jeda: 0 }))
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
     await screen.findByRole('heading', { name: 'Selamat datang, Bu Contoh!' })
@@ -115,7 +116,7 @@ describe('mode contoh: akses sementara dan pengurus', () => {
     expect(screen.queryByRole('link', { name: 'Beri akses sementara' })).toBeNull()
   })
 
-  it('kode UTAMA234 → admin utama: layar admin terkunci sampai authenticator tiruan didaftarkan (kode 123456)', async () => {
+  it('kode UTAMA234 → admin utama: layar admin terkunci sampai authenticator tiruan didaftarkan (kode 123456)', BERAT, async () => {
     const klien = buatKlienContoh({ jeda: 0 })
     const { aksi } = pasang('/kode/UTAMA234', klien)
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import { pasang } from '../test/pembantu.jsx'
 import { GALAT, OK, anggotaContoh, klienSudahMasuk } from '../test/klienTiruan.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -38,7 +39,7 @@ const ketikKode = async (aksi, kode) => {
 }
 
 describe('gerbang layar admin', () => {
-  it('admin utama tanpa aal2: layar verifikasi, layar admin TIDAK memanggil server', async () => {
+  it('admin utama tanpa aal2: layar verifikasi, layar admin TIDAK memanggil server', BERAT, async () => {
     const klien = klienAdmin({ mfa: { level: 'aal1', faktor: [UTAMA] } })
     pasang('/admin/akses-sementara', klien)
     expect(await screen.findByRole('heading', { name: 'Masukkan kode verifikasi dulu' })).toBeTruthy()

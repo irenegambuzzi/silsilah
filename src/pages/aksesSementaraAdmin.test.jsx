@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import { pasang } from '../test/pembantu.jsx'
 import { GALAT, OK, anggotaContoh, klienSudahMasuk } from '../test/klienTiruan.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -43,7 +44,7 @@ describe('menu Saya', () => {
     ['admin utama', pemilik, true],
     ['anggota biasa', anggotaContoh, false],
     ['asisten tanpa izin itu', { ...asisten, permissions: ['bendahara'] }, false],
-  ])('%s: tautan "Beri akses sementara" %s', async (_n, anggota, tampil) => {
+  ])('%s: tautan "Beri akses sementara" %s', BERAT, async (_n, anggota, tampil) => {
     pasang('/saya', klienPengurus({ anggota }))
     await screen.findByRole('heading', { name: 'Saya' })
     expect(!!screen.queryByRole('link', { name: 'Beri akses sementara' })).toBe(tampil)

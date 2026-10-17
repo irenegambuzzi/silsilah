@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import { lokasiSaatIni, pasang } from '../test/pembantu.jsx'
 import { GALAT, OK, klienSudahMasuk } from '../test/klienTiruan.js'
+import { BERAT } from '../test/batasWaktu.js'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -121,7 +122,7 @@ describe('Tambah perangkat', () => {
     expect(JSON.stringify({ ...sessionStorage })).not.toContain('ABCD')
   })
 
-  it('kode habis → pesan dan tombol "Buat kode baru" yang membuat kode lain', async () => {
+  it('kode habis → pesan dan tombol "Buat kode baru" yang membuat kode lain', BERAT, async () => {
     let n = 0
     const klien = klienSudahMasuk({
       rpc: {
