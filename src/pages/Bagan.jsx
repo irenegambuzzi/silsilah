@@ -412,15 +412,17 @@ function IsiBagan() {
   const fokusId = bagan && bagan.simpul.has(params.get('fokus')) ? params.get('fokus') : null
   // "Hitung dari [nama]": GEN dan istilah Jawa dihitung ulang dari orang itu.
   const hitungCabang = Boolean(fokusId) && params.get('hitung') === 'cabang'
+  // Mode fokus: bagan dimulai dari orang itu dengan SEMUA keturunannya (susun.js).
+  const baganFokus = useMemo(() => (fokusId ? susunBagan(silsilah, { fokus: fokusId }) : null), [silsilah, fokusId])
   const sTampil = useMemo(
-    () => (hitungCabang ? silsilahCabang(silsilah, bagan.simpul.get(fokusId)) : silsilah),
-    [hitungCabang, silsilah, bagan, fokusId]
+    () => (hitungCabang ? silsilahCabang(silsilah, baganFokus.akar) : silsilah),
+    [hitungCabang, silsilah, baganFokus]
   )
-  const baganTampil = useMemo(() => (sTampil === silsilah ? bagan : susunBagan(sTampil)), [sTampil, silsilah, bagan])
-  const akar = useMemo(
-    () => (baganTampil ? (fokusId ? baganTampil.simpul.get(fokusId) : baganTampil.akar) : null),
-    [baganTampil, fokusId]
+  const baganTampil = useMemo(
+    () => (!fokusId ? bagan : sTampil === silsilah ? baganFokus : susunBagan(sTampil, { fokus: fokusId })),
+    [fokusId, sTampil, silsilah, bagan, baganFokus]
   )
+  const akar = baganTampil?.akar ?? null
   const tata = useMemo(() => (akar ? tataBagan(akar) : null), [akar])
   const pusat = fokusId ? null : params.get('pilih')
   // Bagian bingkai yang tertutup bilah atas dan legenda (tampilan awal).

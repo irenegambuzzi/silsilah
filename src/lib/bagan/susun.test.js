@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from '../silsilah/keluargaFiktif.js'
 import { susunSilsilah } from '../silsilah/silsilah.js'
-import { susunBagan } from './susun.js'
+import { keturunanCabang, susunBagan } from './susun.js'
 
 const data = bangunKeluargaFiktif()
 const s = susunSilsilah(data)
@@ -150,5 +150,64 @@ describe('susunBagan', () => {
     const rusak = structuredClone(data)
     rusak.children.push({ id: 'siklus', tree_id: null, union_id: 'u8', child_id: 'raksa', kind: 'kandung', deleted_at: null })
     expect(() => susunBagan(susunSilsilah(rusak))).not.toThrow()
+  })
+})
+
+// Putaran ketujuh, bagian 1: mode fokus memuat SEMUA keturunan orang itu.
+describe('susunBagan dengan fokus', () => {
+  const fokus = (id, sx = s) => susunBagan(sx, { fokus: id })
+  const kelompok = (b, id, pasangan) => b.simpul.get(id).pasangan.find((p) => p.id === pasangan)
+
+  it('akar: orang yang difokuskan', () => {
+    expect(fokus('cahya').akar.id).toBe('cahya')
+  })
+
+  it('anak perempuan yang menikah dengan laki-laki dari cabang lain: anaknya di bawah pernikahan itu, beserta keturunannya', () => {
+    const b = fokus('cahya')
+    const k = kelompok(b, 'wati', 'tamran')
+    expect(k.anak.map(nama)).toEqual(['Nirvo'])
+    expect(k.keturunan).toBe(true) // kartu Tamran tetap "Dari cabang lain"
+    expect(k.anakDi).toBeNull()
+    expect(b.induk.get('nirvo')).toBe('wati')
+    const l = fokus('lorvan')
+    expect(kelompok(l, 'arum', 'dorvi').anak.map(nama)).toEqual(['Bintang'])
+    expect(kelompok(l, 'gendis', 'rangga').anak.map(nama)).toEqual(['Hasna'])
+    // Nomor urut di kartu dari sudut pandang ibunya.
+    expect(l.simpul.get('bintang').kartu.urut).toBe(1)
+  })
+
+  it('anak laki-laki itu dari pernikahan lain tidak ditampilkan', () => {
+    const d = structuredClone(data)
+    d.people.push({ ...d.people.find((p) => p.id === 'nirvo'), id: 'anak-melvira', full_name: 'Anak Melvira' })
+    d.children.push({ ...d.children.find((c) => c.child_id === 'nirvo'), id: 'c-u22-x', union_id: 'u22', child_id: 'anak-melvira' })
+    const b = fokus('cahya', susunSilsilah(d))
+    expect(b.simpul.has('anak-melvira')).toBe(false)
+    expect(susunBagan(susunSilsilah(d)).simpul.has('anak-melvira')).toBe(true)
+  })
+
+  it('tidak ada yang ganda; yang sudah tampil tidak hilang (Vino di bawah Umar & Cahya)', () => {
+    for (const id of ['cahya', 'lorvan', 'bima', 'kirana', 'raksa']) {
+      const ids = semuaSimpul(fokus(id).akar).map((n) => n.id)
+      expect(new Set(ids).size, id).toBe(ids.length)
+      expect(new Set(ids), id).toEqual(keturunanCabang(s, id))
+      const lama = semuaSimpul(bagan.simpul.get(id)).map((n) => n.id)
+      for (const x of lama) expect(ids, `${id}: ${x}`).toContain(x)
+    }
+    expect(kelompok(fokus('cahya'), 'cahya', 'umar').anak.map(nama)).toEqual(['Vino', 'Wati'])
+  })
+
+  it('kedua orang tua di cabang: anak sekali di sisi ayah, seperti bagan lengkap', () => {
+    const b = fokus('raksa')
+    expect(b.induk.get('hasna')).toBe('rangga')
+    expect(b.induk.get('bintang')).toBe('dorvi')
+    expect(b.induk.get('nirvo')).toBe('tamran')
+    expect(kelompok(b, 'gendis', 'rangga').anakDi).toEqual({ id: 'rangga', nama: 'Rangga' })
+  })
+
+  it('tanpa fokus: bagan lengkap tidak berubah', () => {
+    expect(bagan.akar.id).toBe('raksa')
+    expect(bagan.induk.get('nirvo')).toBe('tamran')
+    expect(kelompok(bagan, 'wati', 'tamran').anak).toEqual([])
+    expect(kelompok(bagan, 'wati', 'tamran').anakDi).toEqual({ id: 'tamran', nama: 'Tamran' })
   })
 })

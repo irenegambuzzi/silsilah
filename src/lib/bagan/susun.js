@@ -27,8 +27,17 @@ import { anakOrangTua, anakPernikahanMenurutUmur } from '../silsilah/anak.js'
 
 const hurufBesarAwal = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 
+// Mode fokus (`fokus`: id keturunan, putaran ketujuh): bagan dimulai dari
+// orang itu dan memuat SEMUA keturunannya (keturunanCabang), lewat anak
+// laki-laki maupun perempuan. Anak dari perempuan di cabang ini yang menikah
+// dengan laki-laki dari cabang lain tampil di bawah pernikahan itu (di sini
+// dimiliki oleh si ibu), beserta keturunannya; anak laki-laki itu dari
+// pernikahan lain tidak. Kalau kedua orang tua di cabang ini, anaknya tetap
+// di pihak ayah, seperti di bagan lengkap. Tanpa `fokus`: bagan lengkap,
+// tidak berubah.
+//
 // Mengembalikan null kalau pangkal belum ditentukan. Selain itu:
-//   akar     simpul pangkal
+//   akar     simpul pangkal (mode fokus: orang yang difokuskan)
 //   simpul   Map orang → simpul (hanya keturunan)
 //   induk    Map orang → id keturunan yang memilikinya sebagai anak
 //   tempat   Map orang → id simpul tempat orang itu tampil (keturunan: dirinya;
@@ -47,16 +56,23 @@ const hurufBesarAwal = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 //   anak      anak dari pernikahan ini yang tampil di sini, menurut umur
 //   anakDi    { id, nama } kalau anak mereka tampil di tempat pasangan itu
 // }
-export function susunBagan(s, { hariIni = new Date() } = {}) {
+export function susunBagan(s, { hariIni = new Date(), fokus = null } = {}) {
   const root = s.graf.rootUnionId ? s.graf.unions.get(s.graf.rootUnionId) : null
   if (!root) return null
+  const cabang = fokus ? keturunanCabang(s, fokus) : null
 
   const simpul = new Map()
   const induk = new Map()
   const tempat = new Map()
   const diproses = new Set()
 
-  const pemilik = (anakId) => s.jalur.get(anakId)?.[0]?.orangTuaId ?? null
+  // Jalur yang menentukan letak anak: jalur pertama (generasi.js); di mode
+  // fokus, jalur pertama lewat orang tua di cabang itu.
+  const jalurPemilik = (anakId) => {
+    const jalur = s.jalur.get(anakId) ?? []
+    return cabang ? jalur.find((j) => cabang.has(j.orangTuaId)) : jalur[0]
+  }
+  const pemilik = (anakId) => jalurPemilik(anakId)?.orangTuaId ?? null
   const punyaTempat = (id) => (s.jalur.get(id) ?? []).length > 0
   const kartuDari = (id, urut = null) => ({ ...labelKartu(s, id, { hariIni }), urut })
 
@@ -101,7 +117,7 @@ export function susunBagan(s, { hariIni = new Date() } = {}) {
       for (const a of k.anakId) {
         if (diproses.has(a)) continue // penjaga: data rusak tidak boleh membuat putaran tanpa henti
         induk.set(a, id)
-        const anak = bangun(a, s.jalur.get(a)?.[0]?.kandung ? (ke.get(a) ?? null) : null)
+        const anak = bangun(a, jalurPemilik(a)?.kandung ? (ke.get(a) ?? null) : null)
         k.anak.push(anak)
         node.anak.push(anak)
       }
@@ -111,6 +127,30 @@ export function susunBagan(s, { hariIni = new Date() } = {}) {
     return node
   }
 
-  const akar = bangun(root.partner1_id)
+  const akar = bangun(cabang ? fokus : root.partner1_id)
   return { akar, simpul, induk, tempat }
+}
+
+// Semua keturunan `id` (termasuk dirinya), lewat orang tua mana pun di jalur
+// generasi.js: anak kandung, sambung, dan angkat, dari anak laki-laki maupun
+// perempuan, siapa pun pasangannya.
+export function keturunanCabang(s, id) {
+  const anakDari = new Map()
+  for (const [anak, jalur] of s.jalur) {
+    for (const j of jalur) {
+      if (!anakDari.has(j.orangTuaId)) anakDari.set(j.orangTuaId, [])
+      anakDari.get(j.orangTuaId).push(anak)
+    }
+  }
+  const hasil = new Set([id])
+  const antre = [id]
+  while (antre.length) {
+    for (const a of anakDari.get(antre.pop()) ?? []) {
+      if (!hasil.has(a)) {
+        hasil.add(a)
+        antre.push(a)
+      }
+    }
+  }
+  return hasil
 }

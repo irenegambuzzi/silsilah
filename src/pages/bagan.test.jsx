@@ -686,7 +686,7 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(k('kelvan').querySelector('.kartu-gen').textContent).toBe('GEN.2') // tetap dari pangkal utama
     expect(screen.queryByText(/Generasi dihitung dari/)).toBeNull()
     expect(k('cahya')).toBeNull()
-    expect(k('hasna')).toBeNull() // cabang Bima
+    expect(k('mega')).toBeNull() // cabang Bima
     expect(k('kelvan')).toBeTruthy()
     expect(k('gendis')).toBeTruthy()
     expect(semuaKartu().length).toBeLessThan(semua)
@@ -695,6 +695,34 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     await aksi.click(screen.getAllByRole('button', { name: 'Keluar dari fokus' })[1])
     expect(semuaKartu().length).toBe(semua)
     expect(screen.queryByRole('button', { name: 'Keluar dari fokus' })).toBeNull()
+  })
+
+  // Putaran ketujuh, bagian 1: SEMUA keturunan orang yang difokuskan, juga
+  // anak dari perempuan di cabang itu yang menikah dengan laki-laki dari
+  // cabang lain (di bawah pernikahan itu).
+  it('fokus: semua keturunan tampil, juga lewat anak perempuan yang menikah dengan laki-laki dari cabang lain', async () => {
+    pasang('/bagan?fokus=cahya&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Cahya')).toBeTruthy()
+    // Nirvo (anak Tamran & Wati) di bawah Wati–Tamran, GEN.2 · Putu.
+    const anakWati = screen.getByRole('list', { name: 'Anak Wati dan Tamran' })
+    expect(within(anakWati).getByRole('button', { name: /Nirvo/ })).toBe(k('nirvo'))
+    expect(k('nirvo').querySelector('.kartu-gen').textContent).toBe('GEN.2')
+    expect(k('nirvo').querySelector('.kartu-label').textContent).toBe('Putu')
+    // Tamran tetap "Dari cabang lain"; yang sudah tampil tidak hilang (Vino di bawah Umar & Cahya).
+    expect(document.querySelector('[data-rujukan="tamran"]').textContent).toContain('Dari cabang lain')
+    expect(within(screen.getByRole('list', { name: 'Anak Cahya dan Umar' })).getByRole('button', { name: /Vino/ })).toBe(k('vino'))
+    expect(screen.queryByRole('button', { name: /Anak mereka ada di cabang/ })).toBeNull()
+  })
+
+  it('fokus Lorvan: anak Arum & Dorvi dan anak Gendis & Rangga tampil, masing-masing sekali', async () => {
+    pasang('/bagan?fokus=lorvan&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Lorvan')).toBeTruthy()
+    expect(within(screen.getByRole('list', { name: 'Anak Arum dan Dorvi, S.Kom.' })).getByRole('button', { name: /Bintang/ })).toBe(k('bintang'))
+    expect(within(screen.getByRole('list', { name: 'Anak Gendis dan Rangga' })).getByRole('button', { name: /Hasna/ })).toBe(k('hasna'))
+    for (const id of ['bintang', 'hasna']) expect(document.querySelectorAll(`[data-orang="${id}"]`), id).toHaveLength(1)
+    // Laki-laki dari cabang lain tidak punya kartu utama di sini.
+    expect(k('dorvi')).toBeNull()
+    expect(k('rangga')).toBeNull()
   })
 
   it('"Keluar dari fokus" selalu terlihat di pita selama mode fokus, juga saat bilah atas disembunyikan; kembali ke bagan lengkap dan hitungan pangkal utama', async () => {
