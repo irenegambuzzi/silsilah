@@ -1075,7 +1075,7 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 - **Kedua orang tua sama-sama keturunan** (pernikahan antarsepupu; diubah di putaran ketiga tinjauan, Oktober 2026):
   - Anak **selalu** mengikuti pihak **LAKI-LAKI**, beda atau sama generasi: tampil di bawah bagan pihak laki-laki, dan **GEN serta istilah Jawa-nya juga dihitung lewat ayahnya** (bukan lagi "jalur yang paling dekat ke pangkal"), supaya letak di bagan dan GEN selalu cocok. Keturunannya ikut. Berlaku juga kalau jalur ibu lebih dekat ke pangkal (contoh: Arum GEN.2 ♥ Dorvi GEN.3 → Bintang GEN.4 · Canggah di bawah Dorvi). Urutan pencatatan pernikahan (partner1/partner2) tidak berpengaruh (`src/lib/silsilah/generasi.js`, `pihakIbu`).
   - **Kalau jenis kelamin salah satu pihak belum diketahui**: aturan lama, jalur yang paling dekat ke pangkal (kalau sama dekat, pihak yang dicatat lebih dulu). Laporan migrasi mendaftar pernikahan seperti ini (16.3) supaya jenis kelaminnya dilengkapi.
-  - Di bagan, anak tampil **sekali**, di bawah pihak laki-laki. Di samping setiap keturunan, pasangannya dari cabang lain tampil sebagai **kartu rujukan** yang dihubungkan dengan ikon hati: warna keturunan sesuai jenis kelaminnya, keterangan kecil "Dari cabang lain" dan tanda ↗; mengetuknya melompat ke kartu utamanya. Di tempat orang tua yang tidak memuat anaknya ada catatan kecil "Anak mereka ada di cabang …" yang bisa diketuk (ke kartu orang tua itu). **Saat fokus** (putaran ketujuh, 3b): catatan itu tampil hanya kalau tujuannya **di dalam** cabang (misalnya fokus Raksa); mengetuknya menggeser bagan ke anak-anak itu dan menyorotnya, tanpa keluar dari fokus. Tujuan di luar cabang: catatannya tidak ada.
+  - Di bagan, anak tampil **sekali**, di bawah pihak laki-laki. Di samping setiap keturunan, pasangannya dari cabang lain tampil sebagai **kartu rujukan** yang dihubungkan dengan ikon hati: warna keturunan sesuai jenis kelaminnya, keterangan kecil "Dari cabang lain" dan tanda ↗; mengetuknya melompat ke kartu utamanya. Di tempat orang tua yang tidak memuat anaknya ada catatan kecil "Anak mereka ada di cabang …" yang bisa diketuk. **Sejak putaran 7b (bagian A)**, di bagan lengkap dan saat fokus sama: mengetuknya menyorot **semua** anak pasangan itu dan menggeser bagan ke anak pertama, seperti memilih hasil pencarian; kartu orang tua tidak dipilih dan panel tidak dibuka. **Saat fokus** (putaran ketujuh, 3b): catatan itu tampil hanya kalau tujuannya **di dalam** cabang (misalnya fokus Raksa), tanpa keluar dari fokus. Tujuan di luar cabang: catatannya tidak ada.
   - Panel keterangan: kalimat urutan **sekali** kalau hasilnya sama bagi kedua orang tua (misalnya Nirvo: "Putra tunggal"); satu kalimat per orang tua **hanya kalau hasilnya berbeda**, misalnya "Putri ke-2 dari 2 bersaudara (pihak Rangga)" dan "Putri tunggal (pihak Gendis)", pihak ayah dulu. Jalur pihak ibu disebut singkat dan netral: "Lewat Arum: Buyut · Generasi ke-3", hanya kalau GEN kedua jalur berbeda. Tanpa kalimat penjelasan teknis.
 - **Urutan lahir** (ditetapkan ulang Oktober 2026, putaran kedua tinjauan):
   - **"Putra ke-n"** (laki-laki) atau **"Putri ke-n"** (perempuan); kalau jenis kelamin belum diketahui "Putra/Putri ke-n". Kata **"Anak ke-n" tidak dipakai di mana pun** (kartu, panel, daftar anak, Daftar).
@@ -1104,7 +1104,7 @@ Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
 - **Aturan tulisan** (dijaga `src/tulisan.test.jsx`): satu pernikahan tanpa "ke-1"; "Menikah tahun 1974" (bukan "Menikah · Menikah 1974"); tanpa kata ganda, penomoran yang tidak perlu, istilah teknis, atau kalimat yang bisa menyinggung; tanpa "Anak ke-", "cerai"/"bercerai", "Wafat: -" untuk yang masih hidup, dan "Belum menikah" yang tidak dipilih orangnya sendiri.
 - **Nomor silsilah otomatis** (misalnya 1.6.2), **hanya di belakang layar** untuk mengurutkan Daftar. Sejak putaran ketiga tinjauan (Oktober 2026) nomor ini **tidak ditampilkan di mana pun** (panel, Daftar, kartu); dijaga `src/tulisan.test.jsx`, `src/lib/silsilah/daftar.test.js`, dan `src/pages/daftarDetail.test.jsx`.
   - **Ditetapkan di langkah 1.13:** pasangan pangkal = 1, anak ke-6 mereka = 1.6, anak ke-2 dari anak itu = 1.6.2. Untuk anak kandung, angka terakhir selalu sama dengan "Putra/Putri ke-n" di panel keterangan. **Anak sambung/angkat** tetap bernomor supaya keturunannya juga bernomor: sesudah semua anak kandung orang tua itu, menurut umur (Oktober 2026). Anak dari pasangan sepupu dinomori lewat pihak laki-laki (sama dengan letaknya di bagan). Pasangan yang bukan keturunan tidak bernomor ("-").
-- **Nama di kartu** memuat gelar religius di depan dan gelar pendidikan di belakang: "Alm. KH. Nama, S.Ag.". Sejak putaran keenam: ukuran huruf **hanya** dari jumlah kata nama asli (1–2 kata besar, 3 sedang, 4 atau lebih kecil); gelar tidak dihitung dan ditulis dengan Plus Jakarta Sans huruf biasa, lebih kecil dan lebih tipis, menempel pada kata di sebelahnya; nama tidak pernah dipotong (`namaKartu` di `src/lib/silsilah/nama.js`). **Putaran ketujuh, bagian 5**: nama ditulis dengan **Lora tebal sedang (600), huruf besar-kecil** (judul aplikasi tetap Cinzel). Satu atau dua baris menurut **lebar** nama yang diukur (`src/lib/bagan/barisNama.js`, dengan tabel lebar huruf dari file huruf yang dibundel, `lebarHuruf.js`, dibuat oleh `npm run lebar-huruf:buat`): satu baris kalau seluruh nama dengan gelar muat dalam 85% lebar dalam kartu; kalau tidak, dua baris, dipotong di antara kata, sepanjang mungkin seimbang; gelar menempel pada kata di sebelahnya. Paling banyak dua baris; kalau ada baris yang tetap lebih lebar dari lebar dalam kartu, ukurannya turun **satu tingkat** untuk kartu itu saja (di data contoh hanya Hj. Selvarani …, sedang → kecil). Tidak pernah "…". Ukuran pilihan A (sekarang, pada tulisan Normal): besar 15,3 px, sedang 13,5 px, kecil 11,9 px. Halaman perbandingan ukuran sementara (A–E) hanya di mode contoh: `#/contoh/ukuran`; Bagan tetap memakai A sampai Anda memilih. Halaman `#/contoh/huruf` dan paket Marcellus dihapus.
+- **Nama di kartu** memuat gelar religius di depan dan gelar pendidikan di belakang: "Alm. KH. Nama, S.Ag.". Gelar ditulis dengan Plus Jakarta Sans huruf biasa, lebih kecil dan lebih tipis, menempel pada kata di sebelahnya; nama tidak pernah dipotong (`namaKartu` di `src/lib/silsilah/nama.js`). **Putaran ketujuh, bagian 5**: nama ditulis dengan **Lora tebal sedang (600), huruf besar-kecil** (judul aplikasi tetap Cinzel). **Putaran 7b, bagian B** (menggantikan ukuran menurut jumlah kata): ukuran dan baris menurut **lebar** nama yang diukur (`src/lib/bagan/barisNama.js`, dengan tabel lebar huruf dari file huruf yang dibundel, `lebarHuruf.js`, dibuat oleh `npm run lebar-huruf:buat`). Setiap nama dicoba dari ukuran terbesar (besar, sedang, kecil, lalu terkecil sebagai cadangan) dan memakai ukuran **terbesar** yang muat. Nama tanpa gelar paling banyak 2 baris, nama bergelar paling banyak 3 baris. Satu baris hanya kalau seluruh nama dengan gelar muat dalam 85% lebar dalam kartu; kalau tidak, dipotong di antara kata, baris sesedikit mungkin, sepanjang mungkin seimbang; gelar menempel pada kata di sebelahnya; tidak ada baris yang lebih lebar dari lebar dalam kartu. Tinggi kartu tidak berubah: kalau baris-barisnya tidak muat di tinggi kartu (di atas label), turun satu tingkat. Tidak pernah "…". Keputusan saya: nama satu kata (dengan gelarnya) yang tidak bisa dipotong boleh satu baris sampai lebar dalam penuh (100%), daripada langsung turun ukuran. Ukuran pilihan A (sekarang, pada tulisan Normal): besar 15,3 px, sedang 13,5 px, kecil 11,9 px. Halaman perbandingan ukuran sementara (A–E) hanya di mode contoh: `#/contoh/ukuran`; Bagan tetap memakai A sampai Anda memilih. Halaman `#/contoh/huruf` dan paket Marcellus dihapus.
 
 ### 15.2 Pencarian
 
@@ -1247,6 +1247,7 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 6f | perbaikan putaran kelima menurut tinjauan Anda (A mode contoh: nama sama di cabang berbeda dan nama 2–4 kata, B baris orang tua kandung/sambung/angkat, C pencarian baru; lihat "Putaran kelima tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
 | ✅ 6g | perbaikan putaran keenam menurut tinjauan Anda (A generasi anak tanpa garis darah, B panel detail, C kata "Leluhur", D pencarian, E nama di kartu; lihat "Putaran keenam tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
 | ✅ 6g-2 | perbaikan putaran ketujuh menurut tinjauan Anda (1 fokus dengan semua keturunan, 2 "Hitung dari X" seperti leluhur, 3 fokus terisolasi, 3b catatan anak dan aplikasi dibuka baru, 4 keterangan pencarian, 5 nama di kartu, tes lambat; lihat "Putaran ketujuh tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), pilih ukuran A–E di `#/contoh/ukuran`, lalu bilang "lanjut" |
+| ✅ 6g-3 | putaran 7b (A tautan "Anak mereka ada di cabang …", B ukuran nama terbesar yang muat, C catatan kelompok 7 dan audit HP, D pemeriksaan SQL; lihat "Putaran 7b" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh**, pilih ukuran A–E di `#/contoh/ukuran`, lalu bilang "lanjut" |
 | 6h | **AUDIT TAMPILAN HP** (berikutnya; belum dimulai; daftar di "Putaran ketujuh tinjauan tampilan") | – | – |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
@@ -1339,6 +1340,50 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 - **(c)** Zoom awal di HP supaya nama 1–2 kata terlihat sekitar 17–18 px.
 - **(d)** Petunjuk geser/cubit sekali di HP dengan tombol **"Mengerti"**, plus **"Cara memakai bagan"** di legenda ⓘ.
 - **(e)** Tombol **+** dan **−** tetap ada.
+- **(f)** Fokus **tetap bertahan** saat halaman dimuat ulang di tab yang sama, dan baru hilang saat aplikasi dibuka baru (putaran 7b).
+
+**Putaran 7b (kelompok 6g-3, Oktober 2026)**, ringkasan keputusan (keputusan putaran sebelumnya tetap, kecuali yang disebut di sini):
+
+- **A. Tautan "Anak mereka ada di cabang …"** (mengubah perilaku di bagan lengkap): di bagan lengkap dan saat fokus (kalau tujuannya di cabang), mengetuknya menyorot **semua** anak pasangan itu dan menggeser bagan ke anak pertama; panel tidak dibuka dan kartu orang tua tidak dipilih, seperti memilih hasil pencarian. Teks tautan tidak berubah.
+- **B. Ukuran nama di kartu** (menggantikan ukuran menurut jumlah kata, putaran keenam E dan ketujuh 5): ukuran terbesar yang muat (besar → sedang → kecil → terkecil), tanpa gelar paling banyak 2 baris, bergelar 3, satu baris hanya sampai 85%, tinggi kartu tetap (rincian di 15.1). `namaKartu` tidak lagi memberi ukuran. Halaman `#/contoh/ukuran` memakai aturan yang sama; Bagan tetap pilihan A sampai Anda memilih. Hasil di data contoh:
+
+  | Kartu | A | B | C | D | E |
+  |---|---|---|---|---|---|
+  | Mega | besar · 1 | besar · 1 | besar · 1 | besar · 1 | besar · 1 |
+  | Ratrisa Kemuntari | besar · 1 | besar · 2 | besar · 2 | besar · 2 | besar · 2 |
+  | Sadevan Bramasta Wiratmaja, S.T. | besar · 2 | besar · 2 | besar · 2 | besar · 2 | sedang · 2 |
+  | Hj. Selvarani …, S.Pd. | besar · 3 | sedang · 3 | sedang · 3 | sedang · 3 | kecil · 3 |
+  | Alm. H. Bagaskara …, S.H. | besar · 3 | sedang · 3 | sedang · 3 | sedang · 3 | kecil · 3 |
+  | Ratrisa Anindya Maharsi Wijayakusuma | sedang · 2 | sedang · 2 | kecil · 2 | kecil · 2 | terkecil · 2 |
+
+- **C. Catatan untuk kelompok 7** (form, langkah 1.23) dan **peringatan wafat dan haul**: lihat dua daftar di bawah ini; belum dikerjakan.
+- **D. Pemeriksaan SQL dan data contoh** untuk dua daftar itu: hanya dilaporkan di chat; tidak ada file yang diubah (folder `supabase` tidak disentuh).
+- **Tes**: `src/pages/bagan.test.jsx`, `src/lib/bagan/barisNama.test.js`, `src/lib/silsilah/nama.test.js`, `src/contoh/perbandinganUkuran.test.jsx`.
+
+**Kolom form kelompok 7: RIWAYAT HIDUP** (dicatat di putaran 7b; dikerjakan di langkah 1.23):
+
+- **Tempat lahir**.
+- **Tanggal lahir**: hari, bulan, dan tahun disimpan **terpisah**; boleh hanya tahun.
+- **Untuk yang wafat**: tempat wafat dan tanggal wafat dengan cara yang sama (hari, bulan, tahun terpisah; boleh hanya tahun), ditambah kotak opsional **"Wafat setelah maghrib"**.
+- **Tanda "Tahunnya perkiraan"** untuk tahun lahir dan tahun wafat, **hanya untuk yang sudah wafat**.
+- **Anggota yang masih hidup**: form **tidak** menampilkan pilihan "hanya tahun". Kalau hanya tahun yang diisi, tetap boleh disimpan, dengan keterangan: "Tanggal dan bulan lahir dapat dilengkapi apabila diketahui, agar catatan keluarga lebih lengkap."
+- **Tempat lahir kosong**: "Tempat lahir dapat ditambahkan apabila diketahui."
+- **Tanggal wafat tanpa hari/bulan**: "Jadwal peringatan dapat dihitung apabila tanggal wafat diketahui."
+- **Di panel**: "Lahir: Bekasi, 21 Agustus 1990" / "Lahir: Bekasi, 1990" / "Lahir: sekitar tahun 1930" / "Wafat: Surabaya, 3 Maret 2015" / "Wafat: sekitar tahun 1965".
+- Selalu **"wafat"**, tidak pernah "mati" atau "meninggal".
+- **Usul nanti**: daftar **"Data yang belum lengkap"** untuk admin dan asisten.
+
+**PERINGATAN WAFAT DAN HAUL** (dicatat di putaran 7b; memperinci "Tanggal Hijriah dan pengingat haul" di Fase 3):
+
+- **Tidak ada** pengingat otomatis ke anggota.
+- Dari **tanggal wafat lengkap**, aplikasi menghitung jadwal adat Jawa: 3 hari (nelung dinten), 7 hari (mitung dinten), 40 hari (matang puluh), 100 hari (nyatus), 1 tahun (mendhak pisan, kalender Hijriah), 2 tahun (mendhak pindho, kalender Hijriah), 1000 hari (nyewu), lalu haul setiap tahun (kalender Hijriah).
+- **Hari wafat = hari ke-1**; kalau "Wafat setelah maghrib" dicentang, hitungan mulai **hari berikutnya**.
+- Tanggal ditampilkan dalam **Masehi, Hijriah, serta hari dan pasaran Jawa**.
+- Karena kebiasaan daerah berbeda, tanggal hitungan adalah **usulan** yang bisa dikoreksi admin/asisten sebelum mengirim.
+- **Admin dan asisten admin yang diberi izin oleh Irene** melihat daftar **"Peringatan mendatang"** (bawaan 30 hari ke depan, bisa diganti) dan bisa mengirim pengumuman ke: cabang yang bersangkutan (bawaan: keturunan almarhum beserta pasangannya), cabang lain yang dipilih, atau seluruh anggota.
+- **Anggota biasa** melihat jadwal peringatan di panel almarhum, tanpa notifikasi.
+- **Usul**: pengingat pribadi yang dinyalakan anggota hanya untuk dirinya sendiri; jadwal peringatan bisa disertakan saat berita duka diumumkan.
+
 - **Berikutnya**: **AUDIT TAMPILAN HP** (6h), lalu **kelompok 7** (langkah 1.23). Keduanya belum dimulai; menunggu "lanjut".
 
 ### Langkah Darurat
@@ -1456,7 +1501,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
   - Mode contoh mendapat foto fiktif saat fitur ini dibuat (prinsip 12).
 - **Cerita/kenangan**.
 - **Pengingat ulang tahun**.
-- **Tanggal Hijriah dan pengingat haul**.
+- **Tanggal Hijriah dan pengingat haul** (rincian: "PERINGATAN WAFAT DAN HAUL" di bagian 17, putaran 7b).
 - **Notulen dan foto Kumpul Keluarga**.
 
 ---
