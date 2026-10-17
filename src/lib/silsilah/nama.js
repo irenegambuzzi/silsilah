@@ -45,3 +45,28 @@ export function namaKartu(orang) {
     ukuran: ukuranNamaKartu(kata.length),
   }
 }
+
+// Nama singkat di tautan dan keterangan (putaran ketujuh): nama depan saja,
+// tanpa gelar dan tanpa Alm./Almh. ("Dorvi", bukan "Dorvi, S.Kom."). Kalau
+// nama depan itu dipakai lebih dari satu orang di silsilah utama, dua kata
+// ("Ratrisa Kemuntari", "Sadevan Bramasta").
+const simpananDepan = new WeakMap()
+export function namaSingkat(graf, id) {
+  const orang = graf.orang.get(id)
+  if (!orang) return ''
+  let hitungan = simpananDepan.get(graf)
+  if (!hitungan) {
+    hitungan = new Map()
+    for (const p of graf.orang.values()) {
+      if ((p.tree_id ?? null) !== (graf.pohon ?? null)) continue
+      const depan = kataNama(p)[0]?.toLocaleLowerCase('id')
+      if (depan) hitungan.set(depan, (hitungan.get(depan) ?? 0) + 1)
+    }
+    simpananDepan.set(graf, hitungan)
+  }
+  const kata = kataNama(orang)
+  const ganda = (hitungan.get(kata[0]?.toLocaleLowerCase('id')) ?? 0) > 1
+  return kata.slice(0, ganda ? 2 : 1).join(' ')
+}
+
+const kataNama = (orang) => String(orang.full_name ?? '').trim().split(/\s+/).filter(Boolean)

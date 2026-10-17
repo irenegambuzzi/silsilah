@@ -4,7 +4,7 @@
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { configure, screen, within } from '@testing-library/react'
+import { configure, screen, waitFor, within } from '@testing-library/react'
 import { pasang } from '../test/pembantu.jsx'
 import { klienKeluarga } from '../test/klienKeluarga.js'
 
@@ -337,5 +337,66 @@ describe('Keterangan orang (halaman sendiri)', () => {
     expect(await screen.findByText('Orang ini tidak ditemukan di silsilah.')).toBeTruthy()
     pasang('/orang/karto', klienKeluarga())
     expect((await screen.findAllByText('Orang ini tidak ditemukan di silsilah.')).length).toBeGreaterThan(0)
+  })
+})
+
+// Putaran ketujuh, bagian 3: Daftar dan halaman orang ikut fokus cabang Bagan.
+describe('Daftar dan halaman orang saat fokus cabang', () => {
+  const keDaftar = async (alamat) => {
+    const h = pasang(alamat, klienKeluarga())
+    await screen.findByText(/Menampilkan satu cabang|Generasi dihitung dari/)
+    await h.aksi.click(within(screen.getByRole('navigation', { name: 'Menu utama' })).getByRole('link', { name: 'Daftar' }))
+    await screen.findByRole('heading', { name: 'Daftar', level: 1 })
+    return h
+  }
+
+  it('hanya anggota cabang, dengan pita yang sama; "Keluar dari fokus" menampilkan semua lagi', async () => {
+    const { aksi } = await keDaftar('/bagan?fokus=lorvan')
+    expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Kelvan/ })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Sinta/ })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Hasna/ })).toBeTruthy()
+    expect(screen.queryByRole('link', { name: /^Tamran/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /^Dorvi/ })).toBeNull() // dari cabang lain
+    await aksi.click(screen.getByRole('button', { name: 'Keluar dari fokus' }))
+    expect(screen.queryByText(/Menampilkan satu cabang/)).toBeNull()
+    expect(screen.getByRole('link', { name: /^Tamran/ })).toBeTruthy()
+  })
+
+  it('pencarian di Daftar hanya di cabang itu', async () => {
+    const { aksi } = await keDaftar('/bagan?fokus=lorvan')
+    await aksi.type(screen.getByRole('searchbox', { name: 'Cari nama' }), 'sadevan')
+    expect(
+      screen.getByText('Nama ini tidak ditemukan di cabang Lorvan. Untuk mencari di seluruh silsilah, keluar dari fokus terlebih dahulu.').getAttribute('role')
+    ).toBe('status')
+    expect(screen.queryAllByRole('link', { name: /^Sadevan/ })).toHaveLength(0)
+  })
+
+  it('"Hitung dari …": GEN di Daftar sama dengan di Bagan; "Kembali ke leluhur utama" tetap di cabang', async () => {
+    const { aksi } = await keDaftar('/bagan?fokus=lorvan&hitung=cabang')
+    expect(screen.getByText('Generasi dihitung dari Lorvan')).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Ratrisa Anindya/ }).textContent).toContain('GEN.2 · Putu')
+    await aksi.click(screen.getByRole('button', { name: 'Kembali ke leluhur utama' }))
+    expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Ratrisa Anindya/ }).textContent).toContain('GEN.3 · Buyut')
+  })
+
+  it('menu Bagan kembali ke cabang yang sama', async () => {
+    const { aksi } = await keDaftar('/bagan?fokus=lorvan&hitung=cabang')
+    await aksi.click(within(screen.getByRole('navigation', { name: 'Menu utama' })).getByRole('link', { name: 'Bagan' }))
+    expect(await screen.findByText('Generasi dihitung dari Lorvan')).toBeTruthy()
+  })
+
+  it('halaman orang: pita fokus, nama di luar cabang hanya teks biasa, "Lihat di bagan" tetap di cabang', async () => {
+    const { aksi } = await keDaftar('/bagan?fokus=wati')
+    await aksi.click(screen.getByRole('link', { name: /^Wati/ }))
+    await screen.findByRole('heading', { name: 'Wati', level: 1 })
+    expect(screen.getByText('Menampilkan satu cabang: Wati')).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Cahya' })).toBeNull()
+    expect(screen.getByText('Cahya')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Nirvo' })).toBeTruthy()
+    await aksi.click(screen.getByRole('link', { name: 'Lihat di bagan' }))
+    await waitFor(() => expect(screen.getByText('Menampilkan satu cabang: Wati')).toBeTruthy())
+    expect(document.querySelector('[data-orang="cahya"]')).toBeNull()
   })
 })

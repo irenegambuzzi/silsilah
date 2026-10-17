@@ -59,11 +59,13 @@ function NamaKartu({ kartu }) {
 // Kartu RUJUKAN (pernikahan antarsepupu): pasangan yang juga keturunan dan
 // punya kartu utama di cabangnya sendiri. Warnanya tetap warna keturunan,
 // labelnya "Dari cabang lain", dan mengetuknya melompat ke kartu utamanya.
+// Saat fokus cabang tanpa tanda ↗ (rujukan.panah false); orang di luar cabang
+// (rujukan.luar) hanya dibuka panelnya, jadi tetap di cabang itu.
 // Kartu ULANG: pasangan yang dinikahi kembali, tampil lagi di pernikahan
 // berikutnya; mengetuknya memilih orang yang sama.
 export function KartuOrang({ kartu, letak, terpilih = false, disorot = false, rujukan = null, ulang = false, saatKetuk, ...sisa }) {
   const penanda = rujukan
-    ? { 'data-rujukan': kartu.id, 'aria-label': rujukan.aria }
+    ? { 'data-rujukan': kartu.id, 'aria-label': rujukan.aria, ...(rujukan.luar ? { 'aria-pressed': terpilih } : {}) }
     : ulang
       ? { 'data-orang-ulang': kartu.id, 'aria-pressed': terpilih }
       : { 'data-orang': kartu.id, 'aria-pressed': terpilih }
@@ -86,9 +88,11 @@ export function KartuOrang({ kartu, letak, terpilih = false, disorot = false, ru
         {SIMBOL[kartu.sex] ?? '?'}
       </span>
       {rujukan ? (
-        <span aria-hidden="true" className="kartu-gen">
-          ↗
-        </span>
+        rujukan.panah !== false && (
+          <span aria-hidden="true" className="kartu-gen">
+            ↗
+          </span>
+        )
       ) : (
         kartu.pojok && <span className="kartu-gen">{kartu.pojok}</span>
       )}

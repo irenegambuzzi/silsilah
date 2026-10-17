@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes, Link } from 'react-router-dom'
 import KhususAdmin from './components/KhususAdmin.jsx'
 import Kerangka from './components/layout/Kerangka.jsx'
 import { DataSilsilahProvider } from './lib/data/DataSilsilah.jsx'
+import { FokusCabangProvider } from './lib/fokus/konteksFokus.js'
 import { modeContohAktif } from './lib/modeContoh'
 import { useSesi } from './lib/konteksSesi.js'
 import { SesiProvider } from './lib/sesi.jsx'
@@ -76,6 +77,7 @@ export default function App({ Router = HashRouter, klien }) {
     <Router>
       <SesiProvider {...(klien !== undefined ? { klien } : {})}>
         <DataSilsilahProvider>
+        <FokusCabangProvider>
         <Kerangka
           spanduk={
             modeContohAktif && (
@@ -108,6 +110,7 @@ export default function App({ Router = HashRouter, klien }) {
           </Routes>
           </Suspense>
         </Kerangka>
+        </FokusCabangProvider>
         </DataSilsilahProvider>
       </SesiProvider>
     </Router>

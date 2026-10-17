@@ -5,8 +5,10 @@ import { teks } from '../../teks/id.js'
 const T = teks.detail
 
 // Nama orang lain yang bisa diketuk. Di Bagan: memilih dan memusatkan
-// kartunya (saatPilih); di halaman orang: membuka halamannya.
-function NamaOrang({ id, nama, saatPilih }) {
+// kartunya (saatPilih); di halaman orang: membuka halamannya. Saat fokus
+// cabang, orang di luar cabang (bisaDipilih false) hanya teks biasa.
+function NamaOrang({ id, nama, saatPilih, bisaDipilih }) {
+  if (bisaDipilih && !bisaDipilih(id)) return <span data-luar-cabang={id}>{nama}</span>
   if (saatPilih) {
     return (
       <button type="button" onClick={() => saatPilih(id)} className="inline min-h-0 text-left font-semibold underline underline-offset-2 hover:text-emas-teks">
@@ -43,11 +45,11 @@ function Baris({ nama, children }) {
 }
 
 // "Bima & Eka"; orang tua sambung dipisah koma: "Fitri, Gita". Semua nama bisa diketuk.
-const gabungOrang = (orang, saatPilih, pemisah = ' & ') =>
+const gabungOrang = (orang, saatPilih, bisaDipilih, pemisah = ' & ') =>
   orang.map((o, i) => (
     <span key={o.id}>
       {i > 0 && pemisah}
-      <NamaOrang id={o.id} nama={o.nama} saatPilih={saatPilih} />
+      <NamaOrang id={o.id} nama={o.nama} saatPilih={saatPilih} bisaDipilih={bisaDipilih} />
     </span>
   ))
 
@@ -59,7 +61,8 @@ const labelOrangTua = (o) =>
 // Bagan dan di halaman orang. `Judul`: elemen judul nama (h1 di halaman
 // sendiri, h2 di panel). `aksi`: tempat tombol (+ Anak, + Pasangan, Edit, …)
 // yang dibuat di kelompok berikutnya. `tingkat`: tingkat judul bagian (satu
-// di bawah judul nama).
+// di bawah judul nama). `bisaDipilih(id)`: saat fokus cabang, false untuk
+// orang di luar cabang (namanya tertulis, tetapi tidak bisa diketuk).
 //
 // Baris yang selalu tampil (isi "-" kalau belum diisi): Panggilan, Jenis
 // kelamin, Orang tua (lalu "Ayah sambung"/"Ibu sambung" dan "Orang tua
@@ -67,7 +70,7 @@ const labelOrangTua = (o) =>
 // Catatan. Nomor silsilah TIDAK ditampilkan (hanya untuk mengurutkan Daftar). Baris yang
 // hanya tampil kalau berlaku: Status pernikahan (tidak untuk anak di bawah
 // umur), Pasangan (kalau ada data pernikahan), Wafat (yang sudah wafat).
-export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi = null }) {
+export function KeteranganOrang({ d, saatPilih = null, bisaDipilih = null, judul, tingkat = 3, aksi = null }) {
   const banyakPasangan = d.pasangan.length > 1
   return (
     <div className="flex flex-col gap-4 text-lg">
@@ -94,7 +97,7 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
           ) : (
             d.orangTua.map((o) => (
               <Baris key={`${o.jenis}${o.sex ?? ''}${o.orang[0].id}`} nama={labelOrangTua(o)}>
-                {gabungOrang(o.orang, saatPilih, o.jenis === 'sambung' ? ', ' : ' & ')}
+                {gabungOrang(o.orang, saatPilih, bisaDipilih, o.jenis === 'sambung' ? ', ' : ' & ')}
               </Baris>
             ))
           )}
@@ -105,7 +108,7 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
                 {d.pasangan.map((p, i) => (
                   <li key={p.id ?? `?${i}`} className={banyakPasangan ? '' : 'inline'}>
                     {p.ke && `${p.ke}: `}
-                    {p.id ? <NamaOrang id={p.id} nama={p.nama} saatPilih={saatPilih} /> : T.pasanganTidakDiketahui}
+                    {p.id ? <NamaOrang id={p.id} nama={p.nama} saatPilih={saatPilih} bisaDipilih={bisaDipilih} /> : T.pasanganTidakDiketahui}
                     {p.berpisah && ` (${T.berpisah})`}
                     {p.waktu && <span className="block text-base text-redup">{p.waktu}</span>}
                   </li>
@@ -134,7 +137,7 @@ export function KeteranganOrang({ d, saatPilih = null, judul, tingkat = 3, aksi 
                   {a.ke ? `${a.ke}.` : ''}
                 </span>
                 <span>
-                  <NamaOrang id={a.id} nama={a.nama} saatPilih={saatPilih} />
+                  <NamaOrang id={a.id} nama={a.nama} saatPilih={saatPilih} bisaDipilih={bisaDipilih} />
                   {a.jenis && <span className="text-base text-redup"> · {a.jenis}</span>}
                   {a.dari && <span className="text-base text-redup"> · {a.dari}</span>}
                 </span>

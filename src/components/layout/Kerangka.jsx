@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Bell, House, List, Network, ShieldCheck, UserRound } from 'lucide-react'
 import { useSesi } from '../../lib/konteksSesi.js'
+import { alamatBagan, useFokusCabang } from '../../lib/fokus/konteksFokus.js'
 import { useBelumDibaca } from '../../lib/useBelumDibaca.js'
 import { isiTeks, teks } from '../../teks/id.js'
 import { BannerAksesSementara } from '../BannerAksesSementara.jsx'
@@ -36,6 +37,8 @@ export default function Kerangka({ children, spanduk = null }) {
   const penuh = pathname === '/bagan'
   const masuk = status === 'masuk' || status === 'offline'
   const belumDibaca = useBelumDibaca(klien, status === 'masuk')
+  // Selama fokus cabang aktif, menu Bagan kembali ke cabang itu (lib/fokus).
+  const { fokus } = useFokusCabang()
 
   return (
     <div className={`flex flex-col ${penuh ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
@@ -71,7 +74,7 @@ export default function Kerangka({ children, spanduk = null }) {
             {MENU.map(({ ke, teks: nama, ikon: Ikon, akhir, lencana }) => (
               <li key={ke} className="flex-1">
                 <NavLink
-                  to={ke}
+                  to={ke === '/bagan' ? alamatBagan(fokus) : ke}
                   end={akhir}
                   className={({ isActive }) =>
                     `flex min-h-16 flex-col items-center justify-center gap-1 break-words px-1 text-center text-sm font-semibold leading-tight ${

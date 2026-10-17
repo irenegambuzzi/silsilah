@@ -21,7 +21,7 @@
 // (`anakDi`).
 import { labelKartu } from '../silsilah/kartu.js'
 import { jenisPasangan, pasanganBerurutan, teksPasanganKe } from '../silsilah/urutan.js'
-import { namaTampil } from '../silsilah/nama.js'
+import { namaSingkat } from '../silsilah/nama.js'
 import { pasanganDi } from '../silsilah/graf.js'
 import { anakOrangTua, anakPernikahanMenurutUmur } from '../silsilah/anak.js'
 
@@ -54,7 +54,8 @@ const hurufBesarAwal = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 //   berpisah  pernikahan ini berakhir karena berpisah
 //   keturunan pasangan ini juga keturunan dengan tempatnya sendiri (antarsepupu)
 //   anak      anak dari pernikahan ini yang tampil di sini, menurut umur
-//   anakDi    { id, nama } kalau anak mereka tampil di tempat pasangan itu
+//   anakDi    { id, nama (singkat, tanpa gelar) } kalau anak mereka tampil di
+//             tempat pasangan itu (tidak pernah di mode fokus)
 // }
 export function susunBagan(s, { hariIni = new Date(), fokus = null } = {}) {
   const root = s.graf.rootUnionId ? s.graf.unions.get(s.graf.rootUnionId) : null
@@ -107,7 +108,8 @@ export function susunBagan(s, { hariIni = new Date(), fokus = null } = {}) {
         berpisah: u.status === 'cerai',
         keturunan: Boolean(pasanganId && punyaTempat(pasanganId)),
         anakId: milikSini,
-        anakDi: milikPasangan && milikSini.length === 0 ? { id: pasanganId, nama: namaTampil(orang) } : null,
+        // Mode fokus: tidak ada catatan "Anak mereka ada di cabang …" (cabang terisolasi).
+        anakDi: !cabang && milikPasangan && milikSini.length === 0 ? { id: pasanganId, nama: namaSingkat(s.graf, pasanganId) } : null,
       }
     })
 
@@ -153,4 +155,29 @@ export function keturunanCabang(s, id) {
     }
   }
   return hasil
+}
+
+// Semua kartu yang tampil di bagan, dalam urutan bagan (untuk pencarian dan
+// panel): `utama` (keturunan dan pasangan yang bukan keturunan, masing-masing
+// sekali) dan `rujukan` (kartu "Dari cabang lain" dari pernikahan
+// antarsepupu; orangnya punya kartu utama sendiri, di bagan lengkap selalu
+// di bagan ini juga).
+export function kartuDiBagan(akar) {
+  const utama = []
+  const rujukan = []
+  const ada = new Set()
+  const jalan = (s) => {
+    utama.push(s.kartu)
+    ada.add(s.id)
+    for (const k of s.pasangan) {
+      if (k.kartu && !k.keturunan && !ada.has(k.id)) {
+        utama.push(k.kartu)
+        ada.add(k.id)
+      }
+      if (k.kartu && k.keturunan && !rujukan.some((x) => x.id === k.id)) rujukan.push(k.kartu)
+      k.anak.forEach(jalan)
+    }
+  }
+  jalan(akar)
+  return { utama, rujukan: rujukan.filter((k) => !ada.has(k.id)) }
 }

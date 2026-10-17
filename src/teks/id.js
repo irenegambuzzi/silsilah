@@ -304,10 +304,8 @@ export const teks = {
     // (putaran keenam): "1 dari 1: Elvina · putri Harvel (panggilan: Ovi)".
     cariPanggilan: 'panggilan: {panggilan}',
     cariTidakAda: 'Tidak ada nama yang cocok. Periksa ejaannya, atau coba nama panggilan.',
-    // Saat fokus cabang: hasil di cabang itu saja, lalu satu baris untuk yang
-    // cocok di luar cabang (mengetuknya menampilkan hasil-hasil itu).
-    cariLuarCabang: '{n} hasil lain di luar cabang ini',
-    cariTidakAdaCabang: 'Tidak ada nama yang cocok di cabang ini.',
+    // Saat fokus cabang: hanya di cabang itu (putaran ketujuh), juga di Daftar.
+    cariTidakAdaCabang: 'Nama ini tidak ditemukan di cabang {nama}. Untuk mencari di seluruh silsilah, keluar dari fokus terlebih dahulu.',
     // Saat mengetik, sebelum memilih: daftar hasil di bawah kolom cari.
     cariJumlah: '{n} nama cocok. Pilih dari daftar, atau tekan Enter.',
     cariDaftar: 'Hasil pencarian',
@@ -324,6 +322,8 @@ export const teks = {
     pasanganTidakDiketahui: 'Tidak diketahui',
     cabangLain: 'Dari cabang lain',
     rujukan: '{nama}, keturunan dari cabang lain. Ketuk untuk ke kartu utamanya.',
+    // Saat fokus cabang, orang itu di luar cabang: mengetuk hanya membuka panelnya.
+    rujukanLuar: '{nama}, keturunan dari cabang lain. Ketuk untuk melihat keterangannya.',
     anakDiCabang: 'Anak mereka ada di cabang {nama}',
     menikahKembali: 'menikah kembali',
     belumDewasa: 'Belum dewasa',
@@ -334,7 +334,6 @@ export const teks = {
     pitaCabang: 'Generasi dihitung dari {nama}',
     kembaliKePangkal: 'Kembali ke leluhur utama',
     keluarFokus: 'Keluar dari fokus',
-    naikKe: 'Naik ke {nama}',
     panel: 'Orang terpilih',
     fokusCabang: 'Fokus pada cabang ini',
     tutup: 'Tutup',

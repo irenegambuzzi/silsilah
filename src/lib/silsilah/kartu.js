@@ -126,7 +126,9 @@ function orangTuaCari(s, id) {
   return jalur[0]?.orangTuaId ?? null
 }
 
-export function keteranganCari(s, id) {
+// `tampil`: turunan silsilah yang sedang tampil di bagan (cabang yang
+// dihitung dari orang tertentu): istilah generasinya sama dengan di kartu.
+export function keteranganCari(s, id, { tampil = s } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return ''
   const nama = (pid) => namaTampil(s.graf.orang.get(pid))
@@ -138,9 +140,9 @@ export function keteranganCari(s, id) {
     }
     return pasangan.length > 0 ? isiTeks(KATA.cariPasangan, { nama: gabungNama(pasangan.map(nama)) }) : ''
   }
-  const gen = s.gen.get(id)
-  // Keturunan tanpa GEN (generasi.js, tanpaGen): tanpa istilah.
-  const istilah = s.tanpaGen?.has(id) ? null : (istilahGenerasi(gen, s.daftarGenerasi) ?? labelGen(gen))
+  // Istilah seperti di kartu (labelKartu): keturunan tanpa GEN tanpa istilah.
+  const k = labelKartu(tampil, id)
+  const istilah = k.istilahGen ?? (k.gen === null ? null : labelGen(k.gen))
   const ortu = orangTuaCari(s, id)
   const sex = orang.sex === 'L' || orang.sex === 'P' ? orang.sex : 'x'
   return [istilah, ortu ? isiTeks(KATA.cariAnak[sex], { nama: nama(ortu) }) : null].filter(Boolean).join(' · ')

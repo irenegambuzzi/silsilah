@@ -99,7 +99,7 @@ describe('susunBagan', () => {
     expect(bagan.induk.get('bintang')).toBe('dorvi')
     expect(bagan.simpul.get('dorvi').anak.map(nama)).toEqual(['Bintang'])
     expect(bagan.simpul.get('arum').anak).toEqual([])
-    expect(bagan.simpul.get('arum').pasangan.find((p) => p.id === 'dorvi').anakDi).toEqual({ id: 'dorvi', nama: 'Dorvi, S.Kom.' })
+    expect(bagan.simpul.get('arum').pasangan.find((p) => p.id === 'dorvi').anakDi).toEqual({ id: 'dorvi', nama: 'Dorvi' })
     // Posisi di bagan cocok dengan GEN: kedalaman simpul = GEN.
     const kedalaman = (id) => { let d = 0; for (let x = id; bagan.induk.has(x); x = bagan.induk.get(x)) d++; return d }
     for (const id of ['nirvo', 'hasna', 'bintang']) expect(kedalaman(id), id).toBe(s.gen.get(id))
@@ -201,7 +201,9 @@ describe('susunBagan dengan fokus', () => {
     expect(b.induk.get('hasna')).toBe('rangga')
     expect(b.induk.get('bintang')).toBe('dorvi')
     expect(b.induk.get('nirvo')).toBe('tamran')
-    expect(kelompok(b, 'gendis', 'rangga').anakDi).toEqual({ id: 'rangga', nama: 'Rangga' })
+    // Mode fokus: tanpa catatan "Anak mereka ada di cabang …".
+    expect(kelompok(b, 'gendis', 'rangga').anak).toEqual([])
+    expect(kelompok(b, 'gendis', 'rangga').anakDi).toBeNull()
   })
 
   it('tanpa fokus: bagan lengkap tidak berubah', () => {

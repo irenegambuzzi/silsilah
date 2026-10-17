@@ -2,12 +2,14 @@ import { useEffect, useRef } from 'react'
 import { ArrowLeft, Network } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { GerbangData } from '../components/GerbangData.jsx'
+import { PitaFokus } from '../components/bagan/PitaFokus.jsx'
 import { KeteranganOrang } from '../components/orang/KeteranganOrang.jsx'
 import { Judul } from '../components/ui/Judul.jsx'
 import { Kartu } from '../components/ui/Kartu.jsx'
 import { TautanTombol } from '../components/ui/Tombol.jsx'
 import { labelDetail } from '../lib/silsilah/kartu.js'
-import { useSilsilah } from '../lib/silsilah/useSilsilah.js'
+import { alamatBagan } from '../lib/fokus/konteksFokus.js'
+import { useTampilanFokus } from '../lib/fokus/useTampilanFokus.js'
 import { teks } from '../teks/id.js'
 
 const T = teks.detail
@@ -26,14 +28,27 @@ function NamaJudul({ nama, id }) {
   )
 }
 
+// Saat fokus cabang (lib/fokus): pita fokus yang sama, label menurut cara
+// hitung bagan saat itu, nama orang di luar cabang hanya teks biasa, dan
+// "Lihat di bagan" tetap di cabang itu.
 function IsiOrang() {
   const { id } = useParams()
-  const silsilah = useSilsilah()
+  const { silsilah, fokus, cabang, sTampil, keluar, kembaliKeUtama } = useTampilanFokus()
   const orang = silsilah.graf.orang.get(id)
-  const d = orang && (orang.tree_id ?? null) === null ? labelDetail(silsilah, id) : null
+  const d = orang && (orang.tree_id ?? null) === null ? labelDetail(sTampil, id) : null
+  const pita = fokus && (
+    <PitaFokus
+      nama={cabang.nama}
+      hitungCabang={fokus.hitung}
+      saatKembali={kembaliKeUtama}
+      saatKeluar={keluar}
+      className="rounded-xl border border-tepi"
+    />
+  )
   if (!d) {
     return (
       <>
+        {pita}
         <Judul>{T.judul}</Judul>
         <p className="text-xl">{T.tidakDitemukan}</p>
         <TautanTombol to="/daftar" ikon={ArrowLeft}>
@@ -44,10 +59,16 @@ function IsiOrang() {
   }
   return (
     <>
+      {pita}
       <Kartu>
-        <KeteranganOrang d={d} tingkat={2} judul={<NamaJudul nama={d.nama} id={d.id} />} />
+        <KeteranganOrang
+          d={d}
+          tingkat={2}
+          bisaDipilih={cabang ? (x) => cabang.anggota.has(x) : null}
+          judul={<NamaJudul nama={d.nama} id={d.id} />}
+        />
       </Kartu>
-      <TautanTombol to={`/bagan?pilih=${encodeURIComponent(id)}`} varian="utama" ikon={Network}>
+      <TautanTombol to={alamatBagan(fokus, { pilih: id })} varian="utama" ikon={Network}>
         {teks.bagan.lihatDiBagan}
       </TautanTombol>
       <TautanTombol to="/daftar" ikon={ArrowLeft}>

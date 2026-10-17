@@ -4,6 +4,7 @@ import { TautanTombol } from '../components/ui/Tombol.jsx'
 import { Judul } from '../components/ui/Judul.jsx'
 import { useDataSilsilah } from '../lib/data/konteksData.js'
 import { useSesi } from '../lib/konteksSesi.js'
+import { alamatBagan, useFokusCabang } from '../lib/fokus/konteksFokus.js'
 import { isiTeks, teks } from '../teks/id.js'
 
 // Ringkasan: bahwa data silsilah sudah termuat, dan jumlah orangnya.
@@ -15,6 +16,7 @@ function RingkasanSilsilah() {
 
 export default function Beranda() {
   const { anggota } = useSesi()
+  const { fokus } = useFokusCabang()
   return (
     <>
       <Judul>{teks.beranda.judul}</Judul>
@@ -23,7 +25,7 @@ export default function Beranda() {
         <RingkasanSilsilah />
       </GerbangData>
       <p className="text-xl">{teks.beranda.isi}</p>
-      <TautanTombol to="/bagan" varian="utama" ikon={Network}>
+      <TautanTombol to={alamatBagan(fokus)} varian="utama" ikon={Network}>
         {teks.beranda.lihatBagan}
       </TautanTombol>
       <TautanTombol to="/daftar" varian="sekunder" ikon={List}>

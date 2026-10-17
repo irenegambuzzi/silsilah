@@ -12,7 +12,7 @@ const jalur = (titik) => titik.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).j
 // berupa daftar bersarang, supaya pembaca layar membacanya sebagai silsilah.
 // Satu kelompok per pernikahan, dari kiri ke kanan menurut waktu; pasangan
 // yang dinikahi kembali tampil lagi dengan keterangan "menikah kembali".
-function Simpul({ simpul, tata, terpilih, sorot, saatKetuk, saatLompat }) {
+function Simpul({ simpul, tata, terpilih, sorot, saatKetuk, saatLompat, saatRujukan, cabang }) {
   const letak = (kunci) => tata.letak.get(kunci)
   return (
     <li>
@@ -66,9 +66,13 @@ function Simpul({ simpul, tata, terpilih, sorot, saatKetuk, saatLompat }) {
                 letak={lKartu}
                 rujukan={{
                   label: T.cabangLain,
-                  aria: `${k.label ? `${k.label}: ` : ''}${isiTeks(T.rujukan, { nama: k.kartu.nama })}`,
+                  // Saat fokus tanpa tanda ↗; orang di luar cabang: hanya panelnya.
+                  panah: !cabang,
+                  luar: Boolean(cabang && !cabang.has(k.id)),
+                  aria: `${k.label ? `${k.label}: ` : ''}${isiTeks(cabang && !cabang.has(k.id) ? T.rujukanLuar : T.rujukan, { nama: k.kartu.nama })}`,
                 }}
-                saatKetuk={saatLompat}
+                terpilih={Boolean(cabang && !cabang.has(k.id) && terpilih === k.id)}
+                saatKetuk={saatRujukan ?? saatLompat}
               />
             )}
             {k.anakDi && lCatatan && (
@@ -91,7 +95,7 @@ function Simpul({ simpul, tata, terpilih, sorot, saatKetuk, saatLompat }) {
             {k.anak.length > 0 && (
               <ul aria-label={k.kartu ? isiTeks(T.anakBerdua, { nama: simpul.kartu.nama, pasangan: k.kartu.nama }) : isiTeks(T.anakDari, { nama: simpul.kartu.nama })}>
                 {k.anak.map((a) => (
-                  <Simpul key={a.id} simpul={a} tata={tata} terpilih={terpilih} sorot={sorot} saatKetuk={saatKetuk} saatLompat={saatLompat} />
+                  <Simpul key={a.id} simpul={a} tata={tata} terpilih={terpilih} sorot={sorot} saatKetuk={saatKetuk} saatLompat={saatLompat} saatRujukan={saatRujukan} cabang={cabang} />
                 ))}
               </ul>
             )}
@@ -104,7 +108,10 @@ function Simpul({ simpul, tata, terpilih, sorot, saatKetuk, saatLompat }) {
 
 // Seluruh bagan: garis (SVG) di belakang, ikon hati, lalu kartu.
 // saatLompat(id): ke kartu utama seseorang (dari kartu rujukan atau catatan).
-export function GambarBagan({ akar, tata, terpilih, sorot = null, saatKetuk, saatLompat }) {
+// saatRujukan(id): ketuk kartu rujukan (bawaan: saatLompat).
+// cabang: saat fokus, Set orang di cabang itu (kartu rujukan tanpa ↗; orang
+// di luar cabang ditandai dan hanya dibuka panelnya).
+export function GambarBagan({ akar, tata, terpilih, sorot = null, saatKetuk, saatLompat, saatRujukan = null, cabang = null }) {
   return (
     <div className="relative" style={{ width: rem(tata.lebar), height: rem(tata.tinggi) }}>
       <svg
@@ -136,7 +143,7 @@ export function GambarBagan({ akar, tata, terpilih, sorot = null, saatKetuk, saa
         </span>
       ))}
       <ul>
-        <Simpul simpul={akar} tata={tata} terpilih={terpilih} sorot={sorot} saatKetuk={saatKetuk} saatLompat={saatLompat} />
+        <Simpul simpul={akar} tata={tata} terpilih={terpilih} sorot={sorot} saatKetuk={saatKetuk} saatLompat={saatLompat} saatRujukan={saatRujukan} cabang={cabang} />
       </ul>
     </div>
   )

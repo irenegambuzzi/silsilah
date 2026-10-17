@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bangunKeluargaFiktif } from './keluargaFiktif.js'
-import { namaKartu, ukuranNamaKartu } from './nama.js'
+import { namaKartu, namaSingkat, ukuranNamaKartu } from './nama.js'
+import { bangunGraf } from './graf.js'
 
 const data = bangunKeluargaFiktif()
 const orang = (id) => data.people.find((p) => p.id === id)
@@ -59,5 +60,20 @@ describe('namaKartu: aturan 4, pemenggalan', () => {
     for (const p of data.people) {
       expect(namaKartu(p).baris.flat().join(' '), p.id).toBe(p.full_name.trim().split(/\s+/).join(' '))
     }
+  })
+})
+
+// Putaran ketujuh: nama singkat di tautan dan keterangan.
+describe('namaSingkat', () => {
+  const graf = bangunGraf(data)
+  it('nama depan tanpa gelar dan tanpa Alm./Almh.', () => {
+    expect(['dorvi', 'halvin', 'selvarani', 'tirwan', 'yoga'].map((id) => namaSingkat(graf, id))).toEqual([
+      'Dorvi', 'Halvin', 'Selvarani', 'Tirwan', 'Yoga',
+    ])
+  })
+  it('nama depan yang dipakai lebih dari satu orang: dua kata', () => {
+    expect(['ratrisa-k', 'ratrisa-a', 'sadevan-b', 'sadevan-a'].map((id) => namaSingkat(graf, id))).toEqual([
+      'Ratrisa Kemuntari', 'Ratrisa Anindya', 'Sadevan Bramasta', 'Sadevan Arkanata',
+    ])
   })
 })
