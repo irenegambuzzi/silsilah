@@ -607,6 +607,13 @@ describe('Bagan: bilah atas dan legenda', () => {
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 
+  it('legenda menjelaskan dari mana GEN dihitung', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const legenda = screen.getByRole('region', { name: 'Keterangan warna' })
+    expect(within(legenda).getByText('Nomor generasi (GEN) dihitung dari leluhur utama, atau dari orang yang dipilih saat memakai Hitung dari …')).toBeTruthy()
+  })
+
   it('legenda di kiri bawah bisa ditutup dan dibuka lagi', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
@@ -712,6 +719,38 @@ describe('Bagan: ketuk kartu dan fokus cabang', () => {
     expect(document.querySelector('[data-rujukan="tamran"]').textContent).toContain('Dari cabang lain')
     expect(within(screen.getByRole('list', { name: 'Anak Cahya dan Umar' })).getByRole('button', { name: /Vino/ })).toBe(k('vino'))
     expect(screen.queryByRole('button', { name: /Anak mereka ada di cabang/ })).toBeNull()
+  })
+
+  // Putaran ketujuh, bagian 2: X diperlakukan seperti leluhur.
+  it('"Hitung dari Vino": Vino dan Ratrisa Kemuntari GEN.0 · Awal cabang, anak-anaknya GEN.1 · Anak', async () => {
+    pasang('/bagan?fokus=vino&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Vino')).toBeTruthy()
+    for (const [id, gen, label] of [['vino', 'GEN.0', 'Awal cabang'], ['ratrisa-k', 'GEN.0', 'Awal cabang'], ['sadevan-b', 'GEN.1', 'Anak'], ['bagaskara', 'GEN.1', 'Anak']]) {
+      expect(k(id).querySelector('.kartu-gen')?.textContent, id).toBe(gen)
+      expect(k(id).querySelector('.kartu-label').textContent, id).toBe(label)
+    }
+  })
+
+  it('"Hitung dari Cahya": Vino tetap tanpa GEN, Wati GEN.1 · Anak', async () => {
+    pasang('/bagan?fokus=cahya&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Cahya')).toBeTruthy()
+    expect(k('vino').querySelector('.kartu-gen')).toBeNull()
+    expect(k('vino').querySelector('.kartu-label')).toBeNull()
+    expect(k('wati').querySelector('.kartu-gen').textContent).toBe('GEN.1')
+    expect(k('wati').querySelector('.kartu-label').textContent).toBe('Anak')
+  })
+
+  it('"Hitung dari Galen": Galen GEN.0 · Awal cabang; tampilan utama tanpa GEN', async () => {
+    pasang('/bagan?fokus=galen&hitung=cabang', klienKeluarga())
+    expect(await screen.findByText('Generasi dihitung dari Galen')).toBeTruthy()
+    expect(k('galen').querySelector('.kartu-gen').textContent).toBe('GEN.0')
+    expect(k('galen').querySelector('.kartu-label').textContent).toBe('Awal cabang')
+  })
+
+  it('tampilan utama: Vino, Galen, Elvina, Sadevan Bramasta, Bagaskara tetap tanpa GEN', async () => {
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    for (const id of ['vino', 'galen', 'elvina', 'sadevan-b', 'bagaskara']) expect(k(id).querySelector('.kartu-gen'), id).toBeNull()
   })
 
   it('fokus Lorvan: anak Arum & Dorvi dan anak Gendis & Rangga tampil, masing-masing sekali', async () => {

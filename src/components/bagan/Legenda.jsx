@@ -66,6 +66,7 @@ export function Legenda({ bingkai, tombolBulat, ada = {}, ref }) {
           </li>
         )}
       </ul>
+      <p className="mt-2 text-redup">{T.generasi}</p>
       <p className="mt-2 text-redup">{T.petunjuk}</p>
     </section>
   )

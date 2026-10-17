@@ -358,6 +358,8 @@ export const teks = {
       urut: 'Putra/Putri ke-n (anak kandung)',
       belumDewasa: 'Belum dewasa (di bawah 18 tahun)',
       petunjuk: 'Ketuk kartu untuk melihat keterangannya.',
+      // Putaran ketujuh: dari mana GEN dihitung.
+      generasi: 'Nomor generasi (GEN) dihitung dari leluhur utama, atau dari orang yang dipilih saat memakai Hitung dari …',
     },
   },
 

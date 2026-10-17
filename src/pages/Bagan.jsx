@@ -415,8 +415,8 @@ function IsiBagan() {
   // Mode fokus: bagan dimulai dari orang itu dengan SEMUA keturunannya (susun.js).
   const baganFokus = useMemo(() => (fokusId ? susunBagan(silsilah, { fokus: fokusId }) : null), [silsilah, fokusId])
   const sTampil = useMemo(
-    () => (hitungCabang ? silsilahCabang(silsilah, baganFokus.akar) : silsilah),
-    [hitungCabang, silsilah, baganFokus]
+    () => (hitungCabang ? silsilahCabang(silsilah, fokusId) : silsilah),
+    [hitungCabang, silsilah, fokusId]
   )
   const baganTampil = useMemo(
     () => (!fokusId ? bagan : sTampil === silsilah ? baganFokus : susunBagan(sTampil, { fokus: fokusId })),

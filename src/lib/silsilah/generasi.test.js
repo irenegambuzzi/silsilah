@@ -218,3 +218,32 @@ describe('tanpaGen: keturunan tanpa garis darah atau angkat', () => {
     expect(h.gen.get('cucu')).toBe(3) // letaknya tetap
   })
 })
+
+// Putaran ketujuh, bagian 2: GEN dari orang tertentu, aturan yang sama.
+describe('hitungGenerasi dari orang tertentu (pangkal)', () => {
+  const graf = bangunGraf(bangunKeluargaFiktif())
+  const dari = (id) => hitungGenerasi(graf, { pangkal: id })
+
+  it('hanya orang itu dan keturunannya yang ber-GEN; pasangannya tidak', () => {
+    const { gen } = dari('cahya')
+    expect(Object.fromEntries(gen)).toEqual({ cahya: 0, vino: 1, wati: 1, nirvo: 2, 'sadevan-b': 2, bagaskara: 2 })
+  })
+
+  it('aturan anak sambung sama: anak bawaan pasangan tanpa GEN, juga keturunannya', () => {
+    const { tanpaGen } = dari('cahya')
+    expect([...tanpaGen].sort()).toEqual(['bagaskara', 'sadevan-b', 'vino'])
+    expect([...dari('kirana').tanpaGen].sort()).toEqual(['elvina', 'galen'])
+  })
+
+  it('keturunan yang tanpa GEN di bagan lengkap menjadi GEN.0 kalau dihitung dari dirinya', () => {
+    const { gen, tanpaGen } = dari('vino')
+    expect(Object.fromEntries(gen)).toEqual({ vino: 0, 'sadevan-b': 1, bagaskara: 1 })
+    expect(tanpaGen.size).toBe(0)
+  })
+
+  it('anak angkat tetap ber-GEN; antarsepupu di luar cabang ikut jalur di cabang', () => {
+    const { gen, tanpaGen } = dari('lorvan')
+    expect([gen.get('yoga'), gen.get('ratrisa-a'), gen.get('bintang'), gen.get('hasna')]).toEqual([1, 2, 2, 3])
+    expect(tanpaGen.has('yoga')).toBe(false)
+  })
+})

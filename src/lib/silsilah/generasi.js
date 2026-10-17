@@ -48,10 +48,16 @@ export function teksGenerasi(gen, daftar = DAFTAR_GENERASI) {
 //            pasanganKe: { ke, jumlah, jenis } (pasangan orang tua yang mana) }
 //   tanpaGen Set keturunan yang GEN dan istilahnya tidak ditampilkan (lihat
 //          hitungTanpaGen)
-export function hitungGenerasi(graf) {
+//
+// `pangkal` (id, "Hitung dari [nama]", putaran ketujuh): GEN dihitung dari
+// orang itu SEORANG DIRI, dengan aturan yang sama persis (antarsepupu, anak
+// sambung, anak angkat). Hanya keturunannya yang ber-GEN; pasangannya tidak
+// (anak bawaan pasangan tetap tanpa GEN, seperti Vino di cabang Cahya).
+export function hitungGenerasi(graf, { pangkal = null } = {}) {
   const gen = new Map()
   const root = graf.rootUnionId ? graf.unions.get(graf.rootUnionId) : null
-  if (root) for (const id of orangTuaUnion(root)) gen.set(id, 0)
+  if (pangkal) gen.set(pangkal, 0)
+  else if (root) for (const id of orangTuaUnion(root)) gen.set(id, 0)
 
   const tidakAda = new Set()
   const diproses = new Set()
@@ -105,6 +111,26 @@ export function hitungGenerasi(graf) {
     jalur.set(id, daftar)
   }
   return { gen, jalur, tanpaGen: hitungTanpaGen(gen, jalur) }
+}
+
+// "Hitung dari [nama]" (putaran ketujuh): GEN dan istilah Jawa dihitung dari
+// orang itu (`id`) seperti dari leluhur utama (hitungGenerasi dengan
+// `pangkal`), siapa pun orang itu, juga keturunan yang tanpa GEN di bagan
+// lengkap (Vino): ia GEN.0 dan anak kandungnya GEN.1. Hasil:
+//   gen      Map: GEN dari orang itu untuk keturunannya; orang lain tetap
+//            memakai GEN silsilah utama (supaya warna kartu dan "keturunan
+//            atau pasangan" tidak berubah)
+//   tanpaGen keturunan orang itu yang tanpa garis darah/angkat ke orang itu,
+//            DITAMBAH keturunan silsilah utama di luar cabang ini (misalnya
+//            laki-laki dari cabang lain): GEN-nya tidak dihitung dari orang
+//            itu, jadi tidak ditampilkan. Pasangan orang itu tidak termasuk.
+export function hitungGenerasiCabang(s, id, pasangan = new Set()) {
+  const cabang = hitungGenerasi(s.graf, { pangkal: id })
+  const gen = new Map(s.gen)
+  for (const [p, g] of cabang.gen) gen.set(p, g)
+  const tanpaGen = new Set(cabang.tanpaGen)
+  for (const p of s.gen.keys()) if (!cabang.gen.has(p) && !pasangan.has(p)) tanpaGen.add(p)
+  return { gen, tanpaGen }
 }
 
 // Keturunan TANPA GEN dan istilah Jawa (putaran keenam tinjauan, Oktober
