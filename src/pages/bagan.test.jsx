@@ -43,44 +43,34 @@ describe('Bagan: isi kartu', () => {
     expect(mega.querySelector('.kartu-label').textContent).toBe('Putu')
   })
 
-  // Putaran keenam, bagian E: ukuran dasar nama HANYA dari jumlah kata nama asli.
-  // Putaran ketujuh, bagian 5: Lora, satu atau dua baris menurut lebar nama.
-  it('ukuran nama dari jumlah kata saja: nama dengan jumlah kata sama berukuran dasar sama; gelar tidak dihitung; nama selalu utuh', BERAT, async () => {
+  // Putaran 7b, bagian B: ukuran TERBESAR yang muat (menggantikan ukuran menurut jumlah kata).
+  it('ukuran nama: yang terbesar yang muat; tanpa gelar paling banyak 2 baris, bergelar 3; gelar menempel; nama selalu utuh', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
     const nama = (id) => k(id).querySelector('.kartu-nama')
     const ukuran = (id) => nama(id).dataset.ukuran
-    // Ratrisa Kemuntari, Sadevan Arkanata, Ayundra Pramesti (2 kata) sama; juga nama 1 kata.
-    for (const id of ['ratrisa-k', 'sadevan-a', 'ayundra', 'mega', 'tirwan', 'dorvi', 'halvin']) expect(ukuran(id), id).toBe('besar')
-    // 3 kata: sedang; 4 kata: kecil. Hj. Selvarani … tidak muat dalam dua baris: turun satu tingkat.
-    expect(ukuran('sadevan-b')).toBe('sedang')
-    for (const id of ['bagaskara', 'ratrisa-a']) expect(ukuran(id), id).toBe('kecil')
-    expect(nama('selvarani').dataset).toMatchObject({ dasar: 'sedang', ukuran: 'kecil', turun: 'true' })
-    // Semua kartu dengan jumlah kata yang sama: ukuran dasar sama persis.
-    const per = new Map()
-    for (const kartu of semuaKartu()) {
-      const unsurNama = kartu.querySelector('.kartu-nama')
-      const n = unsurNama.dataset.kata
-      per.set(n, new Set([...(per.get(n) ?? []), unsurNama.dataset.dasar]))
-    }
-    for (const [n, set] of per) expect(set.size, `${n} kata`).toBe(1)
-    // Ukuran yang turun hanya untuk kartu itu, dan hanya satu tingkat.
-    const turun = [...semuaKartu()].filter((x) => x.querySelector('.kartu-nama').dataset.turun).map((x) => x.dataset.orang)
-    expect(turun).toEqual(['selvarani'])
-    // Gelar terpisah, tidak ikut dihitung; teksnya tetap utuh.
+    for (const id of ['ratrisa-k', 'sadevan-a', 'ayundra', 'mega', 'tirwan', 'dorvi', 'halvin', 'sadevan-b', 'bagaskara', 'selvarani']) expect(ukuran(id), id).toBe('besar')
+    // Tanpa gelar: dua baris pun tidak muat pada ukuran besar, jadi sedang.
+    expect(ukuran('ratrisa-a')).toBe('sedang')
+    // Gelar terpisah; teksnya tetap utuh.
     const bagas = nama('bagaskara')
     expect(bagas.textContent).toBe('Alm. H. Bagaskara Wiryawan Adinata Mahardika, S.H.')
     expect([...bagas.querySelectorAll('.kartu-gelar')].map((g) => g.textContent)).toEqual(['Alm. H. ', ', S.H.'])
-    // Baris menurut lebar: dua baris yang seimbang, atau satu baris kalau muat.
     const baris = (id) => [...nama(id).querySelectorAll('.kartu-nama-baris')].map((b) => b.textContent.trim())
-    expect(baris('bagaskara')).toEqual(['Alm. H. Bagaskara Wiryawan', 'Adinata Mahardika, S.H.'])
+    expect(baris('bagaskara')).toEqual(['Alm. H. Bagaskara', 'Wiryawan Adinata', 'Mahardika, S.H.'])
+    expect(baris('selvarani')).toEqual(['Hj. Selvarani', 'Kusumaningtyas', 'Prameswari, S.Pd.'])
     expect(baris('sadevan-b')).toEqual(['Sadevan Bramasta', 'Wiratmaja, S.T.'])
+    expect(baris('ratrisa-a')).toEqual(['Ratrisa Anindya', 'Maharsi Wijayakusuma'])
     expect(baris('ratrisa-k')).toEqual(['Ratrisa Kemuntari'])
     expect(baris('mega')).toEqual(['Mega'])
-    for (const kartu of semuaKartu()) expect(kartu.querySelectorAll('.kartu-nama-baris').length, kartu.dataset.orang).toBeLessThanOrEqual(2)
+    for (const kartu of semuaKartu()) {
+      const unsur = kartu.querySelector('.kartu-nama')
+      const bergelar = unsur.querySelector('.kartu-gelar') !== null
+      expect(unsur.querySelectorAll('.kartu-nama-baris').length, kartu.dataset.orang).toBeLessThanOrEqual(bergelar ? 3 : 2)
+    }
     // Ukuran huruf dari tingkat yang dipakai (pilihan A).
     const rem = (id) => nama(id).style.getPropertyValue('--ukuran-nama')
-    expect([rem('mega'), rem('sadevan-b'), rem('selvarani')]).toEqual(['0.85rem', '0.75rem', '0.66rem'])
+    expect([rem('mega'), rem('bagaskara'), rem('ratrisa-a')]).toEqual(['0.85rem', '0.85rem', '0.75rem'])
   })
 
   it('nama tidak pernah dipotong: tanpa line-clamp, tanpa overflow tersembunyi, tanpa ellipsis pada nama; huruf Lora tebal sedang, huruf besar-kecil', () => {

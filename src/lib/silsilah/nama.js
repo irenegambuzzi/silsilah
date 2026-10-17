@@ -20,17 +20,12 @@ export function namaTampil(orang, { gelar = true } = {}) {
   return gelar && orang.academic_title ? `${depan}, ${orang.academic_title}` : depan
 }
 
-// Nama di kartu Bagan (putaran keenam tinjauan, Oktober 2026), aturan tetap:
-// - Ukuran huruf dasar HANYA dari jumlah kata nama asli (full_name): 1–2 kata
-//   "besar", 3 kata "sedang", 4 kata atau lebih "kecil". Nama dengan jumlah
-//   kata yang sama selalu berukuran dasar sama.
-// - Gelar (Alm./Almh., gelar religius, gelar pendidikan) TIDAK dihitung dan
-//   tidak pernah mengubah ukuran; ditulis terpisah (huruf biasa, lebih kecil).
-// - Satu atau dua baris (putaran ketujuh): menurut lebar nama yang diukur,
-//   lib/bagan/barisNama.js.
+// Nama di kartu Bagan: gelar (Alm./Almh., gelar religius, gelar pendidikan)
+// terpisah dari kata nama dan ditulis dengan huruf biasa yang lebih kecil.
+// Ukuran dan baris menurut lebar nama yang diukur (putaran 7b, bagian B):
+// lib/bagan/barisNama.js.
 // Hasil: { depan ("Alm. H." atau null), kata (["Bagaskara", "Wiryawan",
-// "Adinata", "Mahardika"]), belakang ("S.H." atau null), jumlahKata, ukuran }.
-export const ukuranNamaKartu = (jumlahKata) => (jumlahKata >= 4 ? 'kecil' : jumlahKata === 3 ? 'sedang' : 'besar')
+// "Adinata", "Mahardika"]), belakang ("S.H." atau null), jumlahKata }.
 
 export function namaKartu(orang) {
   const kata = String(orang.full_name ?? '').trim().split(/\s+/).filter(Boolean)
@@ -40,7 +35,6 @@ export function namaKartu(orang) {
     kata,
     belakang: orang.academic_title || null,
     jumlahKata: kata.length,
-    ukuran: ukuranNamaKartu(kata.length),
   }
 }
 

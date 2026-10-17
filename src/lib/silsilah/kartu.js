@@ -87,7 +87,7 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   return {
     id,
     nama: namaTampil(orang),
-    // Bentuk nama di kartu Bagan: gelar terpisah, ukuran dari jumlah kata (nama.js).
+    // Bentuk nama di kartu Bagan: gelar terpisah (nama.js); ukuran dan baris dari lebar (bagan/barisNama.js).
     namaKartu: namaKartu(orang),
     sex: orang.sex === 'L' || orang.sex === 'P' ? orang.sex : null,
     wafat: Boolean(orang.is_deceased),

@@ -9,10 +9,11 @@ import { useUkuranNama } from './ukuranNama.js'
 const SIMBOL = { L: '♂', P: '♀' }
 
 // Nama di kartu (namaKartu di lib/silsilah/nama.js, baris di
-// lib/bagan/barisNama.js): Lora tebal sedang, huruf besar-kecil; ukuran dasar
-// dari jumlah kata nama asli, satu atau dua baris menurut lebar yang diukur,
-// gelar di span tersendiri (Plus Jakarta Sans, lebih kecil dan tipis) yang
-// menempel pada kata di sebelahnya. Nama tidak pernah dipotong (index.css).
+// lib/bagan/barisNama.js): Lora tebal sedang, huruf besar-kecil; ukuran
+// terbesar yang muat, satu sampai dua baris (tiga untuk nama bergelar)
+// menurut lebar yang diukur, gelar di span tersendiri (Plus Jakarta Sans,
+// lebih kecil dan tipis) yang menempel pada kata di sebelahnya. Nama tidak
+// pernah dipotong (index.css).
 function NamaKartu({ kartu }) {
   const ukuranNama = useUkuranNama()
   const n = kartu.namaKartu
@@ -38,10 +39,8 @@ function NamaKartu({ kartu }) {
     <span
       className="kartu-nama"
       data-ukuran={susunan.ukuran}
-      data-dasar={n.ukuran}
       data-kata={n.jumlahKata}
       data-baris={susunan.baris.length}
-      data-turun={susunan.turun || undefined}
       style={{ '--ukuran-nama': `${susunan.rem}rem` }}
     >
       {susunan.baris.map((bagian, i) => (
@@ -56,11 +55,11 @@ function NamaKartu({ kartu }) {
 
 // Satu kartu di Bagan, seperti aplikasi lama: strip warna tipis di tepi
 // atas, lingkaran kecil berisi simbol ♂/♀, nama (Lora, huruf besar-kecil,
-// paling banyak dua baris), dan satu label kecil kapital di bawahnya. Pojok kartu:
+// paling banyak dua atau tiga baris), dan satu label kecil kapital di bawahnya. Pojok kartu:
 //   kanan atas  GEN.n
 //   kiri atas   nomor urut (hanya anak KANDUNG; anak sambung/angkat tanpa nomor)
 //   kanan bawah tunas daun: belum dewasa (di bawah 18 tahun)
-// Ukuran nama hanya dari jumlah katanya (NamaKartu); nama tidak pernah terpotong.
+// Ukuran nama dari lebarnya (NamaKartu); nama tidak pernah terpotong.
 // disorot: hasil pencarian yang sedang ditunjuk (cincin emas tebal), tanpa
 // membuka panel; terpilih: kartu yang diketuk (panelnya terbuka).
 // Warnanya menurut warnaKartu (keturunan/pasangan, jenis kelamin, pangkal,

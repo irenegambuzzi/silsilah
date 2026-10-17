@@ -340,14 +340,14 @@ html[data-kontras='tinggi'] .kartu-orang {
 .kartu-orang[data-belum-dewasa] .kartu-label {
   max-width: calc(100% - 2.6rem);
 }
-/* Nama di kartu (putaran ketujuh, bagian 5): Lora tebal sedang (600), huruf
-   besar-kecil. Ukuran (--ukuran-nama, dalam rem) diberikan oleh
-   KartuOrang.jsx dari lib/bagan/barisNama.js: dasar dari jumlah kata nama asli (besar 1–2 kata,
-   sedang 3, kecil 4 atau lebih), turun satu tingkat hanya kalau dua baris pun
-   tidak muat. Satu atau dua baris menurut lebar yang diukur; setiap baris
-   tidak turun lagi (paling banyak dua baris). Tidak pernah dipotong: tanpa
-   line-clamp/overflow tersembunyi/ellipsis; sisa lebar yang sangat kecil
-   masuk ke padding kartu. */
+/* Nama di kartu (putaran ketujuh, bagian 5; putaran 7b, bagian B): Lora
+   tebal sedang (600), huruf besar-kecil. Ukuran (--ukuran-nama, dalam rem)
+   diberikan oleh KartuOrang.jsx dari lib/bagan/barisNama.js: ukuran terbesar
+   yang membuat nama muat dalam dua baris (tiga untuk nama bergelar) dan di
+   tinggi kartu. Setiap baris tidak turun lagi. Tidak pernah dipotong: tanpa
+   line-clamp/overflow tersembunyi/ellipsis. Jarak antarbaris di sini dan
+   tinggi kartu, padding, dan label di bawah dipakai juga di barisNama.js
+   (JARAK_BARIS, TINGGI_NAMA): ubah bersama. */
 .kartu-nama {
   display: block;
   margin: auto 0;
@@ -387,6 +387,7 @@ html[data-kontras='tinggi'] .kartu-orang {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.65rem;
+  line-height: 1.5;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;

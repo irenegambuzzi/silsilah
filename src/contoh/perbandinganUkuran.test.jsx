@@ -32,6 +32,17 @@ async function pasangApp(url, { contoh }) {
   render(<App Router={Router} klien={klienKeluarga()} />)
 }
 
+// Ukuran dan jumlah baris yang terpilih per kartu: Mega, Ratrisa Kemuntari,
+// Sadevan Bramasta Wiratmaja, S.T., Hj. Selvarani …, S.Pd., Alm. H.
+// Bagaskara …, S.H., Ratrisa Anindya Maharsi Wijayakusuma.
+const TERPILIH = {
+  A: ['besar 1', 'besar 1', 'besar 2', 'besar 3', 'besar 3', 'sedang 2'],
+  B: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'sedang 2'],
+  C: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2'],
+  D: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2'],
+  E: ['besar 1', 'besar 2', 'sedang 2', 'kecil 3', 'kecil 3', 'terkecil 2'],
+}
+
 describe('halaman perbandingan ukuran nama', () => {
   it('pilihan A = ukuran Bagan sekarang; B–E: tingkat besar +1 … +4 px, sedang dan kecil dengan perbandingan sama', () => {
     expect(PILIHAN_UKURAN.map((p) => p.huruf)).toEqual(['A', 'B', 'C', 'D', 'E'])
@@ -71,6 +82,12 @@ describe('halaman perbandingan ukuran nama', () => {
         expect(kartu.map((k) => k.dataset.orang)).toEqual(['mega', 'ratrisa-k', 'sadevan-b', 'selvarani', 'bagaskara', 'ratrisa-a'])
         const mega = kartu[0].querySelector('.kartu-nama')
         expect(parseFloat(mega.style.getPropertyValue('--ukuran-nama'))).toBeCloseTo(PILIHAN_UKURAN[i].ukuran.besar, 6)
+        // Aturan Bagan (putaran 7b, bagian B): ukuran terbesar yang muat, dan jumlah barisnya.
+        const hasil = kartu.map((k) => {
+          const n = k.querySelector('.kartu-nama').dataset
+          return `${n.ukuran} ${n.baris}`
+        })
+        expect(hasil, b.dataset.pilihan).toEqual(TERPILIH[b.dataset.pilihan])
       }
     }
   })
