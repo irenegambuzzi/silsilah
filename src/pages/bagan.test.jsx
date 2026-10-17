@@ -296,11 +296,30 @@ describe('Bagan: pernikahan antarsepupu', () => {
     expect(within(panel).getByRole('heading', { name: 'Gendis' })).toBeTruthy()
   })
 
-  it('mengetuk catatan "Anak mereka ada di cabang …" memilih orang tua di cabang itu', async () => {
+  const sorotan = () => [...document.querySelectorAll('[data-sorot]')].map((x) => x.dataset.orang)
+  // Putaran 7b, bagian A: seperti memilih hasil pencarian, juga tanpa fokus.
+  it('mengetuk catatan "Anak mereka ada di cabang …" menyorot anak-anak pasangan itu, tanpa memilih kartu orang tuanya dan tanpa panel', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Tamran' }))
-    expect(k('tamran').getAttribute('aria-pressed')).toBe('true')
+    expect(sorotan()).toEqual(['nirvo'])
+    expect(k('tamran').getAttribute('aria-pressed')).toBe('false')
+    expect(document.querySelector('[aria-pressed="true"]')).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
+    expect(lokasiSaatIni.search).toBe('')
+  })
+
+  it('catatan "Anak mereka ada di cabang …": SEMUA anak pasangan itu disorot, di bagan lengkap dan saat fokus', BERAT, async () => {
+    // Adik Nirvo hanya di tes ini (data contoh tidak diubah).
+    const tabel = tabelKeluarga()
+    const nirvo = tabel.people.find((p) => p.id === 'nirvo')
+    tabel.people.push({ ...nirvo, id: 'nirvo-2', full_name: 'Nirvana', birth_y: 2001 })
+    tabel.children.push({ ...tabel.children.find((c) => c.child_id === 'nirvo'), id: 'c-u9-nirvo-2', child_id: 'nirvo-2' })
+    const { aksi } = pasang('/bagan', klienKeluarga({ tabel }))
+    await tunggu()
+    await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Tamran' }))
+    expect(sorotan().sort()).toEqual(['nirvo', 'nirvo-2'])
+    expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
   })
 
   it('anak antarsepupu SELALU di bawah pihak laki-laki, juga kalau jalur ibu lebih dekat ke pangkal; GEN ikut ayah', async () => {
@@ -338,7 +357,6 @@ describe('Bagan: pernikahan antarsepupu', () => {
     expect(k('hasna').getAttribute('aria-pressed')).toBe('true')
   })
 
-  const sorotan = () => [...document.querySelectorAll('[data-sorot]')].map((x) => x.dataset.orang)
   it('saat fokus: catatan "Anak mereka ada di cabang …" yang tujuannya di luar cabang tidak ada, juga tombol ke luar cabang', async () => {
     pasang('/bagan?fokus=cahya', klienKeluarga())
     expect(await screen.findByText('Menampilkan satu cabang: Cahya')).toBeTruthy()
@@ -360,12 +378,13 @@ describe('Bagan: pernikahan antarsepupu', () => {
     expect(sorotan()).toEqual(['hasna'])
   })
 
-  it('tanpa fokus: mengetuk catatan "Anak mereka ada di cabang …" tidak menyorot apa pun', async () => {
+  it('tanpa fokus: catatan "Anak mereka ada di cabang …" sama seperti saat fokus (sorot anak-anaknya, kartu orang tua tidak dipilih)', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.click(screen.getByRole('button', { name: 'Anak mereka ada di cabang Rangga' }))
-    expect(k('rangga').getAttribute('aria-pressed')).toBe('true')
-    expect(sorotan()).toEqual([])
+    expect(k('rangga').getAttribute('aria-pressed')).toBe('false')
+    expect(sorotan()).toEqual(['hasna'])
+    expect(screen.queryByRole('region', { name: 'Orang terpilih' })).toBeNull()
   })
 
   it('saat fokus: di panel, nama di luar cabang hanya teks biasa', async () => {

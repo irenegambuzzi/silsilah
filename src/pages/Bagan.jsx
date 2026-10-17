@@ -445,14 +445,17 @@ function IsiBagan() {
     else setTerpilih((x) => (x === id ? null : id))
   }
 
-  // Catatan "Anak mereka ada di cabang …": saat fokus (tujuannya selalu di
-  // cabang ini, susun.js) bagan bergeser ke anak-anak itu dan menyorotnya,
-  // tetap di fokus; tanpa fokus, ke kartu pasangan itu.
+  // Catatan "Anak mereka ada di cabang …" (di bagan lengkap dan saat fokus;
+  // saat fokus tujuannya selalu di cabang ini, susun.js): seperti memilih
+  // hasil pencarian. SEMUA anak pasangan itu disorot dan bagan bergeser ke
+  // anak pertama; tidak ada kartu yang dipilih dan panel tidak dibuka
+  // (putaran 7b, bagian A).
   const saatCatatan = (anakDi) => {
-    if (!fokusId) return lompat(anakDi.id)
-    setSorot(anakDi.anak)
+    const anak = anakDi.anak.filter((id) => kartu.some((x) => x.id === id))
+    if (anak.length === 0) return
+    setSorot(anak)
     setTerpilih(null)
-    aksi.pusatkanKe(anakDi.anak, { bilah: true })
+    aksi.pusatkanKe(anak[0], { bilah: true })
   }
 
   // Hasil pencarian: sorot kartunya dan pindahkan Bagan ke sana. Panel orang
