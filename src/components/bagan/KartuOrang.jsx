@@ -1,42 +1,52 @@
+import { useMemo } from 'react'
 import { Sprout } from 'lucide-react'
+import { barisNamaKartu } from '../../lib/bagan/barisNama.js'
 import { warnaKartu } from '../../lib/bagan/warna.js'
 import { teksUrutanKe } from '../../lib/silsilah/urutan.js'
 import { teks } from '../../teks/id.js'
+import { useUkuranNama } from './ukuranNama.js'
 
 const SIMBOL = { L: '♂', P: '♀' }
 
-// Nama di kartu (aturan tetap, namaKartu di lib/silsilah/nama.js): ukuran
-// hanya dari jumlah kata nama asli (besar/sedang/kecil), gelar di span
-// tersendiri dengan huruf biasa yang lebih kecil, 4 kata atau lebih dalam dua
-// baris. Nama tidak pernah dipotong (index.css, .kartu-nama).
+// Nama di kartu (namaKartu di lib/silsilah/nama.js, baris di
+// lib/bagan/barisNama.js): Lora tebal sedang, huruf besar-kecil; ukuran dasar
+// dari jumlah kata nama asli, satu atau dua baris menurut lebar yang diukur,
+// gelar di span tersendiri (Plus Jakarta Sans, lebih kecil dan tipis) yang
+// menempel pada kata di sebelahnya. Nama tidak pernah dipotong (index.css).
 function NamaKartu({ kartu }) {
+  const ukuranNama = useUkuranNama()
   const n = kartu.namaKartu
-  if (!n) return <span className="kartu-nama">{kartu.nama}</span>
-  const akhir = n.baris.length - 1
-  // Gelar tidak pernah sendirian di satu baris: gelar depan menempel pada
-  // kata pertama, gelar belakang pada kata terakhir (.kartu-nama-utuh).
-  const isiBaris = (kata, i) =>
-    kata.map((k, j) => {
-      const depan = i === 0 && j === 0 && n.depan
-      const belakang = i === akhir && j === kata.length - 1 && n.belakang
-      const spasi = j < kata.length - 1 ? ' ' : ''
-      if (!depan && !belakang) return `${k}${spasi}`
+  const susunan = useMemo(() => (n && n.kata.length > 0 ? barisNamaKartu(n, ukuranNama) : null), [n, ukuranNama])
+  if (!susunan) return <span className="kartu-nama">{kartu.nama}</span>
+  const isiBaris = (bagian) =>
+    bagian.map((b, j) => {
+      const spasi = j < bagian.length - 1 ? ' ' : ''
+      if (!b.depan && !b.belakang) return `${b.kata}${spasi}`
       return (
         <span key={j}>
           <span className="kartu-nama-utuh">
-            {depan && <span className="kartu-gelar">{`${n.depan} `}</span>}
-            {k}
-            {belakang && <span className="kartu-gelar">{`, ${n.belakang}`}</span>}
+            {b.depan && <span className="kartu-gelar">{`${b.depan} `}</span>}
+            {b.kata}
+            {b.belakang && <span className="kartu-gelar">{`, ${b.belakang}`}</span>}
           </span>
           {spasi}
         </span>
       )
     })
+  const akhir = susunan.baris.length - 1
   return (
-    <span className="kartu-nama" data-ukuran={n.ukuran} data-kata={n.jumlahKata}>
-      {n.baris.map((kata, i) => (
+    <span
+      className="kartu-nama"
+      data-ukuran={susunan.ukuran}
+      data-dasar={n.ukuran}
+      data-kata={n.jumlahKata}
+      data-baris={susunan.baris.length}
+      data-turun={susunan.turun || undefined}
+      style={{ '--ukuran-nama': `${susunan.rem}rem` }}
+    >
+      {susunan.baris.map((bagian, i) => (
         <span key={i} className="kartu-nama-baris">
-          {isiBaris(kata, i)}
+          {isiBaris(bagian)}
           {i < akhir && ' '}
         </span>
       ))}
@@ -45,8 +55,8 @@ function NamaKartu({ kartu }) {
 }
 
 // Satu kartu di Bagan, seperti aplikasi lama: strip warna tipis di tepi
-// atas, lingkaran kecil berisi simbol ♂/♀, NAMA kapital (Cinzel, boleh dua
-// baris), dan satu label kecil kapital di bawahnya. Pojok kartu:
+// atas, lingkaran kecil berisi simbol ♂/♀, nama (Lora, huruf besar-kecil,
+// paling banyak dua baris), dan satu label kecil kapital di bawahnya. Pojok kartu:
 //   kanan atas  GEN.n
 //   kiri atas   nomor urut (hanya anak KANDUNG; anak sambung/angkat tanpa nomor)
 //   kanan bawah tunas daun: belum dewasa (di bawah 18 tahun)

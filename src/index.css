@@ -1,8 +1,10 @@
 @import 'tailwindcss';
 /* Huruf aplikasi lama, disimpan di aplikasi sendiri (bukan dari Google Fonts),
    supaya tidak ada permintaan ke luar dan tetap tampil saat offline.
-   Cinzel untuk nama dan judul; Plus Jakarta Sans untuk teks lain. */
+   Cinzel untuk judul; Lora untuk nama di kartu Bagan; Plus Jakarta Sans
+   untuk teks lain. */
 @import '@fontsource/cinzel/700.css';
+@import '@fontsource/lora/600.css';
 @import '@fontsource/plus-jakarta-sans/400.css';
 @import '@fontsource/plus-jakarta-sans/600.css';
 @import '@fontsource/plus-jakarta-sans/700.css';
@@ -148,6 +150,7 @@ html[data-kontras='tinggi'] {
   --color-fokus: var(--c-fokus);
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-judul: 'Cinzel', ui-serif, Georgia, serif;
+  --font-nama: 'Lora', ui-serif, Georgia, serif;
   --shadow-lembut: var(--bayangan);
 }
 
@@ -217,7 +220,7 @@ body {
 
 /* ── Bagan silsilah ─────────────────────────────────────────────────
    Kartu seperti aplikasi lama: strip warna tipis di tepi atas, lingkaran
-   kecil berisi simbol ♂/♀ di tengah atas, NAMA kapital (Cinzel), dan satu
+   kecil berisi simbol ♂/♀ di tengah atas, nama (Lora), dan satu
    label kecil kapital. Ukuran memakai rem (ikut pengaturan ukuran huruf);
    warna dari token (ikut kontras tinggi). */
 .bagan-latar {
@@ -337,39 +340,37 @@ html[data-kontras='tinggi'] .kartu-orang {
 .kartu-orang[data-belum-dewasa] .kartu-label {
   max-width: calc(100% - 2.6rem);
 }
-/* Nama di kartu (putaran keenam, namaKartu di lib/silsilah/nama.js): ukuran
-   HANYA dari jumlah kata nama asli, tidak pernah dari panjangnya: besar (1–2
-   kata), sedang (3), kecil (4 atau lebih). Tidak pernah dipotong: tanpa
-   line-clamp/overflow; nama yang tidak muat turun baris tanpa mengecil.
-   --font-nama dan --nama-huruf hanya untuk halaman perbandingan huruf (mode
-   contoh); Bagan memakai Cinzel kapital. */
+/* Nama di kartu (putaran ketujuh, bagian 5): Lora tebal sedang (600), huruf
+   besar-kecil. Ukuran (--ukuran-nama, dalam rem) diberikan oleh
+   KartuOrang.jsx dari lib/bagan/barisNama.js: dasar dari jumlah kata nama asli (besar 1–2 kata,
+   sedang 3, kecil 4 atau lebih), turun satu tingkat hanya kalau dua baris pun
+   tidak muat. Satu atau dua baris menurut lebar yang diukur; setiap baris
+   tidak turun lagi (paling banyak dua baris). Tidak pernah dipotong: tanpa
+   line-clamp/overflow tersembunyi/ellipsis; sisa lebar yang sangat kecil
+   masuk ke padding kartu. */
 .kartu-nama {
   display: block;
   margin: auto 0;
-  font-family: var(--font-nama, var(--font-judul));
-  font-weight: var(--nama-tebal, 700);
-  font-size: 0.85rem;
+  font-family: var(--font-nama);
+  font-weight: 600;
+  font-size: var(--ukuran-nama, 0.85rem);
   line-height: 1.2;
-  text-transform: var(--nama-huruf, uppercase);
-  overflow-wrap: break-word;
 }
 .kartu-nama[data-ukuran='sedang'] {
-  font-size: 0.75rem;
   line-height: 1.15;
 }
-.kartu-nama[data-ukuran='kecil'] {
-  font-size: 0.66rem;
+.kartu-nama[data-ukuran='kecil'],
+.kartu-nama[data-ukuran='terkecil'] {
   line-height: 1.12;
 }
-/* 4 kata atau lebih: dua baris (masing-masing boleh turun lagi kalau terpaksa). */
 .kartu-nama-baris {
   display: block;
+  white-space: nowrap;
 }
 /* Gelar menempel pada kata di sebelahnya (tidak pernah sendirian di satu
-   baris); kalau keduanya tidak muat satu baris, isinya tetap turun baris. */
+   baris). */
 .kartu-nama-utuh {
   display: inline-block;
-  max-width: 100%;
 }
 /* Gelar: Plus Jakarta Sans, huruf besar-kecil biasa, lebih kecil dan lebih
    tipis dari nama; tidak ikut menentukan ukuran nama. */

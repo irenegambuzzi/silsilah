@@ -26,10 +26,10 @@ import SelamatDatang from './pages/SelamatDatang.jsx'
 
 // Layar Tambah perangkat membawa library kode QR; dimuat hanya saat dibuka.
 const TambahPerangkat = lazy(() => import('./pages/TambahPerangkat.jsx'))
-// Halaman perbandingan huruf (SEMENTARA): HANYA di mode contoh. Di build
-// produksi kondisi ini selalu salah, jadi halaman dan hurufnya dibuang.
-const PerbandinganHuruf =
-  import.meta.env.DEV && modeContohAktif ? lazy(() => import('./contoh/PerbandinganHuruf.jsx')) : null
+// Halaman perbandingan ukuran nama kartu (SEMENTARA): HANYA di mode contoh.
+// Di build produksi kondisi ini selalu salah, jadi halamannya dibuang.
+const PerbandinganUkuran =
+  import.meta.env.DEV && modeContohAktif ? lazy(() => import('./contoh/PerbandinganUkuran.jsx')) : null
 
 // HashRouter: GitHub Pages tidak mendukung rute SPA, dan bagian setelah
 // "#" tidak pernah dikirim ke server (penting untuk link undangan).
@@ -105,7 +105,7 @@ export default function App({ Router = HashRouter, klien }) {
             <Route path="/saya/dua-langkah" element={lindungi(<DuaLangkah />)} />
             <Route path="/kotak-masuk" element={lindungi(<KotakMasuk />)} />
             <Route path="/admin/akses-sementara" element={admin(<AksesSementara />)} />
-            {PerbandinganHuruf && <Route path="/contoh/huruf" element={lindungi(<PerbandinganHuruf />)} />}
+            {PerbandinganUkuran && <Route path="/contoh/ukuran" element={lindungi(<PerbandinganUkuran />)} />}
             <Route path="*" element={<TidakDitemukan />} />
           </Routes>
           </Suspense>

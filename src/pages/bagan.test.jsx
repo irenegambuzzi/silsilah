@@ -43,43 +43,57 @@ describe('Bagan: isi kartu', () => {
     expect(mega.querySelector('.kartu-label').textContent).toBe('Putu')
   })
 
-  // Putaran keenam, bagian E: ukuran nama HANYA dari jumlah kata nama asli.
-  it('ukuran nama dari jumlah kata saja: nama dengan jumlah kata sama berukuran sama; gelar tidak dihitung; nama selalu utuh', BERAT, async () => {
+  // Putaran keenam, bagian E: ukuran dasar nama HANYA dari jumlah kata nama asli.
+  // Putaran ketujuh, bagian 5: Lora, satu atau dua baris menurut lebar nama.
+  it('ukuran nama dari jumlah kata saja: nama dengan jumlah kata sama berukuran dasar sama; gelar tidak dihitung; nama selalu utuh', BERAT, async () => {
     pasang('/bagan', klienKeluarga())
     await tunggu()
-    const ukuran = (id) => k(id).querySelector('.kartu-nama').dataset.ukuran
+    const nama = (id) => k(id).querySelector('.kartu-nama')
+    const ukuran = (id) => nama(id).dataset.ukuran
     // Ratrisa Kemuntari, Sadevan Arkanata, Ayundra Pramesti (2 kata) sama; juga nama 1 kata.
     for (const id of ['ratrisa-k', 'sadevan-a', 'ayundra', 'mega', 'tirwan', 'dorvi', 'halvin']) expect(ukuran(id), id).toBe('besar')
-    // 3 kata (dengan atau tanpa gelar): sedang; 4 kata: kecil.
-    for (const id of ['sadevan-b', 'selvarani']) expect(ukuran(id), id).toBe('sedang')
+    // 3 kata: sedang; 4 kata: kecil. Hj. Selvarani … tidak muat dalam dua baris: turun satu tingkat.
+    expect(ukuran('sadevan-b')).toBe('sedang')
     for (const id of ['bagaskara', 'ratrisa-a']) expect(ukuran(id), id).toBe('kecil')
-    // Semua kartu dengan jumlah kata yang sama: ukuran sama persis.
+    expect(nama('selvarani').dataset).toMatchObject({ dasar: 'sedang', ukuran: 'kecil', turun: 'true' })
+    // Semua kartu dengan jumlah kata yang sama: ukuran dasar sama persis.
     const per = new Map()
     for (const kartu of semuaKartu()) {
-      const nama = kartu.querySelector('.kartu-nama')
-      const n = nama.dataset.kata
-      per.set(n, new Set([...(per.get(n) ?? []), nama.dataset.ukuran]))
+      const unsurNama = kartu.querySelector('.kartu-nama')
+      const n = unsurNama.dataset.kata
+      per.set(n, new Set([...(per.get(n) ?? []), unsurNama.dataset.dasar]))
     }
     for (const [n, set] of per) expect(set.size, `${n} kata`).toBe(1)
+    // Ukuran yang turun hanya untuk kartu itu, dan hanya satu tingkat.
+    const turun = [...semuaKartu()].filter((x) => x.querySelector('.kartu-nama').dataset.turun).map((x) => x.dataset.orang)
+    expect(turun).toEqual(['selvarani'])
     // Gelar terpisah, tidak ikut dihitung; teksnya tetap utuh.
-    const bagas = k('bagaskara').querySelector('.kartu-nama')
+    const bagas = nama('bagaskara')
     expect(bagas.textContent).toBe('Alm. H. Bagaskara Wiryawan Adinata Mahardika, S.H.')
     expect([...bagas.querySelectorAll('.kartu-gelar')].map((g) => g.textContent)).toEqual(['Alm. H. ', ', S.H.'])
-    // 4 kata: dua baris.
-    expect([...bagas.querySelectorAll('.kartu-nama-baris')].map((b) => b.textContent.trim())).toEqual([
-      'Alm. H. Bagaskara Wiryawan', 'Adinata Mahardika, S.H.',
-    ])
-    expect(k('sadevan-b').querySelectorAll('.kartu-nama-baris')).toHaveLength(1)
-    expect(k('ratrisa-k').querySelectorAll('.kartu-nama-baris')).toHaveLength(1)
+    // Baris menurut lebar: dua baris yang seimbang, atau satu baris kalau muat.
+    const baris = (id) => [...nama(id).querySelectorAll('.kartu-nama-baris')].map((b) => b.textContent.trim())
+    expect(baris('bagaskara')).toEqual(['Alm. H. Bagaskara Wiryawan', 'Adinata Mahardika, S.H.'])
+    expect(baris('sadevan-b')).toEqual(['Sadevan Bramasta', 'Wiratmaja, S.T.'])
+    expect(baris('ratrisa-k')).toEqual(['Ratrisa Kemuntari'])
+    expect(baris('mega')).toEqual(['Mega'])
+    for (const kartu of semuaKartu()) expect(kartu.querySelectorAll('.kartu-nama-baris').length, kartu.dataset.orang).toBeLessThanOrEqual(2)
+    // Ukuran huruf dari tingkat yang dipakai (pilihan A).
+    const rem = (id) => nama(id).style.getPropertyValue('--ukuran-nama')
+    expect([rem('mega'), rem('sadevan-b'), rem('selvarani')]).toEqual(['0.85rem', '0.75rem', '0.66rem'])
   })
 
-  it('nama tidak pernah dipotong: tanpa line-clamp, tanpa overflow tersembunyi, tanpa ellipsis pada nama', () => {
+  it('nama tidak pernah dipotong: tanpa line-clamp, tanpa overflow tersembunyi, tanpa ellipsis pada nama; huruf Lora tebal sedang, huruf besar-kecil', () => {
     const css = fs.readFileSync(path.join(import.meta.dirname, '..', 'index.css'), 'utf8')
-    const aturanNama = [...css.matchAll(/\.kartu-(nama|nama-baris|gelar)[^{]*\{([^}]*)\}/g)].map((m) => m[2]).join('\n')
-    expect(aturanNama).not.toMatch(/line-clamp|overflow:\s*hidden|text-overflow|white-space:\s*nowrap/)
-    // Ukuran huruf per jumlah kata, tidak dari panjang nama.
-    expect(css).toMatch(/\.kartu-nama\[data-ukuran='sedang'\]/)
-    expect(css).toMatch(/\.kartu-nama\[data-ukuran='kecil'\]/)
+    const aturanNama = [...css.matchAll(/\.kartu-(nama|nama-baris|nama-utuh|gelar)[^{]*\{([^}]*)\}/g)].map((m) => m[2]).join('\n')
+    expect(aturanNama).not.toMatch(/line-clamp|overflow:\s*hidden|text-overflow/)
+    expect(aturanNama).not.toMatch(/text-transform:\s*uppercase/)
+    expect(css).toMatch(/@import '@fontsource\/lora\/600\.css'/)
+    expect(css).toMatch(/--font-nama: 'Lora'/)
+    expect(css).toMatch(/\.kartu-nama \{[^}]*font-family: var\(--font-nama\);[^}]*font-weight: 600;[^}]*font-size: var\(--ukuran-nama, 0\.85rem\);/)
+    // Gelar: Plus Jakarta Sans, lebih kecil dan tipis.
+    expect(css).toMatch(/\.kartu-gelar \{[^}]*font-family: var\(--font-sans\);[^}]*font-weight: 400;[^}]*font-size: 0\.8em;/)
+    expect(css).not.toMatch(/https?:\/\/fonts|googleapis/)
   })
 
   it('kartu pangkal: nama dengan Alm./Almh. dan label "Leluhur"', BERAT, async () => {

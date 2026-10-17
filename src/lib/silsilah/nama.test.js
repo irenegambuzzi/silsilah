@@ -28,7 +28,7 @@ describe('namaKartu: aturan 2, gelar tidak dihitung', () => {
   it('gelar depan (Alm./Almh., gelar religius) dan belakang (gelar pendidikan) terpisah dari kata nama', () => {
     expect(namaKartu(orang('bagaskara'))).toEqual({
       depan: 'Alm. H.',
-      baris: [['Bagaskara', 'Wiryawan'], ['Adinata', 'Mahardika']],
+      kata: ['Bagaskara', 'Wiryawan', 'Adinata', 'Mahardika'],
       belakang: 'S.H.',
       jumlahKata: 4,
       ukuran: 'kecil',
@@ -45,20 +45,11 @@ describe('namaKartu: aturan 2, gelar tidak dihitung', () => {
   })
 })
 
-describe('namaKartu: aturan 4, pemenggalan', () => {
-  it('1–3 kata satu aliran (turun baris sendiri hanya kalau tidak muat)', () => {
-    expect(namaKartu(orang('ratrisa-k')).baris).toEqual([['Ratrisa', 'Kemuntari']])
-    expect(namaKartu(orang('sadevan-b')).baris).toEqual([['Sadevan', 'Bramasta', 'Wiratmaja']])
-  })
-
-  it('4 kata atau lebih: dua baris, separuh pertama di atas', () => {
-    expect(namaKartu(orang('ratrisa-a')).baris).toEqual([['Ratrisa', 'Anindya'], ['Maharsi', 'Wijayakusuma']])
-    expect(namaKartu({ full_name: 'A B C D E' }).baris).toEqual([['A', 'B', 'C'], ['D', 'E']])
-  })
-
+// Baris (satu atau dua) diatur di lib/bagan/barisNama.js menurut lebar nama.
+describe('namaKartu: kata nama', () => {
   it('semua kata tetap ada (tidak ada yang terbuang)', () => {
     for (const p of data.people) {
-      expect(namaKartu(p).baris.flat().join(' '), p.id).toBe(p.full_name.trim().split(/\s+/).join(' '))
+      expect(namaKartu(p).kata.join(' '), p.id).toBe(p.full_name.trim().split(/\s+/).join(' '))
     }
   })
 })
