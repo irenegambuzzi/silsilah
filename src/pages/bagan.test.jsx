@@ -395,12 +395,12 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
     expect(ket[0]).not.toBe(ket[1])
   })
 
-  it('"ratrisa": dua hasil, "pasangan Vino" dan "putri Yoga"', async () => {
+  it('"ratrisa": dua hasil, "istri Vino" dan "putri Yoga"', async () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.type(kolom(), 'ratrisa')
     expect(hasil()).toHaveLength(2)
-    expect(ketHasil().sort()).toEqual(['Buyut · putri Yoga (panggilan: Anin)', 'pasangan Vino'])
+    expect(ketHasil().sort()).toEqual(['Buyut · putri Yoga & Selvarani · panggilan: Anin', 'istri Vino (putra Umar)'])
   })
 
   it('memilih hasil: kartunya disorot, daftar tertutup, panel tidak menutupi bagan; mengetuk kartu itu membuka panelnya', async () => {
@@ -420,7 +420,7 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
     await aksi.click(k('ratrisa-a'))
     expect(within(screen.getByRole('region', { name: 'Orang terpilih' })).getByRole('heading', { level: 2 }).textContent).toBe('Ratrisa Anindya Maharsi Wijayakusuma')
     expect(disorot()).toEqual(['ratrisa-a'])
-    expect(status()).toMatch(/^\d dari 2: Ratrisa Anindya Maharsi Wijayakusuma · Buyut · putri Yoga \(panggilan: Anin\)$/)
+    expect(status()).toMatch(/^\d dari 2: Ratrisa Anindya Maharsi Wijayakusuma · Buyut · putri Yoga & Selvarani · panggilan: Anin$/)
   })
 
   it('Enter dan tombol cari berulang: "n dari m" berputar, sorotan ikut pindah, sesudah yang terakhir kembali ke "1 dari m"', BERAT, async () => {
@@ -510,7 +510,7 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
     expect(hasil().map((o) => o.dataset.hasil)).toEqual(['ratrisa-a'])
     expect(document.querySelector('[data-hasil-luar]')).toBeNull()
     await aksi.keyboard('{Enter}')
-    expect(status()).toBe('1 dari 1: Ratrisa Anindya Maharsi Wijayakusuma · Buyut · putri Yoga (panggilan: Anin)')
+    expect(status()).toBe('1 dari 1: Ratrisa Anindya Maharsi Wijayakusuma · Buyut · putri Yoga & Selvarani · panggilan: Anin')
     await aksi.keyboard('{ArrowDown}{ArrowDown}{Enter}')
     expect(status()).toMatch(/^1 dari 1: /)
     expect(screen.getByText('Menampilkan satu cabang: Lorvan')).toBeTruthy()
@@ -550,16 +550,16 @@ describe('Bagan: pencarian dengan daftar hasil', () => {
       await aksi.clear(kolom())
       await aksi.type(kolom(), kata)
       const o = hasil().find((x) => x.dataset.hasil === 'sadevan-b')
-      expect(o.textContent, kata).toBe('Sadevan Bramasta Wiratmaja, S.T.putra Vino (panggilan: Bram)')
+      expect(o.textContent, kata).toBe('Sadevan Bramasta Wiratmaja, S.T.putra Vino & Ratrisa Kemuntari · panggilan: Bram')
     }
     // Tanpa panggilan: tanpa keterangan itu.
-    expect(hasil().find((x) => x.dataset.hasil === 'sadevan-a').textContent).toBe('Sadevan ArkanataBuyut · putra Nanda')
+    expect(hasil().find((x) => x.dataset.hasil === 'sadevan-a').textContent).toBe('Sadevan ArkanataBuyut · putra Nanda & Ayundra')
     await aksi.keyboard('{Enter}{Enter}')
-    expect(status()).toBe('2 dari 2: Sadevan Bramasta Wiratmaja, S.T. · putra Vino (panggilan: Bram)')
+    expect(status()).toBe('2 dari 2: Sadevan Bramasta Wiratmaja, S.T. · putra Vino & Ratrisa Kemuntari · panggilan: Bram')
     for (const kata of ['anin', 'ratrisa']) {
       await aksi.clear(kolom())
       await aksi.type(kolom(), kata)
-      expect(hasil().find((x) => x.dataset.hasil === 'ratrisa-a').textContent, kata).toContain('Buyut · putri Yoga (panggilan: Anin)')
+      expect(hasil().find((x) => x.dataset.hasil === 'ratrisa-a').textContent, kata).toContain('Buyut · putri Yoga & Selvarani · panggilan: Anin')
     }
     expect(hasil().find((x) => x.dataset.hasil === 'ratrisa-k').textContent).not.toMatch(/panggilan/)
   })
@@ -621,7 +621,7 @@ describe('Bagan: bilah atas dan legenda', () => {
     const { aksi } = pasang('/bagan', klienKeluarga())
     await tunggu()
     await aksi.type(screen.getByRole('combobox', { name: 'Cari nama' }), 'Ovi{Enter}')
-    expect(screen.getByText('1 dari 1: Elvina · putri Harvel (panggilan: Ovi)')).toBeTruthy()
+    expect(screen.getByText('1 dari 1: Elvina · putri Harvel (suami Kirana) · panggilan: Ovi')).toBeTruthy()
     expect(k('elvina').hasAttribute('data-sorot')).toBe(true)
   })
 
@@ -630,10 +630,10 @@ describe('Bagan: bilah atas dan legenda', () => {
     await tunggu()
     const kotak = screen.getByRole('combobox', { name: 'Cari nama' })
     for (const [kata, id, hasil] of [
-      ['H. halvin', 'halvin', '1 dari 1: Alm. H. Halvin · pasangan Ika (panggilan: Pak Halvin)'],
-      ['Tjahya', 'cahya', '1 dari 1: Cahya · Anak · putri Alm. Raksa'],
-      ['oemar', 'umar', '1 dari 1: Umar · pasangan Cahya'],
-      ['harvel', 'harvel', '1 dari 1: Harvel · pasangan Kirana'],
+      ['H. halvin', 'halvin', '1 dari 1: Alm. H. Halvin · suami Ika (putri Bima & Eka) · panggilan: Pak Halvin'],
+      ['Tjahya', 'cahya', '1 dari 1: Cahya · Anak · putri Raksa & Selara'],
+      ['oemar', 'umar', '1 dari 1: Umar · suami Cahya (putri Raksa & Selara)'],
+      ['harvel', 'harvel', '1 dari 1: Harvel · suami Kirana (putri Bima & Fitri)'],
     ]) {
       await aksi.clear(kotak)
       await aksi.type(kotak, `${kata}{Enter}`)

@@ -56,7 +56,8 @@ function StatusData() {
 
 // Pencarian di bilah atas (PLAN.md 15.2; pencocokan di cari.js). Daftar hasil
 // langsung muncul saat mengetik dan memuat SEMUA yang cocok, masing-masing
-// dengan keterangan pembeda (kartu.js, keteranganCari).
+// dengan keterangan pembeda (kartu.js, keteranganCari), termasuk nama
+// panggilannya kalau ada ("putri Harvel (suami Kirana) · panggilan: Ovi").
 // Saat fokus cabang (`namaCabang`), `kartu` hanya kartu di cabang itu: tidak
 // ada hasil dari luar cabang (putaran ketujuh); kalau tidak ada yang cocok,
 // pesannya menyebut cabang itu dan cara mencari di seluruh silsilah.
@@ -131,8 +132,6 @@ function Pencarian({ kartu, namaCabang, keterangan, saatKetemu, saatKosong }) {
       else if (kata) tulis('')
     }
   }
-  // "(panggilan: Bram)": selalu, kalau orangnya punya nama panggilan.
-  const panggilan = (h) => (h.panggilan ? `(${isiTeks(T.cariPanggilan, { panggilan: h.panggilan })})` : null)
   const status =
     cocok === null
       ? ''
@@ -142,8 +141,7 @@ function Pencarian({ kartu, namaCabang, keterangan, saatKetemu, saatKosong }) {
           : T.cariTidakAda
         : ke !== null && cocok[ke]
           ? isiTeks(T.cariHasil, { ke: ke + 1, n: cocok.length, nama: cocok[ke].nama }) +
-            (cocok[ke].keterangan ? ` · ${cocok[ke].keterangan}` : '') +
-            (panggilan(cocok[ke]) ? ` ${panggilan(cocok[ke])}` : '')
+            (cocok[ke].keterangan ? ` · ${cocok[ke].keterangan}` : '')
           : isiTeks(T.cariJumlah, { n: cocok.length })
   return (
     <form
@@ -207,7 +205,7 @@ function Pencarian({ kartu, namaCabang, keterangan, saatKetemu, saatKosong }) {
             >
               <span className="font-semibold">{h.nama}</span>
               <span className="text-sm text-redup">
-                {[h.keterangan, panggilan(h)].filter(Boolean).join(' ')}
+                {h.keterangan}
               </span>
             </li>
           ))}

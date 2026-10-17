@@ -9,7 +9,7 @@
 // sama dengan saudaranya, tetapi tidak bernomor (hanya anak kandung yang
 // punya "Putra/Putri ke-n").
 import { isiTeks, teks } from '../../teks/id.js'
-import { namaKartu, namaTampil } from './nama.js'
+import { namaKartu, namaSingkat, namaTampil } from './nama.js'
 import { tahunHidup, tanggalDari, teksPeristiwa, teksWaktu } from './tanggal.js'
 import { istilahGenerasi, labelGen, teksGenerasi } from './generasi.js'
 import { jenisPasangan, pasanganBerurutan, teksBersaudara, teksPasanganKe, teksUrutanKe } from './urutan.js'
@@ -102,50 +102,113 @@ export function labelKartu(s, id, { hariIni = new Date() } = {}) {
   }
 }
 
-// Keterangan pembeda di daftar hasil pencarian, supaya nama yang sama di
-// cabang berbeda bisa dibedakan: keturunan "Buyut · putra Vino", pasangan
-// pangkal "Leluhur", pasangan (tanpa orang tua di silsilah) "pasangan Vino"
-// (keturunan yang dinikahinya). Keturunan tanpa GEN (tanpaGen): tanpa
-// istilah ("putra Harvel"). Selalu dari silsilah utama, juga saat generasi
-// dihitung dari cabang.
-//
-// Orang tuanya selalu orang tua KANDUNG (putaran keenam): kalau keduanya
-// tercatat, yang keturunan, di jalur yang menentukan GEN-nya (antarsepupu:
-// ayah); anak bawaan pasangan: orang tua kandungnya ("Galen · putra
-// Harvel", bukan ibu sambungnya Kirana). Tanpa orang tua kandung yang
-// tercatat (anak angkat): orang tua di jalurnya ("Putu · putra Lorvan").
-function orangTuaCari(s, id) {
-  const jalur = s.jalur.get(id) ?? []
-  const lewatJalur = jalur.find((j) => j.kandung)
-  if (lewatJalur) return lewatJalur.orangTuaId
+// Keterangan pembeda di daftar hasil pencarian (putaran ketujuh), supaya
+// nama yang sama di cabang berbeda bisa dibedakan. Panel detail tidak
+// memakainya.
+//   [istilah] · [hubungan] · panggilan: [panggilan]
+// - Istilah generasi di depan, sama dengan di kartu (cara hitung bagan saat
+//   itu, `tampil`); tanpa istilah kalau kartunya tanpa istilah.
+// - Anak (punya orang tua di silsilah): "putra Kirana & Harvel", kedua orang
+//   tua yang tercatat, KANDUNG; anak angkat memakai orang tua angkat (tanpa
+//   kata "angkat"). Orang tua yang keturunan dulu, lalu pasangannya; kalau
+//   keduanya keturunan atau keduanya bukan: ayah dulu. Kalau tidak ada orang
+//   tua yang keturunan tetapi pasangan orang tuanya keturunan: penghubung
+//   dalam kurung, "putra Harvel (suami Kirana)".
+// - Pasangan (bukan keturunan): "istri Yoga (putra Lorvan & Sinta)": orang
+//   yang dinikahinya, lalu orang tua orang itu dalam kurung.
+// - "suami"/"istri" kalau pernikahan itu masih berlangsung (juga kalau
+//   pasangannya wafat); "pasangan" kalau berpisah atau jenis kelamin belum
+//   diisi.
+// - "Keturunan" = punya GEN di bagan lengkap (silsilah utama `s`).
+// - Nama: nama depan tanpa gelar, dua kata kalau nama depan itu dipakai lebih
+//   dari satu orang (nama.js, namaSingkat).
+// - Nama panggilan di akhir, tidak pernah dibuang. Kalau seluruhnya lebih dari
+//   60 huruf, bagian dalam kurung dibuang.
+const BATAS_CARI = 60
+const URUT_SEX = { L: 0, P: 1, x: 2 }
+const sexDari = (s, id) => {
+  const sex = s.graf.orang.get(id)?.sex
+  return sex === 'L' || sex === 'P' ? sex : 'x'
+}
+const berGen = (s, id) => s.gen.has(id) && !s.tanpaGen?.has(id)
+
+// Orang tua yang tercatat: kandung; kalau tidak ada, orang tua angkat.
+function orangTuaTercatat(s, id) {
+  const kandung = []
+  const angkat = []
   for (const t of s.graf.tautan.get(id) ?? []) {
     const u = s.graf.unions.get(t.union_id)
-    const p = orangTuaUnion(u).find((x) => kandungUntuk(t, u, x))
-    if (p) return p
+    for (const p of orangTuaUnion(u)) {
+      if (t.kind === 'angkat') {
+        if (!angkat.includes(p)) angkat.push(p)
+      } else if (kandungUntuk(t, u, p) && !kandung.includes(p)) kandung.push(p)
+    }
   }
-  return jalur[0]?.orangTuaId ?? null
+  const ortu = kandung.length > 0 ? kandung : angkat
+  // Keturunan dulu; sesudah itu (atau kalau sama) ayah dulu. Sort stabil.
+  return ortu.sort((a, b) => Number(berGen(s, b)) - Number(berGen(s, a)) || URUT_SEX[sexDari(s, a)] - URUT_SEX[sexDari(s, b)])
 }
 
-// `tampil`: turunan silsilah yang sedang tampil di bagan (cabang yang
-// dihitung dari orang tertentu): istilah generasinya sama dengan di kartu.
+// "suami"/"istri" (pernikahan terakhir dengan orang itu masih berlangsung),
+// selain itu "pasangan".
+function sebutanPasangan(s, id, pernikahan) {
+  const sex = sexDari(s, id)
+  if (pernikahan.status === 'cerai' || sex === 'x') return KATA.jenisPasangan.pasangan
+  return sex === 'L' ? KATA.jenisPasangan.suami : KATA.jenisPasangan.istri
+}
+
+// Orang yang dinikahi `id` (berbeda, menurut urutan pernikahan) dengan
+// pernikahan TERAKHIR dengan masing-masing, yang memenuhi `syarat`.
+function pasanganYang(s, id, syarat) {
+  const terakhir = new Map()
+  for (const u of s.graf.pernikahan.get(id) ?? []) {
+    const p = pasanganDi(u, id)
+    if (p && syarat(p)) terakhir.set(p, u)
+  }
+  return [...terakhir]
+}
+
+// "putra Kirana & Harvel" (tanpa kurung), atau null kalau tidak ada orang tua.
+function teksAnakDari(s, id, ortu) {
+  if (ortu.length === 0) return null
+  return isiTeks(KATA.cariAnak[sexDari(s, id)], { nama: ortu.map((p) => namaSingkat(s.graf, p)).join(' & ') })
+}
+
 export function keteranganCari(s, id, { tampil = s } = {}) {
   const orang = s.graf.orang.get(id)
   if (!orang) return ''
-  const nama = (pid) => namaTampil(s.graf.orang.get(pid))
-  if (!s.gen.has(id)) {
-    const pasangan = []
-    for (const u of s.graf.pernikahan.get(id) ?? []) {
-      const p = pasanganDi(u, id)
-      if (p && s.gen.has(p) && !pasangan.includes(p)) pasangan.push(p)
-    }
-    return pasangan.length > 0 ? isiTeks(KATA.cariPasangan, { nama: gabungNama(pasangan.map(nama)) }) : ''
-  }
-  // Istilah seperti di kartu (labelKartu): keturunan tanpa GEN tanpa istilah.
   const k = labelKartu(tampil, id)
   const istilah = k.istilahGen ?? (k.gen === null ? null : labelGen(k.gen))
-  const ortu = orangTuaCari(s, id)
-  const sex = orang.sex === 'L' || orang.sex === 'P' ? orang.sex : 'x'
-  return [istilah, ortu ? isiTeks(KATA.cariAnak[sex], { nama: nama(ortu) }) : null].filter(Boolean).join(' · ')
+  const panggilan = orang.nickname ? isiTeks(KATA.cariPanggilanAkhir, { panggilan: orang.nickname }) : null
+
+  let inti = null
+  let kurung = null
+  const ortu = orangTuaTercatat(s, id)
+  if (ortu.length > 0) {
+    inti = teksAnakDari(s, id, ortu)
+    if (!ortu.some((p) => berGen(s, p))) {
+      for (const p of ortu) {
+        const [hubung] = pasanganYang(s, p, (q) => berGen(s, q))
+        if (hubung) {
+          kurung = `${sebutanPasangan(s, p, hubung[1])} ${namaSingkat(s.graf, hubung[0])}`
+          break
+        }
+      }
+    }
+  } else if (!s.gen.has(id)) {
+    // Pasangan: orang yang dinikahinya yang keturunan; kalau tidak ada,
+    // keturunan tanpa GEN (Ratrisa Kemuntari, istri Vino).
+    let dinikahi = pasanganYang(s, id, (q) => berGen(s, q))
+    if (dinikahi.length === 0) dinikahi = pasanganYang(s, id, (q) => s.gen.has(q))
+    if (dinikahi.length > 0) {
+      inti = dinikahi.map(([p, u]) => `${sebutanPasangan(s, id, u)} ${namaSingkat(s.graf, p)}`).join(', ')
+      if (dinikahi.length === 1) kurung = teksAnakDari(s, dinikahi[0][0], orangTuaTercatat(s, dinikahi[0][0]))
+    }
+  }
+  const susun = (denganKurung) =>
+    [istilah, inti && (denganKurung && kurung ? `${inti} (${kurung})` : inti), panggilan].filter(Boolean).join(' · ')
+  const panjang = susun(true)
+  return panjang.length > BATAS_CARI ? susun(false) : panjang
 }
 
 // Untuk Daftar: tahun lahir–wafat dan keterangan singkat ("Putra ke-6 ·

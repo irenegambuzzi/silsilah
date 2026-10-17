@@ -300,9 +300,6 @@ export const teks = {
     cari: 'Cari nama',
     petunjukCari: 'Cari nama…',
     cariHasil: '{ke} dari {n}: {nama}',
-    // Nama panggilan SELALU disebut di setiap hasil kalau orangnya punya
-    // (putaran keenam): "1 dari 1: Elvina · putri Harvel (panggilan: Ovi)".
-    cariPanggilan: 'panggilan: {panggilan}',
     cariTidakAda: 'Tidak ada nama yang cocok. Periksa ejaannya, atau coba nama panggilan.',
     // Saat fokus cabang: hanya di cabang itu (putaran ketujuh), juga di Daftar.
     cariTidakAdaCabang: 'Nama ini tidak ditemukan di cabang {nama}. Untuk mencari di seluruh silsilah, keluar dari fokus terlebih dahulu.',
@@ -678,9 +675,10 @@ export const teks = {
     bersaudara: '{urutan} dari {n} bersaudara',
     pihak: '{isi} (pihak {nama})',
     jenisPasangan: { istri: 'istri', suami: 'suami', pasangan: 'pasangan' },
-    // Keterangan pembeda di hasil pencarian: "Buyut · putra Vino", "pasangan Vino".
+    // Keterangan pembeda di hasil pencarian (putaran ketujuh): "Buyut · putra
+    // Kirana & Harvel", "istri Yoga (putra Lorvan & Sinta) · panggilan: Bu Rani".
     cariAnak: { L: 'putra {nama}', P: 'putri {nama}', x: 'anak {nama}' },
-    cariPasangan: 'pasangan {nama}',
+    cariPanggilanAkhir: 'panggilan: {panggilan}',
     // Keterangan kecil di daftar anak milik orang tuanya.
     jenisAnakKecil: { sambung: 'anak sambung', angkat: 'anak angkat' },
     statusPernikahan: {

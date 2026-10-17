@@ -3,6 +3,7 @@ import { bangunKeluargaFiktif } from './keluargaFiktif.js'
 import { susunSilsilah } from './silsilah.js'
 import { keteranganDaftar, labelDetail, labelKartu, keteranganCari } from './kartu.js'
 import { awalanAlmarhum, namaTampil } from './nama.js'
+import { silsilahCabang } from '../bagan/cabang.js'
 
 const s = susunSilsilah(bangunKeluargaFiktif())
 const ket = (id) => keteranganDaftar(s, id).keterangan
@@ -530,24 +531,56 @@ describe('baris yang selalu tampil dan yang hanya tampil kalau berlaku', () => {
 
 describe('keteranganCari: pembeda di hasil pencarian', () => {
   it.each([
-    ['sadevan-b', 'putra Vino'], // tanpa GEN (putaran keenam): tanpa istilah
-    ['sadevan-a', 'Buyut · putra Nanda'],
-    ['ratrisa-k', 'pasangan Vino'],
-    ['ratrisa-a', 'Buyut · putri Yoga'],
+    // Putaran ketujuh: kedua orang tua (keturunan dulu, lalu ayah dulu),
+    // penghubung dalam kurung, nama depan tanpa gelar, panggilan di akhir.
+    ['galen', 'putra Harvel (suami Kirana)'], // tanpa GEN: tanpa istilah
+    ['elvina', 'putri Harvel (suami Kirana) · panggilan: Ovi'],
+    ['vino', 'putra Umar (suami Cahya)'],
+    ['fajrin', 'Buyut · putra Kirana & Harvel · panggilan: Jojo'], // keturunan dulu
+    ['celvia', 'Buyut · putri Kirana & Danuarta'],
+    ['yoga', 'Putu · putra Lorvan & Sinta'], // anak angkat: orang tua angkat, tanpa kata "angkat"
+    ['ratrisa-a', 'Buyut · putri Yoga & Selvarani · panggilan: Anin'],
+    ['selvarani', 'istri Yoga (putra Lorvan & Sinta) · panggilan: Bu Rani'],
+    ['tedrik', 'suami Wati (putri Cahya & Umar)'],
+    ['danuarta', 'pasangan Kirana (putri Bima & Fitri)'], // berpisah: "pasangan"
+    ['sadevan-b', 'putra Vino & Ratrisa Kemuntari · panggilan: Bram'], // nama depan sama: dua kata
+    ['nirvo', 'Buyut · putra Tamran & Wati'], // keduanya keturunan: ayah dulu
+    ['sadevan-a', 'Buyut · putra Nanda & Ayundra'],
+    ['ratrisa-k', 'istri Vino (putra Umar)'], // istri keturunan tanpa GEN
     ['raksa', 'Leluhur'],
-    ['bima', 'Anak · putra Alm. Raksa'],
-    ['ragil', 'Buyut · anak Alm. Tirwan'], // jenis kelamin belum diketahui
-    ['bintang', 'Canggah · putra Dorvi, S.Kom.'], // antarsepupu: lewat ayah, sama dengan GEN-nya
-    ['eka', 'pasangan Bima'], // menikah dua kali dengan orang yang sama: sekali
-    // Putaran keenam: selalu orang tua KANDUNG; tanpa GEN tanpa istilah.
-    ['galen', 'putra Harvel'],
-    ['elvina', 'putri Harvel'],
-    ['vino', 'putra Umar'],
-    ['celvia', 'Buyut · putri Kirana'], // kedua orang tua kandung tercatat: yang keturunan
-    ['fajrin', 'Buyut · putra Kirana'],
-    ['yoga', 'Putu · putra Lorvan'], // anak angkat: tanpa orang tua kandung tercatat
+    ['bima', 'Anak · putra Raksa & Selara · panggilan: Abah'], // tanpa Alm.
+    ['ragil', 'Buyut · anak Tirwan & Dara'], // jenis kelamin belum diketahui
+    ['bintang', 'Canggah · putra Dorvi & Arum'], // antarsepupu: ayah dulu, tanpa gelar
+    ['eka', 'pasangan Bima (putra Raksa & Selara)'], // menikah dua kali dengan orang yang sama: sekali
+    ['halvin', 'suami Ika (putri Bima & Eka) · panggilan: Pak Halvin'], // wafat: tetap "suami"
   ])('%s: "%s"', (id, harapan) => {
     expect(keteranganCari(s, id)).toBe(harapan)
+  })
+  it('istilah generasi mengikuti cara hitung bagan saat itu (Hitung dari X)', () => {
+    expect(keteranganCari(s, 'ratrisa-a', { tampil: silsilahCabang(s, 'lorvan') })).toBe('Putu · putri Yoga & Selvarani · panggilan: Anin')
+    expect(keteranganCari(s, 'sadevan-b', { tampil: silsilahCabang(s, 'vino') })).toBe('Anak · putra Vino & Ratrisa Kemuntari · panggilan: Bram')
+    expect(keteranganCari(s, 'galen', { tampil: silsilahCabang(s, 'galen') })).toBe('Awal cabang · putra Harvel (suami Kirana)')
+    // Anak sambung Cahya tetap tanpa istilah saat dihitung dari Cahya.
+    expect(keteranganCari(s, 'vino', { tampil: silsilahCabang(s, 'cahya') })).toBe('putra Umar (suami Cahya)')
+  })
+  it('jenis kelamin belum diisi: "pasangan"', () => {
+    const d = bangunKeluargaFiktif()
+    d.people.find((p) => p.id === 'tedrik').sex = null
+    d.people.find((p) => p.id === 'harvel').sex = null
+    const t = susunSilsilah(d)
+    expect(keteranganCari(t, 'tedrik')).toBe('pasangan Wati (putri Cahya & Umar)')
+    expect(keteranganCari(t, 'galen')).toBe('putra Harvel (pasangan Kirana)')
+  })
+  it('lebih dari 60 huruf: bagian dalam kurung dibuang, panggilan tetap', () => {
+    const d = bangunKeluargaFiktif()
+    d.people.find((p) => p.id === 'elvina').nickname = 'Ovi Kesayangan Semua Orang'
+    d.people.find((p) => p.id === 'tedrik').nickname = 'Om Tedrik dari Kota Contoh'
+    const t = susunSilsilah(d)
+    expect(keteranganCari(t, 'elvina')).toBe('putri Harvel · panggilan: Ovi Kesayangan Semua Orang')
+    expect(keteranganCari(t, 'tedrik')).toBe('suami Wati · panggilan: Om Tedrik dari Kota Contoh')
+    // Tepat 60 huruf atau kurang: kurung tetap.
+    expect(keteranganCari(s, 'selvarani').length).toBeLessThanOrEqual(60)
+    expect(keteranganCari(s, 'selvarani')).toContain('(putra Lorvan & Sinta)')
   })
   it('nama yang sama di cabang berbeda selalu punya keterangan berbeda', () => {
     const per = new Map()
