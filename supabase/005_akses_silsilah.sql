@@ -198,7 +198,7 @@ begin
      and not private.is_self(new.partner1_id)
      and not private.is_self(new.partner2_id) then
     perform private.fail('SL010',
-      'Status berpisah sebuah pernikahan hanya bisa diubah oleh salah satu dari kedua pasangan itu, admin utama, atau asisten yang diberi izin.');
+      'Status berpisah sebuah pernikahan hanya bisa diubah oleh salah satu dari kedua pasangan itu, ADMIN MASTER, atau ADMIN yang diberi izin.');
   end if;
   return new;
 end $$;

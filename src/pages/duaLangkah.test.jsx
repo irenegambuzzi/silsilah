@@ -43,7 +43,7 @@ describe('gerbang layar admin', () => {
     const klien = klienAdmin({ mfa: { level: 'aal1', faktor: [UTAMA] } })
     pasang('/admin/akses-sementara', klien)
     expect(await screen.findByRole('heading', { name: 'Masukkan kode verifikasi dulu' })).toBeTruthy()
-    expect(screen.getByText(/Layar ini khusus admin utama/)).toBeTruthy()
+    expect(screen.getByText(/Layar ini khusus ADMIN MASTER/)).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'Beri akses sementara' })).toBeNull()
     expect(screen.queryByLabelText('Untuk siapa?')).toBeNull()
     await new Promise((r) => setTimeout(r, 30))
@@ -205,7 +205,7 @@ describe('layar Verifikasi dua langkah (menu Saya)', () => {
   it('bukan admin utama → hanya pesan, tanpa membaca status', async () => {
     const klien = klienAdmin({ anggota: asisten })
     pasang('/saya/dua-langkah', klien)
-    expect(await screen.findByText('Verifikasi dua langkah hanya untuk admin utama.')).toBeTruthy()
+    expect(await screen.findByText('Verifikasi dua langkah hanya untuk ADMIN MASTER.')).toBeTruthy()
     expect(klien.auth.mfa.listFactors).not.toHaveBeenCalled()
   })
 })
@@ -218,12 +218,19 @@ describe('menu Saya dan kotak masuk', () => {
     pasang('/saya', klienAdmin({ anggota, mfa: { level, faktor: [UTAMA] } }))
     expect(await screen.findByRole('link', { name: 'Verifikasi dua langkah' })).toBeTruthy()
     expect(screen.getByText(status)).toBeTruthy()
+    // Judul bagian admin menurut peran (putaran 7c): tidak pernah "pengurus".
+    expect(screen.getByRole('heading', { name: 'ADMIN MASTER' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'ADMIN' })).toBeNull()
+    expect(document.body.textContent).not.toMatch(/pengurus|asisten|admin utama/i)
   })
 
   it('anggota lain: tidak ada tautan verifikasi dua langkah', async () => {
     pasang('/saya', klienAdmin({ anggota: asisten }))
     await screen.findByRole('heading', { name: 'Saya' })
     expect(screen.queryByRole('link', { name: 'Verifikasi dua langkah' })).toBeNull()
+    expect(screen.getByRole('heading', { name: 'ADMIN' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'ADMIN MASTER' })).toBeNull()
+    expect(document.body.textContent).not.toMatch(/pengurus|asisten|admin utama/i)
   })
 
   const curiga = { id: 7, kind: 'login_mencurigakan', title: 'Login mencurigakan: Pak Jauh Contoh', body: 'Contoh.', priority: 'penting', link: `#/admin/perangkat?cabut=${UUID}`, created_at: '2026-10-07T07:05:00Z', read_at: null }

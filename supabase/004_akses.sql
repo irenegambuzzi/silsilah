@@ -355,25 +355,25 @@ begin
   -- Selebihnya: perubahan lewat aplikasi/API.
   if tg_op = 'DELETE' then
     if old.is_owner then
-      perform private.fail('AK001', 'Admin utama tidak bisa diubah atau dicabut lewat aplikasi.');
+      perform private.fail('AK001', 'ADMIN MASTER tidak bisa diubah atau dicabut lewat aplikasi.');
     end if;
-    perform private.fail('AK002', 'Anggota tidak dihapus, hanya dicabut aksesnya oleh admin utama.');
+    perform private.fail('AK002', 'Anggota tidak dihapus, hanya dicabut aksesnya oleh ADMIN MASTER.');
   end if;
 
   if tg_op = 'INSERT' then
     if new.is_owner then
-      perform private.fail('AK001', 'Admin utama tidak bisa diubah atau dicabut lewat aplikasi.');
+      perform private.fail('AK001', 'ADMIN MASTER tidak bisa diubah atau dicabut lewat aplikasi.');
     end if;
     if (new.role = 'asisten' or new.permissions <> '{}' or new.status <> 'aktif' or new.hold_until is not null)
        and not public.is_owner() then
-      perform private.fail('AK002', 'Hanya admin utama yang bisa mengatur peran, izin, atau status anggota.');
+      perform private.fail('AK002', 'Hanya ADMIN MASTER yang bisa mengatur peran, izin, atau status anggota.');
     end if;
     return new;
   end if;
 
   -- UPDATE
   if new.is_owner is distinct from old.is_owner then
-    perform private.fail('AK001', 'Admin utama tidak bisa diubah atau dicabut lewat aplikasi.');
+    perform private.fail('AK001', 'ADMIN MASTER tidak bisa diubah atau dicabut lewat aplikasi.');
   end if;
   if old.auth_user_id is not null and new.auth_user_id is distinct from old.auth_user_id then
     perform private.fail('AK011', 'Akun login seorang anggota tidak bisa diganti.');
@@ -389,13 +389,13 @@ begin
   end if;
   if old.is_owner then
     if (to_jsonb(new) - boleh_owner) <> (to_jsonb(old) - boleh_owner) then
-      perform private.fail('AK001', 'Admin utama tidak bisa diubah atau dicabut lewat aplikasi.');
+      perform private.fail('AK001', 'ADMIN MASTER tidak bisa diubah atau dicabut lewat aplikasi.');
     end if;
     return new;
   end if;
   foreach kolom in array sensitif loop
     if (to_jsonb(new) -> kolom) is distinct from (to_jsonb(old) -> kolom) and not public.is_owner() then
-      perform private.fail('AK002', 'Hanya admin utama yang bisa mengatur peran, izin, atau status anggota.');
+      perform private.fail('AK002', 'Hanya ADMIN MASTER yang bisa mengatur peran, izin, atau status anggota.');
     end if;
   end loop;
   return new;
@@ -443,7 +443,7 @@ declare
 begin
   if tg_op = 'INSERT' then
     if exists (select 1 from public.members where id = new.member_id and status <> 'aktif') then
-      perform private.fail('AK012', 'Akses anggota ini sudah dicabut. Admin utama perlu mengaktifkannya dulu.');
+      perform private.fail('AK012', 'Akses anggota ini sudah dicabut. ADMIN MASTER perlu mengaktifkannya dulu.');
     end if;
     select person_id into orangnya from public.members where id = new.member_id;
     hasil := private.invite_eligibility(orangnya);

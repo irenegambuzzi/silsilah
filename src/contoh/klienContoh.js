@@ -43,11 +43,11 @@ const ANGGOTA = {
   role: 'anggota', is_owner: false, permissions: [],
 }
 const PENGURUS = {
-  id: 'anggota-pengurus', auth_user_id: 'akun-pengurus', display_name: 'Pak Pengurus Contoh',
+  id: 'anggota-pengurus', auth_user_id: 'akun-pengurus', display_name: 'Pak Admin Contoh',
   role: 'asisten', is_owner: false, permissions: ['akses_sementara', 'kelola_peringatan'],
 }
 const PEMILIK = {
-  id: 'anggota-pemilik', auth_user_id: 'akun-pemilik', display_name: 'Admin Utama Contoh',
+  id: 'anggota-pemilik', auth_user_id: 'akun-pemilik', display_name: 'Admin Master Contoh',
   role: 'anggota', is_owner: true, permissions: [],
 }
 const SEMUA = [ANGGOTA, PENGURUS, PEMILIK]
@@ -63,7 +63,7 @@ const contohPemberitahuan = (sekarang) => [
     body: 'iPhone · sekitar Kota Contoh, Indonesia · 13.40, lewat link undangan.',
     link: '#/admin/perangkat', created_at: new Date(sekarang - 3600000).toISOString(), read_at: null },
   { id: 3, kind: 'akses_sementara', title: 'Bu Contoh diberi akses sementara', priority: 'biasa',
-    body: 'Asisten Contoh memberi Bu Contoh akses sementara selama 1 jam. Kodenya berlaku 10 menit.',
+    body: 'Pak Admin Contoh memberi Bu Contoh akses sementara selama 1 jam. Kodenya berlaku 10 menit.',
     link: null, created_at: new Date(sekarang - 86400000).toISOString(), read_at: new Date(sekarang - 80000000).toISOString() },
 ]
 
@@ -265,7 +265,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       if (!pengurus()) return galat('AK016', 'Anda tidak punya izin memberi akses sementara.')
       if (p_minutes < 30) return galat('AK022', 'Durasi akses sementara minimal 30 menit.')
       if (p_minutes > 1440) return galat('AK009', 'Durasi akses sementara melebihi batas yang diatur admin.')
-      if ((p_member === PENGURUS.id || p_member === PEMILIK.id) && !adminUtama()) return galat('AK017', 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.')
+      if ((p_member === PENGURUS.id || p_member === PEMILIK.id) && !adminUtama()) return galat('AK017', 'Link dan kode untuk ADMIN MASTER atau ADMIN hanya bisa dibuat oleh ADMIN MASTER.')
       const teks = acak(8)
       k.kodeSementara = { teks, anggotaId: p_member, menit: p_minutes, berakhir: new Date(sekarang() + 600000).toISOString() }
       return ok({ code_id: 'kode-sementara', code: `${teks.slice(0, 4)}-${teks.slice(4)}`, expires_at: k.kodeSementara.berakhir, access_minutes: p_minutes })
@@ -289,7 +289,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
       return ok(null)
     },
     async record_second_factor() {
-      if (!saya().is_owner) return galat('AK002', 'Hanya admin utama yang boleh melakukan ini.')
+      if (!saya().is_owner) return galat('AK002', 'Hanya ADMIN MASTER yang boleh melakukan ini.')
       return ok({ aal: k.aal, perubahan: 0 })
     },
     async set_death_rule({ p_person, p_start_next_day }) {

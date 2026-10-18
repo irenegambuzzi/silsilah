@@ -213,7 +213,7 @@ set search_path = ''
 as $$
 begin
   if not public.is_owner() then
-    perform private.fail('AK002', 'Hanya admin utama yang bisa melihat daftar salinan.');
+    perform private.fail('AK002', 'Hanya ADMIN MASTER yang bisa melihat daftar salinan.');
   end if;
   return query
     select s.id, s.taken_at, s.kind, s.counts, pg_column_size(s.data), s.detail

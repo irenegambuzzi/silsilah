@@ -72,8 +72,8 @@ begin
     values (m.id, 'verifikasi_dua_langkah', jsonb_build_object('jenis', 'authenticator_baru', 'faktor', f.id, 'nama', f.nama));
     perform private.notify_owner(
       'dua_langkah',
-      'Authenticator baru untuk akun admin utama',
-      format('Aplikasi authenticator "%s" baru didaftarkan untuk akun admin utama (%s). Kalau ini bukan Anda, segera jalankan prosedur darurat di README.',
+      'Authenticator baru untuk akun ADMIN MASTER',
+      format('Aplikasi authenticator "%s" baru didaftarkan untuk akun ADMIN MASTER (%s). Kalau ini bukan Anda, segera jalankan prosedur darurat di README.',
              coalesce(f.nama, 'tanpa nama'), private.owner_clock()),
       null, true);
     n := n + 1;
@@ -91,8 +91,8 @@ begin
     values (m.id, 'verifikasi_dua_langkah', jsonb_build_object('jenis', 'authenticator_dihapus', 'faktor', f.id, 'nama', f.nama));
     perform private.notify_owner(
       'dua_langkah',
-      'Authenticator dihapus dari akun admin utama',
-      format('Aplikasi authenticator "%s" dihapus dari akun admin utama (%s). Kalau ini bukan Anda, segera jalankan prosedur darurat di README.',
+      'Authenticator dihapus dari akun ADMIN MASTER',
+      format('Aplikasi authenticator "%s" dihapus dari akun ADMIN MASTER (%s). Kalau ini bukan Anda, segera jalankan prosedur darurat di README.',
              coalesce(f.nama, 'tanpa nama'), private.owner_clock()),
       null, true);
     n := n + 1;
@@ -116,7 +116,7 @@ declare
   aal text := coalesce(auth.jwt() ->> 'aal', '');
 begin
   if saya is null or not exists (select 1 from public.members where id = saya and is_owner) then
-    perform private.fail('AK002', 'Hanya admin utama yang boleh melakukan ini.');
+    perform private.fail('AK002', 'Hanya ADMIN MASTER yang boleh melakukan ini.');
   end if;
   d := private.current_device();
   if aal = 'aal2' and not exists (
@@ -155,7 +155,7 @@ begin
   end if;
   select * into m from public.members where is_owner for update;
   if not found or m.auth_user_id is null then
-    perform private.fail('AK029', 'Admin utama belum ada atau belum pernah masuk.');
+    perform private.fail('AK029', 'ADMIN MASTER belum ada atau belum pernah masuk.');
   end if;
 
   delete from auth.mfa_factors where user_id = m.auth_user_id;
@@ -179,7 +179,7 @@ begin
   perform private.notify_owner(
     'dua_langkah',
     'Pemulihan darurat verifikasi dua langkah',
-    format('Pemulihan darurat dijalankan dari SQL Editor (%s): %s authenticator dihapus dan %s perangkat admin utama dicabut. Daftarkan authenticator baru sekarang di menu Saya.',
+    format('Pemulihan darurat dijalankan dari SQL Editor (%s): %s authenticator dihapus dan %s perangkat ADMIN MASTER dicabut. Daftarkan authenticator baru sekarang di menu Saya.',
            private.owner_clock(), n_faktor, n_perangkat),
     null, true);
 

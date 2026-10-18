@@ -124,7 +124,7 @@ describe('pemantauan authenticator admin utama', () => {
     expect(await kenal()).toEqual([utama])
     const n = await a.notifikasiAdminSejak(penanda)
     expect(n).toHaveLength(1)
-    expect(n[0]).toMatchObject({ kind: 'dua_langkah', priority: 'penting', title: 'Authenticator baru untuk akun admin utama' })
+    expect(n[0]).toMatchObject({ kind: 'dua_langkah', priority: 'penting', title: 'Authenticator baru untuk akun ADMIN MASTER' })
     expect(n[0].body).toContain('"Utama"')
     expect(n[0].body).toContain('prosedur darurat')
     expect((await peristiwa('authenticator_baru')).at(-1).detail.faktor).toBe(utama)
@@ -141,7 +141,7 @@ describe('pemantauan authenticator admin utama', () => {
     await baris(db, `delete from auth.mfa_factors where friendly_name = 'Cadangan'`)
     expect(await cek()).toBe(1)
     const n = await a.notifikasiAdminSejak(penanda)
-    expect(n.map((x) => x.title)).toEqual(['Authenticator dihapus dari akun admin utama'])
+    expect(n.map((x) => x.title)).toEqual(['Authenticator dihapus dari akun ADMIN MASTER'])
     expect(await kenal()).toHaveLength(1)
   })
 

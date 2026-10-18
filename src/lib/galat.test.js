@@ -88,7 +88,7 @@ describe('standar Postgres', () => {
   })
   it('nama batasan juga dibaca dari details', () => {
     const h = petakanGalat(pg('23505', 'conflict', { details: 'violates unique constraint "members_one_owner"' }))
-    expect(h.pesan).toBe('Hanya boleh ada satu admin utama.')
+    expect(h.pesan).toBe('Hanya boleh ada satu ADMIN MASTER.')
   })
   it('batasan tidak dikenal → pesan standar per kode', () => {
     expect(petakanGalat(pg('23505', 'duplicate key value violates unique constraint "xyz"')).pesan).toBe('Data ini sudah ada.')

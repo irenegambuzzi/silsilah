@@ -313,14 +313,14 @@ begin
     select * from public.change_log where batch_id = p_batch and not automatic order by id desc
   loop
     if e.op = 'hapus_permanen' then
-      perform private.fail('UN004', 'Hapus permanen tidak bisa dibatalkan. Data hanya bisa dipulihkan dari cadangan oleh admin utama.');
+      perform private.fail('UN004', 'Hapus permanen tidak bisa dibatalkan. Data hanya bisa dipulihkan dari cadangan oleh ADMIN MASTER.');
     end if;
     if e.table_name = 'origin_trees' and e.op = 'tambah' then
       perform private.fail('UN005', 'Pembuatan pohon keluarga asal tidak bisa dibatalkan dari riwayat.');
     end if;
     if (e.tree_id is not null or e.table_name in ('settings', 'origin_trees', 'origin_tree_access'))
        and not public.is_owner() then
-      perform private.fail('UN007', 'Hanya admin utama yang bisa membatalkan perubahan ini.');
+      perform private.fail('UN007', 'Hanya ADMIN MASTER yang bisa membatalkan perubahan ini.');
     end if;
     if e.actor_member_id is distinct from saya and not public.has_perm('batalkan_orang_lain') then
       perform private.fail('UN006', 'Anda hanya bisa membatalkan perubahan Anda sendiri.');
@@ -390,7 +390,7 @@ set search_path = ''
 as $$
 begin
   if not public.is_owner() then
-    perform private.fail('AK002', 'Hanya admin utama yang bisa melepas penahanan.');
+    perform private.fail('AK002', 'Hanya ADMIN MASTER yang bisa melepas penahanan.');
   end if;
   update public.members set hold_until = null, hold_reason = null where id = p_member;
 end $$;

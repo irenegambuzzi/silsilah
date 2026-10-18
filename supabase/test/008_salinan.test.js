@@ -192,8 +192,8 @@ describe('perapian salinan', () => {
 
 describe('daftar salinan untuk admin', () => {
   it('hanya admin utama (aal2), tanpa isi salinan', async () => {
-    await expect(q('Anggota', `select * from public.list_snapshots()`)).rejects.toThrow(/admin utama/)
-    await expect(q('Pemilik', `select * from public.list_snapshots()`, [], 'aal1')).rejects.toThrow(/admin utama/)
+    await expect(q('Anggota', `select * from public.list_snapshots()`)).rejects.toThrow(/ADMIN MASTER/)
+    await expect(q('Pemilik', `select * from public.list_snapshots()`, [], 'aal1')).rejects.toThrow(/ADMIN MASTER/)
     const r = await q('Pemilik', `select * from public.list_snapshots()`, [], 'aal2')
     expect(r.length).toBeGreaterThan(0)
     expect(Object.keys(r[0]).sort()).toEqual(['counts', 'detail', 'id', 'kind', 'size_bytes', 'taken_at'])

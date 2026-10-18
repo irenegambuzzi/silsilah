@@ -129,7 +129,7 @@ describe('layar Beri akses sementara', () => {
 
   it.each([
     ['AK009', 'Durasi akses sementara melebihi batas yang diatur admin.'],
-    ['AK017', 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.'],
+    ['AK017', 'Link dan kode untuk ADMIN MASTER atau ADMIN hanya bisa dibuat oleh ADMIN MASTER.'],
     ['AK012', 'Akses anggota ini sudah dicabut. Admin utama perlu mengaktifkannya dulu.'],
   ])('ditolak server (%s) → pesan Indonesia, tanpa kode', async (kode, pesan) => {
     const klien = klienPengurus({ rpc: { create_temp_access_code: async () => GALAT(kode, pesan) } })

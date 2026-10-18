@@ -163,7 +163,7 @@ set search_path = ''
 as $$
 begin
   if (sasaran.is_owner or sasaran.role = 'asisten') and not public.is_owner() then
-    perform private.fail('AK017', 'Link dan kode untuk admin utama atau asisten hanya bisa dibuat oleh admin utama.');
+    perform private.fail('AK017', 'Link dan kode untuk ADMIN MASTER atau ADMIN hanya bisa dibuat oleh ADMIN MASTER.');
   end if;
 end $$;
 revoke all on function private.require_target_right(public.members) from public, anon, authenticated;
@@ -375,7 +375,7 @@ begin
   end if;
   select * into sasaran from public.members where id = p_member for update;
   if not found or sasaran.status <> 'aktif' then
-    perform private.fail('AK012', 'Akses anggota ini sudah dicabut. Admin utama perlu mengaktifkannya dulu.');
+    perform private.fail('AK012', 'Akses anggota ini sudah dicabut. ADMIN MASTER perlu mengaktifkannya dulu.');
   end if;
   perform private.require_target_right(sasaran);
   update private.device_codes

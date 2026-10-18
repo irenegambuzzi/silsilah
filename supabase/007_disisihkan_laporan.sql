@@ -173,7 +173,7 @@ as $$
 begin
   if pohon is not null then
     if not public.is_owner() then
-      perform private.fail('TR012', 'Data pohon keluarga asal hanya bisa diatur admin utama.');
+      perform private.fail('TR012', 'Data pohon keluarga asal hanya bisa diatur ADMIN MASTER.');
     end if;
   elsif not (public.has_perm('sisihkan') and public.can_edit()) then
     perform private.fail('TR001', 'Anda tidak punya izin untuk menyisihkan atau memulihkan data.');
@@ -207,10 +207,10 @@ begin
       perform private.fail('TR004', 'Pasangan pangkal tidak bisa disisihkan.');
     end if;
     if exists (select 1 from public.origin_trees where anchor_person_id = p_id) then
-      perform private.fail('TR003', 'Orang ini punya pohon keluarga asal. Admin utama perlu mengurus pohon itu dulu.');
+      perform private.fail('TR003', 'Orang ini punya pohon keluarga asal. ADMIN MASTER perlu mengurus pohon itu dulu.');
     end if;
     if exists (select 1 from public.members where person_id = p_id and status = 'aktif') then
-      perform private.fail('TR005', 'Orang ini anggota aplikasi. Admin utama perlu mencabut aksesnya dulu.');
+      perform private.fail('TR005', 'Orang ini anggota aplikasi. ADMIN MASTER perlu mencabut aksesnya dulu.');
     end if;
     if exists (
       select 1 from public.children ch join public.unions un on un.id = ch.union_id
@@ -366,7 +366,7 @@ set search_path = ''
 as $$
 begin
   if not public.is_owner() then
-    perform private.fail('TR008', 'Hanya admin utama (dengan verifikasi dua langkah) yang bisa menghapus permanen.');
+    perform private.fail('TR008', 'Hanya ADMIN MASTER (dengan verifikasi dua langkah) yang bisa menghapus permanen.');
   end if;
   if konfirmasi is distinct from 'HAPUS' then
     perform private.fail('TR009', 'Ketik HAPUS (huruf besar) untuk memastikan penghapusan permanen.');

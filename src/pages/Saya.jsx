@@ -27,7 +27,7 @@ export default function Saya() {
       </Kartu>
       {(bolehBeriAkses(anggota) || anggota?.pemilik) && (
         <Kartu className="flex flex-col gap-3">
-          <Subjudul>{T.admin}</Subjudul>
+          <Subjudul>{anggota?.pemilik ? T.adminMaster : T.admin}</Subjudul>
           {anggota?.pemilik && (
             <>
               <p className="text-lg">{duaLangkah?.level === 'aal2' ? T.duaLangkahAktif : T.duaLangkahBelum}</p>
