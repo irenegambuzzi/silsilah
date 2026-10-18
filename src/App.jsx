@@ -3,12 +3,11 @@ import { HashRouter, Navigate, Route, Routes, Link } from 'react-router-dom'
 import KhususAdmin from './components/KhususAdmin.jsx'
 import Kerangka from './components/layout/Kerangka.jsx'
 import { DataSilsilahProvider } from './lib/data/DataSilsilah.jsx'
-import { FokusCabangProvider } from './lib/fokus/konteksFokus.js'
+import { alamatBagan, FokusCabangProvider, useFokusCabang } from './lib/fokus/konteksFokus.js'
 import { modeContohAktif } from './lib/modeContoh'
 import { useSesi } from './lib/konteksSesi.js'
 import { SesiProvider } from './lib/sesi.jsx'
 import { teks } from './teks/id'
-import Beranda from './pages/Beranda.jsx'
 import Bagan from './pages/Bagan.jsx'
 import Daftar from './pages/Daftar.jsx'
 import Orang from './pages/Orang.jsx'
@@ -35,12 +34,13 @@ const PerbandinganUkuran =
 // "#" tidak pernah dikirim ke server (penting untuk link undangan).
 
 function TidakDitemukan() {
+  const { fokus } = useFokusCabang()
   return (
     <>
       <h1 className="font-judul text-3xl font-bold text-emas-teks">{teks.aplikasi.tidakDitemukanJudul}</h1>
       <p className="text-lg">{teks.aplikasi.tidakDitemukanIsi}</p>
-      <Link to="/" className="inline-flex min-h-12 items-center text-lg font-semibold underline">
-        {teks.aplikasi.kembaliKeAwal}
+      <Link to={alamatBagan(fokus)} className="inline-flex min-h-12 items-center text-lg font-semibold underline">
+        {teks.aplikasi.kembaliKeBagan}
       </Link>
     </>
   )
@@ -63,9 +63,17 @@ function Terlindungi({ children }) {
 // Layar Masuk hanya untuk yang belum masuk.
 function Tamu({ children }) {
   const { status } = useSesi()
+  const { fokus } = useFokusCabang()
   if (status === 'memuat') return <KeadaanMemuat />
-  if (status === 'masuk' || status === 'offline') return <Navigate to="/" replace />
+  if (status === 'masuk' || status === 'offline') return <Navigate to={alamatBagan(fokus)} replace />
   return children
+}
+
+// Alamat "/" (halaman awal lama dihapus di putaran 8a): langsung ke Bagan dengan fokus
+// yang sedang aktif, tanpa langkah tambahan di riwayat.
+function KeBagan() {
+  const { fokus } = useFokusCabang()
+  return <Navigate to={alamatBagan(fokus)} replace />
 }
 
 export default function App({ Router = HashRouter, klien }) {
@@ -89,7 +97,7 @@ export default function App({ Router = HashRouter, klien }) {
         >
           <Suspense fallback={<KeadaanMemuat />}>
           <Routes>
-            <Route path="/" element={lindungi(<Beranda />)} />
+            <Route path="/" element={lindungi(<KeBagan />)} />
             <Route path="/bagan" element={lindungi(<Bagan />)} />
             <Route path="/daftar" element={lindungi(<Daftar />)} />
             <Route path="/orang/:id" element={lindungi(<Orang />)} />

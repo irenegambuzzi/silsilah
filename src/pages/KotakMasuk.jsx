@@ -15,7 +15,8 @@ import { Keadaan, KeadaanMemuat } from './Keadaan.jsx'
 // persis ini. Tautan lain tidak pernah dijadikan tautan di layar.
 const POLA_CABUT = /^#\/admin\/perangkat\?cabut=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/
 
-// Kotak masuk (layar 19): pemberitahuan untuk anggota. Admin utama menerima
+// Pemberitahuan (layar 19, dulu "Kotak masuk"; alamat tetap /kotak-masuk):
+// pemberitahuan untuk anggota. Admin utama menerima
 // login baru, login mencurigakan, dan "Bukan saya" di sini.
 export default function KotakMasuk() {
   const { klien, anggota, duaLangkah } = useSesi()

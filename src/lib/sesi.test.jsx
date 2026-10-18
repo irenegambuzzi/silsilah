@@ -2,8 +2,8 @@
 // Tes pengelola sesi lewat aplikasi UTUH: apa yang terjadi saat aplikasi
 // dibuka dengan berbagai keadaan perangkat. Semua data FIKTIF.
 import { describe, expect, it } from 'vitest'
-import { act, screen } from '@testing-library/react'
-import { lokasiSaatIni, pasang } from '../test/pembantu.jsx'
+import { act, cleanup, screen } from '@testing-library/react'
+import { lokasiSaatIni, pasang, tungguMasuk } from '../test/pembantu.jsx'
 import { OK, anggotaContoh, buatKlienTiruan, klienSudahMasuk, tokenTiruan } from '../test/klienTiruan.js'
 
 const sesiAda = { access_token: tokenTiruan('sesi-ini'), user: { id: 'akun-contoh' } }
@@ -29,11 +29,14 @@ describe('saat aplikasi dibuka', () => {
     expect(klien.functions.invoke).not.toHaveBeenCalled()
   })
 
-  it('sesi ada dan perangkat sah → Beranda dengan nama anggota; nama diambil dari baris milik sendiri', async () => {
+  it('sesi ada dan perangkat sah → "/" langsung ke Bagan; nama anggota diambil dari baris milik sendiri', async () => {
     const klien = klienDenganCek(async () => OK({ ok: true, status: 'ok', berakhir: null }))
     pasang('/', klien)
-    expect(await screen.findByText('Halo, Bu Contoh')).toBeTruthy()
+    await tungguMasuk()
     expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(1)
+    cleanup()
+    pasang('/selamat-datang', klienDenganCek(async () => OK({ ok: true, status: 'ok', berakhir: null })))
+    expect(await screen.findByRole('heading', { name: 'Selamat datang, Bu Contoh!' })).toBeTruthy()
   })
 
   it('perangkat DICABUT → data dihapus dan layar Masuk dengan penjelasan', async () => {
@@ -79,7 +82,7 @@ describe('saat aplikasi dibuka', () => {
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBe('data')
     expect(klien.panggilanKe('auth', 'signOut')).toEqual([])
     await aksi.click(screen.getByRole('button', { name: 'Coba lagi' }))
-    expect(await screen.findByText('Halo, Bu Contoh')).toBeTruthy()
+    await tungguMasuk()
   })
 
   it('project dijeda (540) → "Aplikasi sedang dipulihkan"', async () => {
@@ -104,15 +107,15 @@ describe('saat aplikasi dibuka', () => {
         { id: 'a-2', auth_user_id: 'akun-lain-2', display_name: 'Orang Ketiga Contoh', role: 'anggota', is_owner: false, permissions: [] },
       ] },
     })
-    pasang('/', klien)
-    expect(await screen.findByText('Halo, Bu Contoh')).toBeTruthy()
+    pasang('/selamat-datang', klien)
+    expect(await screen.findByRole('heading', { name: 'Selamat datang, Bu Contoh!' })).toBeTruthy()
   })
 
   it('keluar dari tab lain (SIGNED_OUT) → data di tab ini juga dihapus', async () => {
     localStorage.setItem('silsilah-salinan-contoh', 'data')
     const klien = klienSudahMasuk()
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     await act(async () => { klien.keadaan.pendengar.forEach((f) => f('SIGNED_OUT', null)) })
     expect(await screen.findByText(/Sesi Anda berakhir/)).toBeTruthy()
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBeNull()
@@ -120,7 +123,7 @@ describe('saat aplikasi dibuka', () => {
 
   it('layar Masuk tidak bisa dibuka lagi kalau sudah masuk', async () => {
     pasang('/masuk', klienSudahMasuk())
-    expect(await screen.findByText('Halo, Bu Contoh')).toBeTruthy()
-    expect(lokasiSaatIni.pathname).toBe('/')
+    await tungguMasuk()
+    expect(lokasiSaatIni.pathname).toBe('/bagan')
   })
 })

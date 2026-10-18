@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { petakanGalat } from './galat.js'
 import { pesanPenukaran } from './masuk.js'
 import { useSesi } from './konteksSesi.js'
+import { alamatBagan, useFokusCabang } from './fokus/konteksFokus.js'
 
 // Alasan yang tidak akan berubah kalau dicoba lagi dengan link/kode yang sama.
 const TETAP = new Set(['tidak_dikenal', 'sudah_dipakai', 'kedaluwarsa', 'dicabut', 'dimatikan'])
@@ -12,6 +13,7 @@ const TETAP = new Set(['tidak_dikenal', 'sudah_dipakai', 'kedaluwarsa', 'dicabut
 export function usePenukaran(jenis) {
   const sesi = useSesi()
   const navigasi = useNavigate()
+  const { fokus } = useFokusCabang()
   const [sedang, setSedang] = useState(false)
   const [hasil, setHasil] = useState(null) // { pesan, tetap }
 
@@ -22,9 +24,9 @@ export function usePenukaran(jenis) {
       try {
         const h = await sesi.masuk(jenis, rahasia)
         if (h.ok) {
-          // Link undangan pertama kali: sapaan "Apakah ini Anda?". Kode: langsung masuk.
+          // Link undangan pertama kali: sapaan "Apakah ini Anda?". Kode: langsung ke Bagan.
           // replace: token/kode hilang dari kolom alamat dan riwayat.
-          navigasi(h.via === 'undangan' ? '/selamat-datang' : '/', { replace: true })
+          navigasi(h.via === 'undangan' ? '/selamat-datang' : alamatBagan(fokus), { replace: true })
           return
         }
         setHasil({ pesan: pesanPenukaran(jenis, h.alasan), tetap: TETAP.has(h.alasan) })
@@ -34,7 +36,7 @@ export function usePenukaran(jenis) {
       }
       setSedang(false)
     },
-    [jenis, navigasi, sesi]
+    [jenis, navigasi, sesi, fokus]
   )
 
   return { sedang, hasil, jalankan }

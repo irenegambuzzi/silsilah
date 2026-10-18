@@ -3,20 +3,20 @@
 // aplikasi UTUH dan server tiruan di memori. Semua data FIKTIF.
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import { pasang, lokasiSaatIni } from '../test/pembantu.jsx'
+import { pasang, lokasiSaatIni, tungguMasuk } from '../test/pembantu.jsx'
 import { buatKlienContoh } from './klienContoh.js'
 import { BERAT } from '../test/batasWaktu.js'
 
 const tokenDengan = (huruf) => huruf.repeat(43)
 
 describe('mode contoh', () => {
-  it('link berhasil → sapaan → tips → beranda; perangkat terdaftar dan terlihat di Perangkat saya', BERAT, async () => {
+  it('link berhasil → sapaan → tips → Bagan; perangkat terdaftar dan terlihat di Perangkat saya', BERAT, async () => {
     const { aksi } = pasang(`/u/${tokenDengan('A')}`, buatKlienContoh({ jeda: 0 }))
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
     await screen.findByRole('heading', { name: 'Selamat datang, Bu Contoh!' })
     await aksi.click(screen.getByRole('button', { name: 'Ya, ini saya' }))
     await aksi.click(await screen.findByRole('button', { name: 'Mulai memakai aplikasi' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await aksi.click(await screen.findByRole('link', { name: 'Perangkat saya' }))
     expect(await screen.findByText('Laptop Windows · Chrome')).toBeTruthy()
@@ -40,14 +40,14 @@ describe('mode contoh', () => {
     await aksi.clear(isian)
     await aksi.type(isian, 'abcd2345')
     await aksi.click(screen.getByRole('button', { name: 'Masuk dengan kode' }))
-    expect(await screen.findByText('Halo, Bu Contoh')).toBeTruthy()
+    await tungguMasuk()
   })
 
   it('Tambah perangkat membuat kode, yang bisa dipakai untuk masuk di perangkat lain', async () => {
     const klien = buatKlienContoh({ jeda: 0 })
     const { aksi } = pasang('/kode/ABCD2345', klien)
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await aksi.click(await screen.findByRole('link', { name: 'Tambah perangkat' }))
     const kode = (await screen.findByRole('timer')).previousElementSibling.textContent
@@ -59,7 +59,7 @@ describe('mode contoh', () => {
   it('keluar menghapus sesi contoh; membuka lagi → layar Masuk', async () => {
     const { aksi } = pasang('/kode/ABCD2345', buatKlienContoh({ jeda: 0 }))
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await aksi.click(await screen.findByRole('link', { name: 'Keluar' }))
     await aksi.click(await screen.findByRole('button', { name: 'Keluar dari perangkat ini' }))
@@ -73,18 +73,18 @@ describe('mode contoh: akses sementara dan pengurus', () => {
   it('kode AKSES234 → spanduk hitung mundur dan tanpa "Tambah perangkat"', async () => {
     const { aksi } = pasang('/kode/AKSES234', buatKlienContoh({ jeda: 0 }))
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     expect(screen.getByRole('timer').textContent).toMatch(/Akses sementara berakhir pukul \d\d\.\d\d\. Sisa waktu: (29|30) menit\./)
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await screen.findByRole('heading', { name: 'Saya' })
     expect(screen.queryByRole('link', { name: 'Tambah perangkat' })).toBeNull()
   })
 
-  it('kode PENGURUS → kotak masuk berisi contoh pemberitahuan, dan "Cabut perangkat ini" bekerja', async () => {
+  it('kode PENGURUS → Pemberitahuan berisi contoh pemberitahuan, dan "Cabut perangkat ini" bekerja', async () => {
     const { aksi } = pasang('/kode/PENGURUS', buatKlienContoh({ jeda: 0 }))
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Pak Admin Contoh')
-    await aksi.click(screen.getByRole('link', { name: /Kotak masuk/ }))
+    await tungguMasuk()
+    await aksi.click(screen.getByRole('link', { name: /Pemberitahuan/ }))
     expect(await screen.findByRole('heading', { name: 'Login mencurigakan: Pak Jauh Contoh' })).toBeTruthy()
     await aksi.click(screen.getByRole('button', { name: 'Cabut perangkat ini' }))
     expect(await screen.findByText('Perangkat itu sudah dicabut.')).toBeTruthy()
@@ -94,7 +94,7 @@ describe('mode contoh: akses sementara dan pengurus', () => {
     const klien = buatKlienContoh({ jeda: 0 })
     const { aksi } = pasang('/kode/PENGURUS', klien)
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Pak Admin Contoh')
+    await tungguMasuk()
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await aksi.click(await screen.findByRole('link', { name: 'Beri akses sementara' }))
     await aksi.selectOptions(await screen.findByLabelText('Untuk siapa?'), 'anggota-contoh')
@@ -108,8 +108,8 @@ describe('mode contoh: akses sementara dan pengurus', () => {
   it('anggota biasa tidak melihat pemberitahuan pengurus maupun menu akses sementara', async () => {
     const { aksi } = pasang('/kode/ABCD2345', buatKlienContoh({ jeda: 0 }))
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Bu Contoh')
-    await aksi.click(screen.getByRole('link', { name: 'Kotak masuk' }))
+    await tungguMasuk()
+    await aksi.click(screen.getByRole('link', { name: 'Pemberitahuan' }))
     expect(await screen.findByText('Belum ada pemberitahuan.')).toBeTruthy()
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await screen.findByRole('heading', { name: 'Saya' })
@@ -120,7 +120,7 @@ describe('mode contoh: akses sementara dan pengurus', () => {
     const klien = buatKlienContoh({ jeda: 0 })
     const { aksi } = pasang('/kode/UTAMA234', klien)
     await aksi.click(await screen.findByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Admin Master Contoh')
+    await tungguMasuk()
     await aksi.click(screen.getByRole('link', { name: 'Saya' }))
     await aksi.click(await screen.findByRole('link', { name: 'Beri akses sementara' }))
     expect(await screen.findByRole('heading', { name: 'Masukkan kode verifikasi dulu' })).toBeTruthy()

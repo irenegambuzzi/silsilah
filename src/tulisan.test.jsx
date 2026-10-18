@@ -74,6 +74,17 @@ describe('semua teks di teks/id.js', () => {
   it('tanpa penomoran, istilah teknis, atau kalimat lama yang dilarang', () => {
     for (const [jalur, isi] of daftar) for (const re of TERLARANG) expect(isi, jalur).not.toMatch(re)
   })
+  // Putaran 8a: Beranda dihapus, "Kotak masuk" menjadi "Pemberitahuan".
+  it('tanpa kata "Beranda" dan tanpa "Kotak masuk" (juga di kode aplikasi, di luar tes)', () => {
+    for (const [jalur, isi] of daftar) expect(isi, jalur).not.toMatch(/beranda|kotak masuk/i)
+    const kode = (folder) =>
+      fs.readdirSync(folder, { withFileTypes: true }).flatMap((f) => {
+        const p = path.join(folder, f.name)
+        if (f.isDirectory()) return kode(p)
+        return /\.jsx?$/.test(f.name) && !/\.test\.jsx?$/.test(f.name) && !p.includes(`${path.sep}test${path.sep}`) ? [p] : []
+      })
+    for (const p of kode(import.meta.dirname)) expect(fs.readFileSync(p, 'utf8'), p).not.toMatch(/beranda/i)
+  })
 })
 
 const s = susunSilsilah(bangunKeluargaFiktif())
@@ -168,7 +179,7 @@ describe('tulisan di layar', () => {
   const LAYAR = [
     ['Masuk', '/masuk', () => buatKlienTiruan({}), 'Silsilah Keluarga'],
     ['Privasi', '/privasi', () => buatKlienTiruan({}), 'Privasi'],
-    ['Beranda', '/', klienKeluarga, 'Silsilah keluarga saat ini berisi'],
+    ['Pemberitahuan', '/kotak-masuk', klienKeluarga, 'Belum ada pemberitahuan'],
     ['Bagan', '/bagan', klienKeluarga, 'Hasna'],
     ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
     ['Saya', '/saya', klienKeluarga, 'Ukuran huruf'],

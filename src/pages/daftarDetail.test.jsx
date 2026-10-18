@@ -360,7 +360,8 @@ describe('Daftar dan halaman orang saat fokus cabang', () => {
   const keDaftar = async (alamat) => {
     const h = pasang(alamat, klienKeluarga())
     await screen.findByText(/Menampilkan satu cabang|Generasi dihitung dari/)
-    await h.aksi.click(within(screen.getByRole('navigation', { name: 'Menu utama' })).getByRole('link', { name: 'Daftar' }))
+    // Pilihan "Bagan | Daftar" di bilah atas Bagan (putaran 8a).
+    await h.aksi.click(within(screen.getByRole('group', { name: 'Tampilkan sebagai bagan atau daftar' })).getByRole('link', { name: 'Daftar' }))
     await screen.findByRole('heading', { name: 'Daftar', level: 1 })
     return h
   }

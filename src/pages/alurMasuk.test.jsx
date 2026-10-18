@@ -4,7 +4,7 @@
 // aplikasi lain. Semua orang dan data FIKTIF.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
-import { lokasiSaatIni, pasang } from '../test/pembantu.jsx'
+import { lokasiSaatIni, pasang, tungguMasuk } from '../test/pembantu.jsx'
 import { GALAT, OK, anggotaContoh, buatKlienTiruan } from '../test/klienTiruan.js'
 
 const TOKEN = 'Q'.repeat(43)
@@ -49,14 +49,14 @@ describe('layar Masuk', () => {
     await aksi.type(isian, 'abcd2345')
     expect(isian.value).toBe('ABCD-2345')
     await aksi.click(screen.getByRole('button', { name: 'Masuk dengan kode' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
 
     expect(klien.panggilanKe('fungsi', 'pakai-kode')[0].isi).toEqual({ kode: 'ABCD2345' })
     expect(klien.panggilanKe('auth', 'verifyOtp')[0].isi).toEqual({ token_hash: 'hash-tiruan', type: 'magiclink' })
     const klaim = klien.panggilanKe('rpc', 'claim_device')[0].isi
     expect(klaim.p_ticket).toBe('tiket-tiruan')
     expect(typeof klaim.p_timezone === 'string' || klaim.p_timezone === null).toBe(true)
-    expect(lokasiSaatIni.pathname).toBe('/')
+    expect(lokasiSaatIni.pathname).toBe('/bagan')
   })
 
   it('kode kurang lengkap: pesan, dan server TIDAK dipanggil', async () => {
@@ -181,7 +181,7 @@ describe('membuka link undangan', () => {
 })
 
 describe('membuka kode dari QR', () => {
-  it('menunggu tombol Masuk; sesudahnya langsung ke beranda (tanpa sapaan "Apakah ini Anda?")', async () => {
+  it('menunggu tombol Masuk; sesudahnya langsung ke Bagan (tanpa sapaan "Apakah ini Anda?")', async () => {
     const klien = klienMasuk({
       rpc: { claim_device: async () => OK({ device_id: 'perangkat-2', member_id: 'anggota-1', via: 'kode', expires_at: null }) },
     })
@@ -189,9 +189,9 @@ describe('membuka kode dari QR', () => {
     expect(await screen.findByRole('heading', { name: 'Masuk dengan kode' })).toBeTruthy()
     expect(klien.functions.invoke).not.toHaveBeenCalled()
     await aksi.click(screen.getByRole('button', { name: 'Masuk' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     expect(klien.panggilanKe('fungsi', 'pakai-kode')[0].isi).toEqual({ kode: 'ABCD2345' })
-    expect(lokasiSaatIni.pathname).toBe('/')
+    expect(lokasiSaatIni.pathname).toBe('/bagan')
   })
 })
 
@@ -242,7 +242,7 @@ describe('selamat datang', () => {
     return { ...h, klien }
   }
 
-  it('"Ya, ini saya" → tips (ukuran huruf, layar utama, perangkat lain) → Beranda', async () => {
+  it('"Ya, ini saya" → tips (ukuran huruf, layar utama, perangkat lain) → Bagan', async () => {
     const { aksi } = await sampaiSapaan()
     await aksi.click(screen.getByRole('button', { name: 'Ya, ini saya' }))
     expect(await screen.findByRole('heading', { name: 'Beberapa tips' })).toBeTruthy()
@@ -251,7 +251,7 @@ describe('selamat datang', () => {
     await aksi.click(screen.getByLabelText('Besar'))
     expect(document.documentElement.dataset.ukuran).toBe('besar')
     await aksi.click(screen.getByRole('button', { name: 'Mulai memakai aplikasi' }))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
   })
 
   it('"Bukan saya" → minta kepastian dulu; "Kembali" membatalkan tanpa memberi tahu admin', async () => {

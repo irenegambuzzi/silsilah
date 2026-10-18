@@ -7,7 +7,7 @@ import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, configure, screen, waitFor } from '@testing-library/react'
-import { pasang } from '../test/pembantu.jsx'
+import { pasang, menuBawah } from '../test/pembantu.jsx'
 import { GALAT, OK, anggotaContoh, klienSudahMasuk } from '../test/klienTiruan.js'
 import { bangunKeluargaFiktif } from '../lib/silsilah/keluargaFiktif.js'
 import { bacaSalinan, generasiPenghapusan } from '../lib/penyimpanan.js'
@@ -28,7 +28,8 @@ afterEach(() => {
 
 const keluarga = bangunKeluargaFiktif()
 const JUMLAH_UTAMA = keluarga.people.filter((p) => p.tree_id === null).length
-const ringkasan = (n) => `Silsilah keluarga saat ini berisi ${n} orang.`
+// Jumlah orang di Daftar (sejak putaran 8a tidak ada Beranda dengan ringkasan).
+const ringkasan = (n) => `${n} orang`
 const tabelKeluarga = () => ({
   people: structuredClone(keluarga.people),
   unions: structuredClone(keluarga.unions),
@@ -68,9 +69,9 @@ function hanyaMembaca(klien) {
 }
 
 describe('memuat data silsilah', () => {
-  it('setelah masuk: semua data dimuat dan beranda menunjukkan jumlah orang; hanya membaca', async () => {
+  it('setelah masuk: semua data dimuat dan Daftar menunjukkan jumlah orang; hanya membaca', async () => {
     const klien = klienKeluarga()
-    pasang('/', klien)
+    pasang('/daftar', klien)
     expect(await screen.findByText(ringkasan(JUMLAH_UTAMA))).toBeTruthy()
     for (const t of ['people', 'unions', 'children', 'birth_ranks', 'origin_trees', 'settings']) {
       expect(klien.panggilanKe('tabel', t).length, t).toBeGreaterThan(0)
@@ -80,7 +81,7 @@ describe('memuat data silsilah', () => {
 
   it('database kosong → "Belum ada data, hubungi admin." dan tidak ada penulisan apa pun', async () => {
     const klien = klienSudahMasuk()
-    pasang('/', klien)
+    pasang('/daftar', klien)
     expect(await screen.findByText(teks.layar.kosong.isi)).toBeTruthy()
     expect(screen.getByRole('heading', { name: teks.layar.kosong.judul })).toBeTruthy()
     hanyaMembaca(klien)
@@ -98,7 +99,7 @@ describe('Supabase gagal → layar keterangan, TIDAK PERNAH menulis data bawaan'
   ]
   it.each(kasus)('%s', async (_nama, galat, pesan, bisaCobaLagi) => {
     const klien = klienKeluarga({ gagalTabel: { people: async () => galat } })
-    pasang('/', klien)
+    pasang('/daftar', klien)
     if (pesan) {
       expect(await screen.findByText(pesan)).toBeTruthy()
       expect(Boolean(screen.queryByRole('button', { name: teks.umum.cobaLagi }))).toBe(bisaCobaLagi)
@@ -106,14 +107,14 @@ describe('Supabase gagal → layar keterangan, TIDAK PERNAH menulis data bawaan'
       // Sesi berakhir: keluar dan data dihapus, bukan menulis apa pun.
       expect(await screen.findByText(teks.keluar.alasan.sesi)).toBeTruthy()
     }
-    expect(screen.queryByText(/Silsilah keluarga saat ini berisi/)).toBeNull()
+    expect(screen.queryByText(/^\d+ orang$/)).toBeNull()
     hanyaMembaca(klien)
   })
 
   it('"Coba lagi" setelah gagal → data termuat', async () => {
     let gagal = true
     const klien = klienKeluarga({ gagalTabel: { people: async () => (gagal ? putus() : null) } })
-    const { aksi } = pasang('/', klien)
+    const { aksi } = pasang('/daftar', klien)
     await screen.findByText(teks.galat.jaringan)
     gagal = false
     await aksi.click(screen.getByRole('button', { name: teks.umum.cobaLagi }))
@@ -125,7 +126,7 @@ describe('Supabase gagal → layar keterangan, TIDAK PERNAH menulis data bawaan'
 describe('sinkron live', () => {
   it('perubahan dari anggota lain langsung tampil: tambah, disisihkan, hapus permanen', async () => {
     const klien = klienKeluarga()
-    pasang('/', klien)
+    pasang('/daftar', klien)
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     await kirim(klien, { table: 'people', eventType: 'INSERT', new: { id: 'baru', tree_id: null, full_name: 'Baru Contoh', version: 1 } })
     expect(await screen.findByText(ringkasan(JUMLAH_UTAMA + 1))).toBeTruthy()
@@ -140,7 +141,7 @@ describe('sinkron live', () => {
   it('perubahan yang tiba selagi data dimuat tidak hilang', async () => {
     const t = tunda()
     const klien = klienKeluarga({ gagalTabel: { people: async () => { await t.janji; return null } } })
-    pasang('/', klien)
+    pasang('/daftar', klien)
     await waitFor(() => expect(klien.realtime.jumlahSaluran()).toBe(1))
     await kirim(klien, { table: 'people', eventType: 'INSERT', new: { id: 'saat-muat', tree_id: null, full_name: 'Saat Muat Contoh', version: 1 } })
     await act(async () => t.lepas())
@@ -149,7 +150,7 @@ describe('sinkron live', () => {
 
   it('sambungan live putus lalu pulih → semua data diambil ulang (perubahan selama putus tidak hilang)', async () => {
     const klien = klienKeluarga()
-    pasang('/', klien)
+    pasang('/daftar', klien)
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     const sebelum = klien.panggilanKe('tabel', 'people').length
     await act(async () => klien.realtime.status('CHANNEL_ERROR'))
@@ -162,7 +163,7 @@ describe('sinkron live', () => {
 
   it('internet tersambung lagi → data diambil ulang', async () => {
     const klien = klienKeluarga()
-    pasang('/', klien)
+    pasang('/daftar', klien)
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     klien.tabel.people.push({ id: 'setelah-online', tree_id: null, full_name: 'Setelah Online Contoh', deleted_at: null })
     await act(async () => { window.dispatchEvent(new Event('online')) })
@@ -186,7 +187,7 @@ describe('salinan offline', () => {
   it('setelah dimuat, salinan disimpan di perangkat TANPA data kontak (walau server mengirimkannya)', async () => {
     jamTiruan()
     const people = tabelKeluarga().people.map((p, i) => (i === 0 ? { ...p, phone: '081234567890', address_enc: 'rahasia', region_lat: -7.25 } : p))
-    pasang('/', klienKeluarga({ tabel: { people } }))
+    pasang('/daftar', klienKeluarga({ tabel: { people } }))
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     await majukan(2500)
     await waitFor(async () => expect(await bacaSalinan()).not.toBeNull())
@@ -200,9 +201,9 @@ describe('salinan offline', () => {
     await salinanAda()
     keadaanOffline()
     const klien = klienKeluarga({ fungsi: { 'cek-perangkat': async () => { throw new TypeError('Failed to fetch') } } })
-    pasang('/', klien)
+    pasang('/daftar', klien)
     expect(await screen.findByText(ringkasan(JUMLAH_UTAMA))).toBeTruthy()
-    expect(screen.getByText('Halo, Bu Contoh')).toBeTruthy()
+    expect(menuBawah()).toBeTruthy()
     expect(teksSpanduk()).toMatch(/^Anda sedang offline\. Yang tampil adalah data tersimpan di perangkat ini dari \d+ \w+ \d{4}, \d\d\.\d\d\./)
     expect(klien.realtime.jumlahSaluran()).toBe(0)
     expect(klien.panggilanKe('tabel', 'people')).toEqual([])
@@ -220,7 +221,7 @@ describe('salinan offline', () => {
       } },
     })
     klien.tabel.people.push({ id: 'terbaru', tree_id: null, full_name: 'Terbaru Contoh', deleted_at: null })
-    pasang('/', klien)
+    pasang('/daftar', klien)
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     tersambung = true
     offline.mockReturnValue(true)
@@ -232,7 +233,7 @@ describe('salinan offline', () => {
   it('server tidak terjangkau saat memuat data (sesi sah) → salinan dipakai dengan spanduk', async () => {
     await salinanAda()
     const klien = klienKeluarga({ gagalTabel: { people: async () => putus() } })
-    pasang('/', klien)
+    pasang('/daftar', klien)
     expect(await screen.findByText(ringkasan(JUMLAH_UTAMA))).toBeTruthy()
     expect(teksSpanduk()).toMatch(/^Server belum bisa dihubungi\. Yang tampil adalah data tersimpan di perangkat ini dari/)
     hanyaMembaca(klien)
@@ -241,22 +242,22 @@ describe('salinan offline', () => {
   it('salinan milik akun lain tidak dipakai', async () => {
     await salinanAda('akun-lain')
     keadaanOffline()
-    pasang('/', klienKeluarga({ fungsi: { 'cek-perangkat': async () => { throw new TypeError('Failed to fetch') } } }))
+    pasang('/daftar', klienKeluarga({ fungsi: { 'cek-perangkat': async () => { throw new TypeError('Failed to fetch') } } }))
     expect(await screen.findByText(teks.layar.offline.judul)).toBeTruthy()
-    expect(screen.queryByText(/Silsilah keluarga saat ini berisi/)).toBeNull()
+    expect(screen.queryByText(/^\d+ orang$/)).toBeNull()
   })
 
   it('server MENOLAK (bukan soal koneksi) → salinan tidak dipakai', async () => {
     await salinanAda()
-    pasang('/', klienKeluarga({ gagalTabel: { people: async () => GALAT('42501', 'permission denied').error } }))
+    pasang('/daftar', klienKeluarga({ gagalTabel: { people: async () => GALAT('42501', 'permission denied').error } }))
     expect(await screen.findByText(teks.galat.tanpaIzin)).toBeTruthy()
-    expect(screen.queryByText(/Silsilah keluarga saat ini berisi/)).toBeNull()
+    expect(screen.queryByText(/^\d+ orang$/)).toBeNull()
   })
 
   it('perangkat akses sementara tidak pernah menyimpan salinan', async () => {
     jamTiruan()
     const berakhir = new Date(Date.now() + 30 * 60000).toISOString()
-    pasang('/', klienKeluarga({ fungsi: { 'cek-perangkat': async () => OK({ ok: true, status: 'ok', berakhir }) } }))
+    pasang('/daftar', klienKeluarga({ fungsi: { 'cek-perangkat': async () => OK({ ok: true, status: 'ok', berakhir }) } }))
     await screen.findByText(ringkasan(JUMLAH_UTAMA))
     await majukan(5000)
     expect(await bacaSalinan()).toBeNull()

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Bell, House, List, Network, ShieldCheck, UserRound } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { Bell, Network, ShieldCheck, UserRound } from 'lucide-react'
 import { useSesi } from '../../lib/konteksSesi.js'
 import { alamatBagan, useFokusCabang } from '../../lib/fokus/konteksFokus.js'
 import { useBelumDibaca } from '../../lib/useBelumDibaca.js'
@@ -8,12 +8,14 @@ import { isiTeks, teks } from '../../teks/id.js'
 import { BannerAksesSementara } from '../BannerAksesSementara.jsx'
 import { SpandukData } from '../SpandukData.jsx'
 
+// Menu bawah saat peluncuran (PLAN.md bagian 14, putaran 8a): tepat tiga
+// item. Bagan menyala di Bagan, Daftar, dan halaman orang (pilihan "Bagan |
+// Daftar" ada di halamannya). Pemberitahuan tetap di /kotak-masuk supaya
+// tautan di notifikasi tidak rusak.
 const MENU = [
-  { ke: '/', teks: teks.navigasi.beranda, ikon: House, akhir: true },
-  { ke: '/bagan', teks: teks.navigasi.bagan, ikon: Network },
-  { ke: '/daftar', teks: teks.navigasi.daftar, ikon: List },
-  { ke: '/kotak-masuk', teks: teks.navigasi.kotakMasuk, ikon: Bell, lencana: true },
-  { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound },
+  { ke: '/bagan', teks: teks.navigasi.bagan, ikon: Network, aktif: (p) => p === '/bagan' || p === '/daftar' || p.startsWith('/orang/') },
+  { ke: '/kotak-masuk', teks: teks.navigasi.pemberitahuan, ikon: Bell, lencana: true, aktif: (p) => p === '/kotak-masuk' },
+  { ke: '/saya', teks: teks.navigasi.saya, ikon: UserRound, aktif: (p) => p === '/saya' || p.startsWith('/saya/') },
 ]
 
 // Nama aplikasi di atas setiap layar, seperti aplikasi lama (di Bagan
@@ -71,16 +73,16 @@ export default function Kerangka({ children, spanduk = null }) {
           className="sticky bottom-0 z-30 border-t border-t-tepi bg-kertas shadow-lembut"
         >
           <ul className="mx-auto flex max-w-xl">
-            {MENU.map(({ ke, teks: nama, ikon: Ikon, akhir, lencana }) => (
+            {MENU.map(({ ke, teks: nama, ikon: Ikon, aktif, lencana }) => {
+              const ini = aktif(pathname)
+              return (
               <li key={ke} className="flex-1">
-                <NavLink
+                <Link
                   to={ke === '/bagan' ? alamatBagan(fokus) : ke}
-                  end={akhir}
-                  className={({ isActive }) =>
-                    `flex min-h-16 flex-col items-center justify-center gap-1 break-words px-1 text-center text-sm font-semibold leading-tight ${
-                      isActive ? 'text-emas-teks underline decoration-4 underline-offset-4' : 'text-teks'
-                    }`
-                  }
+                  aria-current={ini ? 'page' : undefined}
+                  className={`flex min-h-16 flex-col items-center justify-center gap-1 break-words px-1 text-center text-sm font-semibold leading-tight ${
+                    ini ? 'text-emas-teks underline decoration-4 underline-offset-4' : 'text-teks'
+                  }`}
                 >
                   <span className="relative">
                     <Ikon aria-hidden="true" className="size-6" />
@@ -97,9 +99,10 @@ export default function Kerangka({ children, spanduk = null }) {
                   {lencana && belumDibaca > 0 && (
                     <span className="sr-only">{isiTeks(teks.kotakMasuk.jumlahBelumDibaca, { n: belumDibaca })}</span>
                   )}
-                </NavLink>
+                </Link>
               </li>
-            ))}
+              )
+            })}
           </ul>
         </nav>
       ) : (

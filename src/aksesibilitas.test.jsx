@@ -3,7 +3,7 @@
 // peran, judul, daftar, tautan), tombol dan isian punya nama, tombol
 // berukuran besar, dan semua teks yang tampil berbahasa Indonesia.
 import { describe, expect, it } from 'vitest'
-import { screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
 import axe from 'axe-core'
 import { pasang } from './test/pembantu.jsx'
 import { OK, buatKlienTiruan, klienSudahMasuk } from './test/klienTiruan.js'
@@ -36,9 +36,7 @@ const pengurus = () => klienSudahMasuk({
     settings: [{ temp_access_max_minutes: 1440 }],
   },
 })
-const sementara = () => klienSudahMasuk({
-  fungsi: { 'cek-perangkat': async () => OK({ ok: true, status: 'ok', berakhir: new Date(Date.now() + 240000).toISOString() }) },
-})
+const FUNGSI_SEMENTARA = () => ({ 'cek-perangkat': async () => OK({ ok: true, status: 'ok', berakhir: new Date(Date.now() + 240000).toISOString() }) })
 const kotakMasuk = () => klienSudahMasuk({
   rpc: { db_version: async () => OK('999') },
   tabel: { notifications: [
@@ -54,7 +52,6 @@ const LAYAR = [
   ['Link undangan terpotong', '/u/pendek', () => buatKlienTiruan({}), 'Link undangan pribadi'],
   ['Kode dari QR', '/kode/ABCD2345', () => buatKlienTiruan({}), 'Masuk dengan kode'],
   ['Selamat datang', '/selamat-datang', () => masuk(), 'Apakah ini Anda?'],
-  ['Beranda', '/', () => masuk(), 'Beranda'],
   ['Bagan', '/bagan', klienKeluarga, 'Hasna'],
   ['Daftar', '/daftar', klienKeluarga, 'Tamran'],
   ['Detail orang', '/orang/hasna', klienKeluarga, 'Keterangan Pribadi'],
@@ -63,9 +60,9 @@ const LAYAR = [
   ['Keluar', '/saya/keluar', () => masuk(), 'Keluar dari perangkat ini'],
   ['Tambah perangkat', '/saya/tambah-perangkat', () => masuk(), 'ABCD-2345'],
   ['Perangkat saya', '/saya/perangkat', () => masuk(), 'Laptop'],
-  ['Kotak masuk', '/kotak-masuk', kotakMasuk, 'Pemberitahuan Penting Contoh'],
+  ['Pemberitahuan', '/kotak-masuk', kotakMasuk, 'Pemberitahuan Penting Contoh'],
   ['Beri akses sementara', '/admin/akses-sementara', pengurus, 'Akses yang sedang berjalan'],
-  ['Beranda dengan akses sementara', '/', sementara, 'Segera berakhir'],
+  ['Bagan dengan akses sementara (dari alamat /)', '/', () => klienKeluarga({ fungsi: FUNGSI_SEMENTARA() }), 'Hasna'],
   ['Privasi', '/privasi', () => buatKlienTiruan({}), 'Privasi'],
   ['Halaman tidak ada', '/tidak-ada', () => buatKlienTiruan({}), 'Halaman tidak ditemukan'],
   ['Aplikasi belum siap', '/masuk', () => null, 'Aplikasi belum siap'],
@@ -78,7 +75,7 @@ async function tunggu(jangkar) {
 }
 
 // Layar yang memasang seluruh Bagan atau Daftar: batas waktu lebih longgar.
-const LAYAR_BERAT = ['Bagan', 'Daftar']
+const LAYAR_BERAT = ['Bagan', 'Daftar', 'Bagan dengan akses sementara (dari alamat /)']
 
 describe.each(LAYAR)('layar %s', (_nama, url, buatKlien, jangkar) => {
   const batas = LAYAR_BERAT.includes(_nama) ? BERAT : {}
@@ -137,7 +134,24 @@ describe('struktur umum', () => {
     const nav = screen.getByRole('navigation', { name: 'Menu utama' })
     const aktif = nav.querySelector('[aria-current="page"]')
     expect(aktif.textContent).toBe('Saya')
-    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(5)
+    expect(nav.querySelectorAll('svg[aria-hidden="true"]').length).toBe(3)
+  })
+  // Putaran 8a: tepat tiga item, Bagan · Pemberitahuan · Saya.
+  it('menu bawah: tepat tiga item berurutan Bagan · Pemberitahuan · Saya; Bagan menyala di Bagan, Daftar, dan halaman orang', BERAT, async () => {
+    for (const [url, jangkar, aktif] of [
+      ['/bagan', 'Hasna', 'Bagan'],
+      ['/daftar', 'Tamran', 'Bagan'],
+      ['/orang/hasna', 'Keterangan Pribadi', 'Bagan'],
+      ['/kotak-masuk', 'Belum ada pemberitahuan', 'Pemberitahuan'],
+      ['/saya/perangkat', 'Perangkat', 'Saya'],
+    ]) {
+      pasang(url, klienKeluarga())
+      await screen.findAllByText((t) => t.includes(jangkar))
+      const nav = screen.getByRole('navigation', { name: 'Menu utama' })
+      expect([...nav.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['Bagan', 'Pemberitahuan', 'Saya'])
+      expect([...nav.querySelectorAll('[aria-current="page"]')].map((a) => a.textContent), url).toEqual([aktif])
+      cleanup()
+    }
   })
   it('judul layar menerima fokus saat layar terbuka (pembaca layar langsung membacakannya)', async () => {
     pasang('/saya', masuk())

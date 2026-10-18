@@ -9,6 +9,7 @@ import { PilihanUkuranHuruf } from '../components/PengaturanTampilan.jsx'
 import { petakanGalat } from '../lib/galat.js'
 import { laporBukanSaya } from '../lib/api.js'
 import { useSesi } from '../lib/konteksSesi.js'
+import { alamatBagan, useFokusCabang } from '../lib/fokus/konteksFokus.js'
 import { isiTeks, teks } from '../teks/id.js'
 
 // Layar Selamat datang (layar 3), setelah link undangan dipakai pertama kali:
@@ -17,6 +18,7 @@ import { isiTeks, teks } from '../teks/id.js'
 export default function SelamatDatang() {
   const { anggota, klien, akhiri } = useSesi()
   const navigasi = useNavigate()
+  const { fokus } = useFokusCabang()
   const [langkah, setLangkah] = useState('tanya') // tanya | yakin | terima | tips
   const [sedang, setSedang] = useState(false)
   const [galat, setGalat] = useState(null)
@@ -79,7 +81,7 @@ export default function SelamatDatang() {
           <Subjudul className="flex items-center gap-2"><Smartphone aria-hidden="true" className="size-7" />{T.perangkatBaru}</Subjudul>
           <p className="text-lg">{T.perangkatBaruIsi}</p>
         </Kartu>
-        <Tombol ikon={ArrowRight} onClick={() => navigasi('/', { replace: true })}>{T.lanjut}</Tombol>
+        <Tombol ikon={ArrowRight} onClick={() => navigasi(alamatBagan(fokus), { replace: true })}>{T.lanjut}</Tombol>
       </>
     )
   }

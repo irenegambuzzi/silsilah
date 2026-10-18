@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { BarisOrang } from '../components/BarisOrang.jsx'
 import { PitaFokus } from '../components/bagan/PitaFokus.jsx'
 import { GerbangData } from '../components/GerbangData.jsx'
+import { PilihanTampilan } from '../components/PilihanTampilan.jsx'
 import { Judul, Subjudul } from '../components/ui/Judul.jsx'
 import { cariDaftar, susunDaftar } from '../lib/silsilah/daftar.js'
 import { useTampilanFokus } from '../lib/fokus/useTampilanFokus.js'
@@ -75,6 +76,8 @@ function IsiDaftar() {
 export default function Daftar() {
   return (
     <>
+      {/* Pilihan "Bagan | Daftar" di bagian paling atas halaman (putaran 8a). */}
+      <PilihanTampilan aktif="daftar" />
       <Judul>{teks.daftar.judul}</Judul>
       <GerbangData bagian>
         <IsiDaftar />

@@ -16,7 +16,7 @@ export const teks = {
     sedangDibangun: 'Aplikasi ini sedang dibangun.',
     tidakDitemukanJudul: 'Halaman tidak ditemukan',
     tidakDitemukanIsi: 'Alamat yang Anda buka tidak ada di aplikasi ini.',
-    kembaliKeAwal: 'Kembali ke halaman awal',
+    kembaliKeBagan: 'Kembali ke Bagan',
   },
 
   umum: {
@@ -208,11 +208,11 @@ export const teks = {
 
   navigasi: {
     menu: 'Menu utama',
-    beranda: 'Beranda',
     saya: 'Saya',
-    kotakMasuk: 'Kotak masuk',
+    pemberitahuan: 'Pemberitahuan',
     daftar: 'Daftar',
     bagan: 'Bagan',
+    pilihanTampilan: 'Tampilkan sebagai bagan atau daftar',
     lewatiKeIsi: 'Langsung ke isi halaman',
     privasi: 'Privasi',
   },
@@ -281,15 +281,6 @@ export const teks = {
     perangkatBaru: 'Pakai di HP atau laptop lain',
     perangkatBaruIsi: 'Buka menu Saya, lalu pilih Tambah perangkat. Anda akan mendapat kode untuk masuk di perangkat lain, tanpa perlu meminta link baru.',
     lanjut: 'Mulai memakai aplikasi',
-  },
-
-  beranda: {
-    judul: 'Beranda',
-    sapa: 'Halo, {nama}',
-    ringkasan: 'Silsilah keluarga saat ini berisi {n} orang.',
-    isi: 'Buka Bagan untuk melihat silsilah keluarga, atau Daftar untuk mencari nama seseorang. Ukuran huruf dan perangkat bisa Anda atur di menu Saya.',
-    lihatDaftar: 'Lihat daftar orang',
-    lihatBagan: 'Lihat bagan keluarga',
   },
 
   // Bagan silsilah (langkah 1.22).
@@ -492,9 +483,10 @@ export const teks = {
     perluDuaLangkah: 'Server meminta verifikasi dua langkah lagi. Buka menu Saya, lalu Verifikasi dua langkah, masukkan kodenya, lalu coba lagi.',
   },
 
-  // Kotak masuk (layar 19): pemberitahuan untuk anggota, terutama admin.
+  // Layar Pemberitahuan (layar 19, dulu "Kotak masuk"; alamatnya tetap
+  // /kotak-masuk): pemberitahuan untuk anggota, terutama admin.
   kotakMasuk: {
-    judul: 'Kotak masuk',
+    judul: 'Pemberitahuan',
     kosong: 'Belum ada pemberitahuan.',
     belumDibaca: 'Belum dibaca',
     penting: 'Penting',

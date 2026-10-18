@@ -5,6 +5,7 @@ import { GambarBagan } from '../components/bagan/GambarBagan.jsx'
 import { Legenda } from '../components/bagan/Legenda.jsx'
 import { PitaFokus } from '../components/bagan/PitaFokus.jsx'
 import { GerbangData } from '../components/GerbangData.jsx'
+import { PilihanTampilan } from '../components/PilihanTampilan.jsx'
 import { Judul } from '../components/ui/Judul.jsx'
 import { Tombol } from '../components/ui/Tombol.jsx'
 import { KeteranganOrang } from '../components/orang/KeteranganOrang.jsx'
@@ -240,6 +241,10 @@ function BilahAtas({ kartu, namaCabang, keterangan, aksi, saatKetemu, saatKosong
         </div>
         <div className="flex flex-wrap items-start gap-2">
           <Pencarian kartu={kartu} namaCabang={namaCabang} keterangan={keterangan} saatKetemu={saatKetemu} saatKosong={saatKosong} />
+          {/* "Bagan | Daftar" (putaran 8a): di HP baris sendiri di bawah
+              pencarian, supaya kolom cari tidak menyempit; di layar lebar
+              di sebelahnya. */}
+          <PilihanTampilan aktif="bagan" className="w-full sm:w-auto" />
           <div className="flex gap-2">
             <button type="button" className={TOMBOL_KECIL} onClick={aksi.perbesar} aria-label={T.perbesar}>
               <Plus aria-hidden="true" className="size-5" />

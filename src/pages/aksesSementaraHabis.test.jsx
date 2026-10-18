@@ -5,7 +5,7 @@
 // aplikasi kembali terlihat. Aplikasi UTUH + klien tiruan; data FIKTIF.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, screen, waitFor } from '@testing-library/react'
-import { lokasiSaatIni, pasang } from '../test/pembantu.jsx'
+import { lokasiSaatIni, pasang, tungguMasuk, menuBawah } from '../test/pembantu.jsx'
 import { OK, klienSudahMasuk } from '../test/klienTiruan.js'
 import { BERAT } from '../test/batasWaktu.js'
 
@@ -47,7 +47,7 @@ describe('spanduk hitung mundur', () => {
   it('menampilkan pukul berapa akses berakhir dan sisa waktunya, dengan peran timer', BERAT, async () => {
     const berakhir = menitLagi(29)
     pasang('/', klienSementara(berakhir))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     const spanduk = screen.getByRole('timer')
     expect(spanduk.textContent).toContain(`Akses sementara berakhir pukul ${jamTeks(berakhir)}.`)
     expect(spanduk.textContent).toMatch(/Sisa waktu: (28|29) menit\./)
@@ -56,13 +56,13 @@ describe('spanduk hitung mundur', () => {
 
   it('lima menit terakhir: tulisan "Segera berakhir" (bukan hanya warna) dan penjelasan penghapusan data', async () => {
     pasang('/', klienSementara(menitLagi(4)))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     expect(screen.getByRole('timer').textContent).toContain('Segera berakhir. Setelah itu aplikasi keluar sendiri dan data di perangkat ini dihapus.')
   })
 
   it('akses biasa tidak punya spanduk', async () => {
     pasang('/', klienSudahMasuk())
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     expect(screen.queryByRole('timer')).toBeNull()
   })
 
@@ -76,7 +76,7 @@ describe('spanduk hitung mundur', () => {
   it('waktu berakhir disimpan di perangkat (untuk penghapusan saat dibuka kembali)', async () => {
     const berakhir = menitLagi(30)
     pasang('/', klienSementara(berakhir))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     expect(localStorage.getItem('silsilah-akses-berakhir')).toBe(berakhir)
   })
 })
@@ -89,13 +89,13 @@ describe('waktu habis saat aplikasi terbuka', () => {
     const berakhir = menitLagi(10)
     const klien = klienSementara(berakhir)
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     await majukan(Date.parse(berakhir) - Date.now() - 1000)
-    expect(screen.getByText('Halo, Bu Contoh')).toBeTruthy()
+    expect(menuBawah()).toBeTruthy()
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBe('data keluarga fiktif')
     await majukan(1000)
     expect(await screen.findByText('Akses sementara Anda sudah berakhir. Data di perangkat ini sudah dihapus.')).toBeTruthy()
-    expect(screen.queryByText('Halo, Bu Contoh')).toBeNull()
+    expect(menuBawah()).toBeNull()
     expect(lokasiSaatIni.pathname).toBe('/masuk')
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBeNull()
     expect(localStorage.getItem('silsilah-akses-berakhir')).toBeNull()
@@ -107,7 +107,7 @@ describe('waktu habis saat aplikasi terbuka', () => {
     pakaiJamTiruan()
     const berakhir = menitLagi(10)
     pasang('/', klienSementara(berakhir))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     const sisa = Date.parse(berakhir) - Date.now()
     // Jam perangkat tertinggal 5 ms dari pengatur waktu.
     vi.setSystemTime(Date.now() - 5)
@@ -120,7 +120,7 @@ describe('waktu habis saat aplikasi terbuka', () => {
     localStorage.setItem('silsilah-salinan-contoh', 'data')
     const klien = klienSementara(menitLagi(10))
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     const panggilanSebelum = klien.panggilanKe('fungsi', 'cek-perangkat').length
     geserJam(11)
     await tampakSampai(() => expect(screen.getByText(/Akses sementara Anda sudah berakhir/)).toBeTruthy())
@@ -146,7 +146,7 @@ describe('aplikasi dibuka kembali', () => {
   it('waktu yang tersimpan belum lewat → aplikasi dibuka seperti biasa', async () => {
     localStorage.setItem('silsilah-akses-berakhir', menitLagi(20))
     pasang('/', klienSementara(menitLagi(20)))
-    expect(await screen.findByText('Halo, Bu Contoh')).toBeTruthy()
+    await tungguMasuk()
   })
 
   it('server menjawab "kedaluwarsa" (jam perangkat salah/mundur) → tetap dikeluarkan dan data dihapus', async () => {
@@ -164,7 +164,7 @@ describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
     let status = 'ok'
     const klien = klienSudahMasuk({ fungsi: { 'cek-perangkat': async () => OK({ ok: true, status, berakhir: null }) } })
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     status = 'dicabut'
     geserJam(2)
     await tampakSampai(() => expect(screen.getByText(/Akses perangkat ini sudah dicabut/)).toBeTruthy())
@@ -174,7 +174,7 @@ describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
   it('tidak menanyai server terlalu sering (paling cepat setiap 1 menit)', async () => {
     const klien = klienSudahMasuk()
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     const awal = klien.panggilanKe('fungsi', 'cek-perangkat').length
     geserJam(2)
     await tampakSampai(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(awal + 1))
@@ -194,11 +194,11 @@ describe('pemeriksaan ulang saat aplikasi kembali terlihat', () => {
       return OK({ ok: true, status: 'ok', berakhir: null })
     } } })
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     putus = true
     geserJam(2)
     await tampakSampai(() => expect(klien.panggilanKe('fungsi', 'cek-perangkat')).toHaveLength(2))
-    expect(screen.getByText('Halo, Bu Contoh')).toBeTruthy()
+    expect(menuBawah()).toBeTruthy()
     expect(localStorage.getItem('silsilah-salinan-contoh')).toBe('data')
   })
 })

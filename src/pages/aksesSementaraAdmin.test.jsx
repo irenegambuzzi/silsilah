@@ -3,7 +3,7 @@
 // klien tiruan; semua nama dan data FIKTIF.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
-import { pasang } from '../test/pembantu.jsx'
+import { pasang, tungguMasuk } from '../test/pembantu.jsx'
 import { GALAT, OK, anggotaContoh, klienSudahMasuk } from '../test/klienTiruan.js'
 import { BERAT } from '../test/batasWaktu.js'
 
@@ -233,7 +233,7 @@ describe('kotak masuk', () => {
   it('penanda di navigasi: jumlah belum dibaca (juga untuk pembaca layar); hilang kalau semua dibaca', async () => {
     const klien = klienKotak([notif(1), notif(2), notif(3, { read_at: '2026-10-07T08:00:00Z' })])
     pasang('/', klien)
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     const nav = screen.getByRole('navigation', { name: 'Menu utama' })
     expect(await within(nav).findByText('2 belum dibaca')).toBeTruthy()
     expect(nav.textContent).toContain('2')
@@ -241,7 +241,7 @@ describe('kotak masuk', () => {
 
   it('tanpa pemberitahuan → tidak ada penanda', async () => {
     pasang('/', klienKotak([]))
-    await screen.findByText('Halo, Bu Contoh')
+    await tungguMasuk()
     const nav = screen.getByRole('navigation', { name: 'Menu utama' })
     await new Promise((r) => setTimeout(r, 50))
     expect(within(nav).queryByText(/belum dibaca/)).toBeNull()

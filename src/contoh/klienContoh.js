@@ -9,7 +9,7 @@
 //   /#/u/<43 huruf E>   link dicabut              /#/u/<43 huruf D>  gangguan server
 //   kode ABCD2345       masuk sebagai perangkat tambahan
 //   kode AKSES234       masuk dengan akses sementara 30 menit
-//   kode PENGURUS       masuk sebagai asisten admin (kotak masuk berisi contoh
+//   kode PENGURUS       masuk sebagai asisten admin (Pemberitahuan berisi contoh
 //                       pemberitahuan, dan menu "Beri akses sementara"); juga
 //                       berizin mengatur peringatan wafat
 //   kode UTAMA234       masuk sebagai admin utama: layar admin terkunci sampai

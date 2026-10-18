@@ -4,6 +4,7 @@ import { Judul, Subjudul } from '../components/ui/Judul.jsx'
 import { Kartu } from '../components/ui/Kartu.jsx'
 import { Tombol } from '../components/ui/Tombol.jsx'
 import { teks } from '../teks/id.js'
+import { alamatBagan, useFokusCabang } from '../lib/fokus/konteksFokus.js'
 
 // Layar Privasi (layar 29): bisa dibuka sebelum dan sesudah masuk, dan
 // tidak memuat data apa pun (tidak memanggil server).
@@ -11,6 +12,7 @@ export default function Privasi() {
   const T = teks.privasi
   const navigasi = useNavigate()
   const lokasi = useLocation()
+  const { fokus } = useFokusCabang()
   return (
     <>
       <Judul>{T.judul}</Judul>
@@ -31,7 +33,7 @@ export default function Privasi() {
         <ExternalLink aria-hidden="true" className="size-6" />
         {T.tautanAtribusi}
       </a>
-      <Tombol varian="sekunder" ikon={ArrowLeft} onClick={() => (lokasi.key === 'default' ? navigasi('/') : navigasi(-1))}>{T.kembali}</Tombol>
+      <Tombol varian="sekunder" ikon={ArrowLeft} onClick={() => (lokasi.key === 'default' ? navigasi(alamatBagan(fokus)) : navigasi(-1))}>{T.kembali}</Tombol>
     </>
   )
 }
