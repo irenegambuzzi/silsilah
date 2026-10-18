@@ -166,6 +166,26 @@ html[data-ukuran='sangatBesar'] {
   font-size: 24px;
 }
 
+/* Poni dan bilah gestur iPhone (putaran 8a; index.html memakai
+   viewport-fit=cover). Bingkai halaman menjauh dari poni di atas dan, saat HP
+   miring, dari sisi kiri dan kanan; menu bawah (dan footer sebelum masuk)
+   menjauh dari bilah gestur di bawah. Spanduk, bilah atas, tombol menu Bagan,
+   pita fokus, dan legenda ada di dalam bingkai. Di komputer nilainya 0, jadi
+   tampilan tidak berubah. */
+.kerangka-aman {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.bawah-aman {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Untuk unsur yang sudah punya padding sendiri (footer p-5): lewat margin,
+   supaya padding Tailwind-nya tidak tertimpa. */
+.bawah-aman-luar {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Latar krem dengan pola titik emas, seperti aplikasi lama. */
 body {
   background-color: var(--c-latar);

@@ -7,17 +7,21 @@ const T = teks.detail
 // Nama orang lain yang bisa diketuk. Di Bagan: memilih dan memusatkan
 // kartunya (saatPilih); di halaman orang: membuka halamannya. Saat fokus
 // cabang, orang di luar cabang (bisaDipilih false) hanya teks biasa.
+// Sasaran sentuh minimal 48 × 48 px (putaran 8a): kotak inline-flex setinggi
+// 3rem, selebar minimal 3rem, dan my-1 supaya nama di baris berikutnya
+// berjarak minimal 8 px.
+const SASARAN_NAMA = 'my-1 inline-flex min-h-12 min-w-12 items-center text-left font-semibold underline underline-offset-2 hover:text-emas-teks'
 function NamaOrang({ id, nama, saatPilih, bisaDipilih }) {
   if (bisaDipilih && !bisaDipilih(id)) return <span data-luar-cabang={id}>{nama}</span>
   if (saatPilih) {
     return (
-      <button type="button" onClick={() => saatPilih(id)} className="inline min-h-0 text-left font-semibold underline underline-offset-2 hover:text-emas-teks">
+      <button type="button" onClick={() => saatPilih(id)} className={SASARAN_NAMA}>
         {nama}
       </button>
     )
   }
   return (
-    <Link to={`/orang/${encodeURIComponent(id)}`} className="font-semibold underline underline-offset-2 hover:text-emas-teks">
+    <Link to={`/orang/${encodeURIComponent(id)}`} className={SASARAN_NAMA}>
       {nama}
     </Link>
   )

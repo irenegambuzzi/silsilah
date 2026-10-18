@@ -187,7 +187,7 @@ function Pencarian({ kartu, namaCabang, keterangan, saatKetemu, saatKosong }) {
           id="cari-hasil"
           role="listbox"
           aria-label={T.cariDaftar}
-          className="absolute left-0 top-14 z-30 max-h-[min(24rem,50dvh)] w-[min(26rem,calc(100vw-3.5rem))] overflow-y-auto rounded-xl border border-tepi bg-kertas py-1 shadow-lembut"
+          className="absolute left-0 top-14 z-30 flex max-h-[min(24rem,50dvh)] w-[min(26rem,calc(100vw-3.5rem))] flex-col gap-2 overflow-y-auto rounded-xl border border-tepi bg-kertas py-1 shadow-lembut"
         >
           {cocok.map((h, i) => (
             <li
@@ -224,7 +224,7 @@ function Pencarian({ kartu, namaCabang, keterangan, saatKetemu, saatKosong }) {
 // pita fokus kalau ada).
 function BilahAtas({ kartu, namaCabang, keterangan, aksi, saatKetemu, saatKosong, fokus, saatTutup, ref }) {
   return (
-    <div ref={ref} className={`pointer-events-auto relative mx-3 mt-3 flex flex-col gap-3 p-4 pr-14 sm:mr-auto sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
+    <div ref={ref} className={`pointer-events-auto relative mx-3 mt-3 flex flex-col gap-3 p-4 pr-14 sm:mr-auto sm:pr-16 sm:max-w-[calc(100%-1.5rem)] ${BINGKAI}`}>
       <button
         type="button"
         onClick={saatTutup}

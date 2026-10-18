@@ -43,10 +43,10 @@ export default function Kerangka({ children, spanduk = null }) {
   const { fokus } = useFokusCabang()
 
   return (
-    <div className={`flex flex-col ${penuh ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
+    <div className={`kerangka-aman flex flex-col ${penuh ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
       <button
         type="button"
-        className="sr-only focus:not-sr-only focus:m-2 focus:rounded-lg focus:bg-kertas focus:p-3 focus:text-lg focus:font-semibold"
+        className="sr-only focus:not-sr-only focus:m-2 focus:min-h-12 focus:rounded-lg focus:bg-kertas focus:p-3 focus:text-lg focus:font-semibold"
         onClick={() => isi.current?.focus()}
       >
         {teks.navigasi.lewatiKeIsi}
@@ -70,9 +70,9 @@ export default function Kerangka({ children, spanduk = null }) {
       {masuk ? (
         <nav
           aria-label={teks.navigasi.menu}
-          className="sticky bottom-0 z-30 border-t border-t-tepi bg-kertas shadow-lembut"
+          className="bawah-aman sticky bottom-0 z-30 border-t border-t-tepi bg-kertas shadow-lembut"
         >
-          <ul className="mx-auto flex max-w-xl">
+          <ul className="mx-auto flex max-w-xl gap-2 px-2">
             {MENU.map(({ ke, teks: nama, ikon: Ikon, aktif, lencana }) => {
               const ini = aktif(pathname)
               return (
@@ -106,7 +106,7 @@ export default function Kerangka({ children, spanduk = null }) {
           </ul>
         </nav>
       ) : (
-        <footer className="mx-auto w-full max-w-xl p-5 text-center">
+        <footer className="bawah-aman-luar mx-auto w-full max-w-xl p-5 text-center">
           <Link to="/privasi" className="inline-flex min-h-12 items-center gap-2 text-lg underline">
             <ShieldCheck aria-hidden="true" className="size-6" />
             {teks.navigasi.privasi}

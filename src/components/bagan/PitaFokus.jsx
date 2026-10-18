@@ -13,7 +13,7 @@ const TOMBOL_KECIL =
 // jadi isi pita tidak boleh tertutup panel.
 export function PitaFokus({ nama, hitungCabang, saatKembali, saatKeluar, sisiKanan = false, className = '' }) {
   return (
-    <div className={`pointer-events-auto flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 border-b-2 border-emas bg-kertas px-4 py-1 text-lg font-semibold shadow-lembut ${sisiKanan ? 'md:pr-[27rem]' : ''} ${className}`}>
+    <div className={`pointer-events-auto flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 border-b-2 border-emas bg-kertas px-4 py-1 text-lg font-semibold shadow-lembut ${sisiKanan ? 'md:pr-[27rem]' : ''} ${className}`}>
       <p role="status" className="flex flex-wrap items-center gap-x-2">
         <span>{isiTeks(hitungCabang ? T.pitaCabang : T.fokusJudul, { nama })}</span>
         {hitungCabang && (
