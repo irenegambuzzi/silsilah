@@ -33,11 +33,11 @@ putaran ketujuh 3b). Alamat yang bisa dicoba:
 | `http://localhost:5176/#/u/` + 43 huruf `B` / `C` / `E` / `D` | sudah dipakai / kedaluwarsa / dibatalkan / gangguan server |
 | kode `ABCD2345` di layar Masuk | masuk sebagai perangkat tambahan |
 | kode `AKSES234` | masuk dengan akses sementara 30 menit (spanduk hitung mundur; data dihapus saat habis) |
-| kode `PENGURUS` | masuk sebagai **ADMIN** ("Pak Admin Contoh", berizin akses sementara dan peringatan wafat): Kotak masuk berisi contoh pemberitahuan; menu Saya → bagian **ADMIN** → "Beri akses sementara" (pilih "Bu Contoh", buat kode, lalu pakai kode itu di jendela lain) |
+| kode `PENGURUS` | masuk sebagai **ADMIN** ("Pak Admin Contoh", berizin akses sementara dan peringatan wafat): Pemberitahuan berisi contoh pemberitahuan; menu Saya → bagian **ADMIN** → "Beri akses sementara" (pilih "Bu Contoh", buat kode, lalu pakai kode itu di jendela lain) |
 | kode `UTAMA234` | masuk sebagai **ADMIN MASTER** ("Admin Master Contoh"): menu Saya → bagian **ADMIN MASTER** → "Verifikasi dua langkah"; layar admin (Saya → "Beri akses sementara") terkunci sampai verifikasi dua langkah. Authenticator di mode contoh **tiruan**: kode yang diterima hanya `123456` (kunci/QR yang tampil bukan kunci sungguhan) |
 | `http://localhost:5176/#/privasi` | halaman Privasi |
-| Beranda setelah masuk | jumlah orang di silsilah contoh (keluarga fiktif): tanda data silsilah sudah termuat |
-| menu Daftar (atau `http://localhost:5176/#/daftar`) | daftar keluarga fiktif (urut cabang demi cabang; nomor silsilah tidak ditampilkan), dengan kotak pencarian (nama atau nama panggilan, lihat baris "Pencarian" di bawah); ketuk satu nama untuk membuka keterangannya |
+| menu bawah setelah masuk (`http://localhost:5176/#/` langsung membuka Bagan) | tepat tiga item: **Bagan · Pemberitahuan · Saya** (putaran 8a; Beranda dihapus, "Kotak masuk" menjadi "Pemberitahuan" dengan alamat tetap `#/kotak-masuk`). Bagan menyala juga di Daftar dan halaman orang. Di Bagan (bilah atas; di HP baris sendiri di bawah pencarian) dan di paling atas Daftar ada pilihan **"Bagan \| Daftar"**; yang aktif bertanda ✓. Fokus cabang ikut terbawa ke dua arah (salin lalu tempel di tab yang sudah terbuka: `http://localhost:5176/#/bagan?fokus=lorvan`, lalu ketuk Daftar) |
+| pilihan Daftar (atau `http://localhost:5176/#/daftar`) | daftar keluarga fiktif (urut cabang demi cabang; nomor silsilah tidak ditampilkan), dengan kotak pencarian (nama atau nama panggilan, lihat baris "Pencarian" di bawah); ketuk satu nama untuk membuka keterangannya |
 | menu Bagan (atau `http://localhost:5176/#/bagan`) | bagan kartu keluarga fiktif. Di laptop mula-mula tampil utuh, tidak tertutup legenda; di HP mulai dari ukuran terbaca dengan pasangan pangkal di tengah (tombol "Lihat seluruh bagan" untuk melihat semuanya). Geser dengan satu jari (di laptop: seret dengan mouse atau tombol panah), perbesar/perkecil dengan dua jari (di laptop: Ctrl + roda mouse) atau tombol + / − ; "Pusatkan" kembali ke tampilan awal. Ketuk satu kartu → panel keterangan di kanan (di HP: dari bawah) dengan "Fokus pada cabang ini" (pilih "Hitung dari leluhur utama" atau "Hitung dari [nama]"). Di Saya, coba ukuran huruf Sangat besar dan Kontras tinggi: bagan ikut berubah |
 | offline | setelah data termuat, matikan internet (atau DevTools → Network → Offline) lalu muat ulang halaman: aplikasi terbuka dari salinan di perangkat, dengan spanduk "Anda sedang offline". Nyalakan lagi internet: spanduk hilang. Dengan kode `AKSES234` tidak ada salinan (perangkat pinjaman) |
 
@@ -172,7 +172,7 @@ perangkat itu keluar.
   atau kunci yang ditampilkan saat mendaftar, disalin ke kertas dan disimpan
   bersama passphrase backup). Menu Saya → Verifikasi dua langkah.
 - Setiap authenticator yang ditambah atau dihapus dicatat dan dilaporkan ke
-  kotak masuk admin utama (pemeriksaan setiap 10 menit, `jadwal.sql`), juga
+  Pemberitahuan admin utama (pemeriksaan setiap 10 menit, `jadwal.sql`), juga
   kalau perubahannya tidak lewat aplikasi.
 
 **Kalau HP atau aplikasi authenticator hilang**, dari yang paling ringan:
