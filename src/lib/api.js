@@ -135,6 +135,22 @@ export const buatKodeAksesSementara = (klien, memberId, menit) =>
 export const daftarAksesSementara = (klien) => rpc(klien, 'list_temp_access')
 export const akhiriAksesSementara = (klien, id) => rpc(klien, 'revoke_temp_access', { p_device: id })
 
+// ── Peringatan wafat (SQL 015) ─────────────────────────────────────
+
+// Boleh mengatur "mulai hari berikutnya" (admin utama, atau asisten dengan izinnya).
+export const bolehKelolaPeringatan = (anggota) =>
+  Boolean(anggota && (anggota.pemilik || (anggota.peran === 'asisten' && anggota.izin.includes('kelola_peringatan'))))
+
+// Pilihan "Hitung peringatan mulai hari berikutnya (wafat setelah maghrib)"
+// untuk satu almarhum. Hanya pemegang izin; anggota lain ditolak server (PW001).
+export const aturMulaiHariBerikutnya = (klien, personId, nilai) =>
+  rpc(klien, 'set_death_rule', { p_person: personId, p_start_next_day: nilai })
+export const bacaMulaiHariBerikutnya = (klien, personId) => rpc(klien, 'get_death_rule', { p_person: personId })
+
+// Tanggal mulai hitungan peringatan ('YYYY-MM-DD'), untuk semua anggota.
+// null kalau tanggal wafat tidak lengkap. Nilai pilihannya tidak pernah dikirim.
+export const tanggalMulaiPeringatan = (klien, personId) => rpc(klien, 'death_count_start', { p_person: personId })
+
 // Batas lama akses sementara dari pengaturan admin (menit; bawaan 24 jam).
 export async function batasAksesSementara(klien) {
   const { data, error } = await klien.from('settings').select('temp_access_max_minutes')

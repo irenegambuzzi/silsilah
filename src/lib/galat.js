@@ -14,7 +14,7 @@
 // langkah), 'dataDitolak', 'tidakDitemukan', atau 'tidakDikenal'.
 import { teks } from '../teks/id.js'
 
-const KODE_KITA = /^(AK|RP|SL|TR|UN)\d{3}$/
+const KODE_KITA = /^(AK|PW|RP|SL|TR|UN)\d{3}$/
 const NAMA_BATASAN = /constraint "([^"]+)"/
 
 // Galat PostgREST/Postgres yang artinya "database belum punya tabel, fungsi,

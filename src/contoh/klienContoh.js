@@ -10,7 +10,8 @@
 //   kode ABCD2345       masuk sebagai perangkat tambahan
 //   kode AKSES234       masuk dengan akses sementara 30 menit
 //   kode PENGURUS       masuk sebagai asisten admin (kotak masuk berisi contoh
-//                       pemberitahuan, dan menu "Beri akses sementara")
+//                       pemberitahuan, dan menu "Beri akses sementara"); juga
+//                       berizin mengatur peringatan wafat
 //   kode UTAMA234       masuk sebagai admin utama: layar admin terkunci sampai
 //                       verifikasi dua langkah. Authenticator di sini TIRUAN:
 //                       kode yang diterima hanya 123456.
@@ -43,7 +44,7 @@ const ANGGOTA = {
 }
 const PENGURUS = {
   id: 'anggota-pengurus', auth_user_id: 'akun-pengurus', display_name: 'Pak Pengurus Contoh',
-  role: 'asisten', is_owner: false, permissions: ['akses_sementara'],
+  role: 'asisten', is_owner: false, permissions: ['akses_sementara', 'kelola_peringatan'],
 }
 const PEMILIK = {
   id: 'anggota-pemilik', auth_user_id: 'akun-pemilik', display_name: 'Admin Utama Contoh',
@@ -112,6 +113,7 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
   const sesiSaatIni = () => (k.idSesi ? { access_token: token(k.idSesi, saya().auth_user_id), user: { id: saya().auth_user_id } } : null)
   const adminUtama = () => saya().is_owner && k.aal === 'aal2'
   const pengurus = () => saya().permissions.includes('akses_sementara') || adminUtama()
+  const punyaIzin = (izin) => adminUtama() || (saya().role === 'asisten' && saya().permissions.includes(izin))
   const tiketBaru = (isi) => { const t = `tiket-${acak(8)}`; k.tiket[t] = isi; return t }
   const perangkatIni = () => k.devices.find((d) => d.session_id === k.idSesi)
   const tunggu = (data) => new Promise((r) => setTimeout(() => r(data), jeda))
@@ -119,6 +121,21 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
   const silsilah = bangunKeluargaFiktif()
   // Seperti RLS: pohon keluarga asal hanya untuk admin utama.
   const bolehLihat = (r) => (r.tree_id ?? null) === null || saya().is_owner
+  // Peringatan wafat (SQL 015). Pilihan "mulai hari berikutnya" disimpan
+  // terpisah seperti private.death_rules: tidak pernah ikut tabel people.
+  const aturanWafat = new Map(silsilah.death_rules.map((r) => [r.person_id, r.start_next_day]))
+  const almarhum = (id) => {
+    const o = silsilah.people.find((p) => p.id === id && !p.deleted_at)
+    return o && bolehLihat(o) ? o : null
+  }
+  const tanggalLengkap = (o) => o.is_deceased && o.death_y != null && o.death_m != null && o.death_d != null
+  const periksaPeringatan = (id) => {
+    if (!punyaIzin('kelola_peringatan')) return galat('PW001', 'Anda tidak punya izin mengatur peringatan wafat.')
+    const o = almarhum(id)
+    if (!o) return galat('PW003', 'Orang ini tidak ditemukan.')
+    if (!tanggalLengkap(o)) return galat('PW002', 'Peringatan hanya bisa diatur untuk yang sudah wafat dengan tanggal wafat lengkap (hari, bulan, dan tahun).')
+    return null
+  }
   const tabel = (nama) => {
     // Pemberitahuan contoh hanya untuk pengurus (seperti admin sungguhan).
     const sumber = () => ({
@@ -274,6 +291,22 @@ export function buatKlienContoh({ sekarang = Date.now, jeda = 150 } = {}) {
     async record_second_factor() {
       if (!saya().is_owner) return galat('AK002', 'Hanya admin utama yang boleh melakukan ini.')
       return ok({ aal: k.aal, perubahan: 0 })
+    },
+    async set_death_rule({ p_person, p_start_next_day }) {
+      const tolak = periksaPeringatan(p_person)
+      if (tolak) return tolak
+      aturanWafat.set(p_person, Boolean(p_start_next_day))
+      return ok(Boolean(p_start_next_day))
+    },
+    async get_death_rule({ p_person }) {
+      return periksaPeringatan(p_person) ?? ok(aturanWafat.get(p_person) ?? false)
+    },
+    // Hanya tanggal mulai hitungan ('YYYY-MM-DD'), tidak pernah nilai pilihannya.
+    async death_count_start({ p_person }) {
+      const o = almarhum(p_person)
+      if (!k.idSesi || !o || !tanggalLengkap(o)) return ok(null)
+      const t = new Date(Date.UTC(o.death_y, o.death_m - 1, o.death_d + (aturanWafat.get(o.id) ? 1 : 0)))
+      return ok(t.toISOString().slice(0, 10))
     },
     async report_not_me() {
       const d = perangkatIni()

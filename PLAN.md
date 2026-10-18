@@ -209,7 +209,7 @@ Keterangan: ✓ = boleh, ✗ = tidak, **izin** = hanya asisten yang dicentang iz
 
 **Daftar izin asisten** (kolom `members.permissions`, berupa centang):
 
-`batalkan_orang_lain`, `tindak_laporan`, `sisihkan` (dulu `tempat_sampah`), `buat_undangan`, `lihat_anggota`, `akses_sementara`, `tambah_kuota_kontak`, `unduh_kontak`, `kelola_jadwal`, `bendahara`, `konfirmasi_kabar`, `bagikan_whatsapp`, `status_pernikahan` (menandai pernikahan orang lain berakhir karena berpisah; ditambahkan Oktober 2026).
+`batalkan_orang_lain`, `tindak_laporan`, `sisihkan` (dulu `tempat_sampah`), `buat_undangan`, `lihat_anggota`, `akses_sementara`, `tambah_kuota_kontak`, `unduh_kontak`, `kelola_jadwal`, `bendahara`, `konfirmasi_kabar`, `bagikan_whatsapp`, `status_pernikahan` (menandai pernikahan orang lain berakhir karena berpisah; ditambahkan Oktober 2026), `kelola_peringatan` (mengatur "Hitung peringatan mulai hari berikutnya" per almarhum; putaran 7c, SQL 015).
 
 **Aturan tambahan:**
 
@@ -1377,7 +1377,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 
 - **Tidak ada** pengingat otomatis ke anggota.
 - Dari **tanggal wafat lengkap**, aplikasi menghitung jadwal adat Jawa: 3 hari (nelung dinten), 7 hari (mitung dinten), 40 hari (matang puluh dinten), 100 hari (nyatus dinten), 1 tahun (mendhak sepisan, kalender Hijriah), 2 tahun (mendhak kaping kalih, kalender Hijriah), 1000 hari (nyewu dinten), lalu haul setiap tahun (kalender Hijriah). Teks aplikasi selalu memakai istilah **krama** ini (putaran 7c).
-- **Hari wafat = hari ke-1**; kalau "Wafat setelah maghrib" dicentang, hitungan mulai **hari berikutnya**.
+- **Hari wafat = hari ke-1**; kalau "Wafat setelah maghrib" dicentang, hitungan mulai **hari berikutnya**. **Putaran 7c, bagian C** (SQL `015_peringatan_wafat.sql`, belum dijalankan): pilihan per almarhum "Hitung peringatan mulai hari berikutnya (wafat setelah maghrib)" disimpan di `private.death_rules` (tidak terbaca lewat API). Mengatur dan membacanya hanya lewat RPC `set_death_rule`/`get_death_rule`, untuk admin utama atau asisten dengan izin `kelola_peringatan`, dan hanya untuk almarhum dengan tanggal wafat lengkap (galat PW001–PW003). Semua anggota yang boleh melihat orang itu memakai `death_count_start`: hanya tanggal mulai hitungan, tidak pernah nilai pilihannya. Catatan: `death_rules` belum ikut salinan otomatis (008 hanya menyalin tabel `public`); diputuskan sebelum langkah 1.29. Catatan kedua: karena anggota melihat tanggal wafat dan jadwal hasil hitungan, selisih satu hari di antara keduanya tetap bisa disimpulkan; yang dikunci adalah nilai pilihannya sendiri.
 - Tanggal ditampilkan dalam **Masehi, Hijriah, serta hari dan pasaran Jawa**.
 - Karena kebiasaan daerah berbeda, tanggal hitungan adalah **usulan** yang bisa dikoreksi admin/asisten sebelum mengirim.
 - **Admin dan asisten admin yang diberi izin oleh Irene** melihat daftar **"Peringatan mendatang"** (bawaan 30 hari ke depan, bisa diganti) dan bisa mengirim pengumuman ke: cabang yang bersangkutan (bawaan: keturunan almarhum beserta pasangannya), cabang lain yang dipilih, atau seluruh anggota.
@@ -1430,7 +1430,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 | 1.26 | Pohon keluarga asal: editor admin, istilah dari sudut pandang pasangan khusus, layar akses + tombol "Beri akses ke semua keturunan …" | PGlite + manual: yang tidak diberi akses tidak melihat apa pun. |
 | 1.27 | Skrip migrasi `ubah` + `verifikasi` (struktur, tanggal/tempat lahir-wafat, bio → catatan) | Tes data fiktif, termasuk tanggal teks yang aneh; laporan dari CSV asli (lokal). |
 | 1.28 | Repo privat `silsilah-cadangan`: workflow backup (hanya jika berubah, age+passphrase, Releases, retensi, uji pulih) + workflow bulanan pembaruan database lokasi IP (unduh CSV DB-IP City Lite → `npm run lokasi-ip:buat` → unggah `lokasi-ip.bin.gz` ke bucket privat `lokasi-ip`; kota ID+IT, negara untuk lainnya) | Workflow hijau; Anda berhasil membuka satu file dengan `age -d`. |
-| 1.29 | Jalankan SQL 001–009 (dan seterusnya) di cloud, deploy Edge Functions, lalu `jadwal.sql` (pg_cron), cek hasil, Security Advisor, uji `curl` tanpa login → ditolak; uji dengan data fiktif, lalu reset | Semua lulus. |
+| 1.29 | Jalankan SQL 001–015 di cloud, deploy Edge Functions, lalu `jadwal.sql` (pg_cron), cek hasil, Security Advisor, uji `curl` tanpa login → ditolak; uji dengan data fiktif, lalu reset | Semua lulus. |
 | ⏰ | **Pengingat B untuk Anda: aktifkan verifikasi dua langkah** di GitHub, Supabase, dan Google (bagian 2.1). Ini **wajib sebelum 1.30**, karena setelah itu akun-akun ini menjaga data asli. | Anda konfirmasi ketiganya aktif. |
 | 1.30 | Bootstrap admin utama (SQL dari saya) + TOTP | Anda masuk sebagai admin dengan `aal2`. |
 | 1.31 | Migrasi ke cloud + verifikasi + pangkal + pohon keluarga asal A/B | Verifikasi 100% cocok. |
@@ -1550,7 +1550,7 @@ Aplikasi sudah disiapkan sejak awal, jadi tidak ada yang perlu dirombak.
 12. Repo `silsilah` → Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_BASE_PATH` = `/silsilah/`.
 13. Supabase → Authentication → URL Configuration: Site URL = alamat Pages; Redirect URLs = alamat Pages + `http://localhost:5173`.
 14. Supabase → Authentication: aktifkan **manual linking**, dan pastikan MFA TOTP aktif.
-15. Jalankan file SQL 001–009 (dan file bernomor berikutnya yang sudah ada saat itu) satu per satu (langkah 1.29) di SQL Editor, lalu `jadwal.sql` (tugas otomatis pg_cron; kalau gagal, aktifkan dulu ekstensi pg_cron di Dashboard → Database → Extensions), dan kirimkan hasil pemeriksaannya ke saya.
+15. Jalankan file SQL 001–015 (dan file bernomor berikutnya yang sudah ada saat itu) satu per satu (langkah 1.29) di SQL Editor, lalu `jadwal.sql` (tugas otomatis pg_cron; kalau gagal, aktifkan dulu ekstensi pg_cron di Dashboard → Database → Extensions), dan kirimkan hasil pemeriksaannya ke saya.
 16. *Deploy* Edge Functions `pakai-undangan`, `pakai-kode`, dan `cek-perangkat` (perintah ada di README, dijalankan oleh Anda). Sebelumnya isi Edge Functions → Secrets: `KUNCI_SERVER` (secret key `server_silsilah`; tempel langsung di dashboard, jangan ke chat) dan `ASAL_APLIKASI` (alamat Pages). Pastikan provider **Email** di Authentication aktif (dipakai untuk tautan masuk tanpa email terkirim), sementara "Allow new users to sign up" tetap mati.
 17. Jalankan SQL **bootstrap admin utama**, ketuk link pertama Anda, lalu daftarkan TOTP (dan passkey kalau tersedia).
 18. Repo `silsilah-cadangan` → Secrets: `SUPABASE_DB_URL` (connection string **Session pooler** dari Connect → berisi password database) dan `BACKUP_PASSPHRASE`.

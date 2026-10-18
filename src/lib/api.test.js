@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { bacaSessionId, jalankanMasuk, verifikasiTautanMasuk, zonaWaktu } from './api.js'
+import {
+  aturMulaiHariBerikutnya, bacaMulaiHariBerikutnya, bacaSessionId, bolehKelolaPeringatan, jalankanMasuk,
+  tanggalMulaiPeringatan, verifikasiTautanMasuk, zonaWaktu,
+} from './api.js'
 import { GALAT, OK, buatKlienTiruan, tokenTiruan } from '../test/klienTiruan.js'
 
 describe('verifikasiTautanMasuk', () => {
@@ -59,5 +62,28 @@ describe('zonaWaktu', () => {
     const z = zonaWaktu()
     expect(z === null || /^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9_+-]+)*$/.test(z)).toBe(true)
     vi.restoreAllMocks()
+  })
+})
+
+describe('peringatan wafat', () => {
+  it('bolehKelolaPeringatan: admin utama, atau asisten dengan izin kelola_peringatan', () => {
+    expect(bolehKelolaPeringatan({ pemilik: true, peran: 'anggota', izin: [] })).toBe(true)
+    expect(bolehKelolaPeringatan({ pemilik: false, peran: 'asisten', izin: ['kelola_peringatan'] })).toBe(true)
+    expect(bolehKelolaPeringatan({ pemilik: false, peran: 'asisten', izin: ['bendahara'] })).toBe(false)
+    expect(bolehKelolaPeringatan({ pemilik: false, peran: 'anggota', izin: [] })).toBe(false)
+    expect(bolehKelolaPeringatan(null)).toBe(false)
+  })
+
+  it('memanggil RPC yang benar dengan argumen bernama', async () => {
+    const panggilan = []
+    const klien = { rpc: async (nama, args) => { panggilan.push([nama, args]); return { data: nama === 'death_count_start' ? '1998-05-21' : true, error: null } } }
+    expect(await aturMulaiHariBerikutnya(klien, 'p1', true)).toBe(true)
+    expect(await bacaMulaiHariBerikutnya(klien, 'p1')).toBe(true)
+    expect(await tanggalMulaiPeringatan(klien, 'p1')).toBe('1998-05-21')
+    expect(panggilan).toEqual([
+      ['set_death_rule', { p_person: 'p1', p_start_next_day: true }],
+      ['get_death_rule', { p_person: 'p1' }],
+      ['death_count_start', { p_person: 'p1' }],
+    ])
   })
 })

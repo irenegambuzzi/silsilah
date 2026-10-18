@@ -135,3 +135,41 @@ describe('mode contoh: akses sementara dan pengurus', () => {
     expect(await screen.findByLabelText('Untuk siapa?')).toBeTruthy()
   })
 })
+
+describe('mode contoh: peringatan wafat (SQL 015)', () => {
+  // Masuk tanpa layar: tukar link/kode, sesi baru, daftarkan perangkat.
+  const masuk = async (klien, fungsi, body) => {
+    const { data } = await klien.functions.invoke(fungsi, { body })
+    await klien.auth.verifyOtp()
+    await klien.rpc('claim_device', { p_ticket: data.tiket })
+    return klien
+  }
+  const sebagaiAnggota = () => masuk(buatKlienContoh({ jeda: 0 }), 'pakai-undangan', { token: tokenDengan('A') })
+  const sebagaiPengurus = () => masuk(buatKlienContoh({ jeda: 0 }), 'pakai-kode', { kode: 'PENGURUS' })
+
+  it('Sekar (wafat 20 Mei 1998, mulai hari berikutnya) → 21 Mei 1998; Halvin (tanpa hari) → null', async () => {
+    const klien = await sebagaiAnggota()
+    expect(await klien.rpc('death_count_start', { p_person: 'sekar' })).toEqual({ data: '1998-05-21', error: null })
+    expect(await klien.rpc('death_count_start', { p_person: 'halvin' })).toEqual({ data: null, error: null })
+    expect(await klien.rpc('death_count_start', { p_person: 'bayu' })).toEqual({ data: null, error: null })
+  })
+
+  it('anggota biasa (link 43 huruf A) tidak pernah menerima nilai pilihannya', async () => {
+    const klien = await sebagaiAnggota()
+    expect((await klien.rpc('get_death_rule', { p_person: 'sekar' })).error.code).toBe('PW001')
+    expect((await klien.rpc('set_death_rule', { p_person: 'sekar', p_start_next_day: false })).error.code).toBe('PW001')
+    const { data: orang } = await klien.from('people').select('*')
+    expect(JSON.stringify(orang)).not.toMatch(/start_next_day|death_rule/)
+    expect(await klien.rpc('death_count_start', { p_person: 'sekar' })).toEqual({ data: '1998-05-21', error: null })
+  })
+
+  it('kode PENGURUS (asisten berizin) bisa membaca dan mengatur; hanya untuk tanggal wafat lengkap', async () => {
+    const klien = await sebagaiPengurus()
+    expect((await klien.rpc('get_death_rule', { p_person: 'sekar' })).data).toBe(true)
+    expect((await klien.rpc('set_death_rule', { p_person: 'sekar', p_start_next_day: false })).data).toBe(false)
+    expect((await klien.rpc('death_count_start', { p_person: 'sekar' })).data).toBe('1998-05-20')
+    expect((await klien.rpc('set_death_rule', { p_person: 'halvin', p_start_next_day: true })).error.code).toBe('PW002')
+    expect((await klien.rpc('set_death_rule', { p_person: 'bayu', p_start_next_day: true })).error.code).toBe('PW002')
+    expect((await klien.rpc('get_death_rule', { p_person: 'tidak-ada' })).error.code).toBe('PW003')
+  })
+})

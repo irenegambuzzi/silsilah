@@ -20,7 +20,8 @@
 //         dengan Arum sebagai partner1.
 //   Ika: ditinggal wafat suami ke-1 (H. Halvin), lalu menikah lagi (Joval).
 //         Anak: Dorvi (gelar, panggilan, tanggal lengkap), Sekar (wafat saat
-//         bayi), Laras, dan Bayu (di bawah umur, dari suami ke-2).
+//         bayi; peringatan dihitung mulai hari berikutnya), Laras, dan Bayu
+//         (di bawah umur, dari suami ke-2).
 //   Tirwan: keturunan yang sudah wafat; istrinya Hj. Dara ditinggal wafat.
 //         Anak: Rinzo, Nala (di bawah umur), Ragil (jenis kelamin tidak
 //         diketahui). Dara = pasangan khusus B (istri anak Eka).
@@ -63,6 +64,10 @@ export function bangunKeluargaFiktif() {
       { id: 'T2', anchor_person_id: 'dara', is_active: true },
     ],
     root_union_id: null,
+    // Pilihan "mulai hari berikutnya" untuk peringatan wafat (SQL 015,
+    // private.death_rules). Tidak ada di tabel people dan tidak pernah
+    // dikirim ke anggota; hanya klien contoh yang memakainya.
+    death_rules: [],
   }
   const tanpaUrutan = new Set()
   let detik = 0
@@ -226,6 +231,7 @@ export function bangunKeluargaFiktif() {
     birth_m: 5, birth_d: 3, birth_place: 'Kota Contoh', is_deceased: true, death_y: 1998, death_m: 5, death_d: 20,
     notes: 'Wafat saat masih bayi. Dimakamkan di makam keluarga.',
   })
+  data.death_rules.push({ person_id: 'sekar', start_next_day: true })
   orang('laras', 'Laras', 'P', 2001, { birth_place: 'Desa Contoh', academic_title: 'S.Ked.', occupation: 'Dokter muda' })
   for (const a of ['dorvi', 'sekar', 'laras']) anak('u10', a)
   orang('joval', 'Joval', 'L', 1970, { academic_title: 'S.E.', nickname: 'Mas Joval', occupation: 'Pedagang' })

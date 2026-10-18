@@ -165,6 +165,9 @@ export const teks = {
       AK027: 'Ketik PULIHKAN (huruf besar) untuk menjalankan pemulihan darurat.',
       AK028: 'Prosedur darurat hanya bisa dijalankan dari SQL Editor.',
       AK029: 'Admin utama belum ada atau belum pernah masuk.',
+      PW001: 'Anda tidak punya izin mengatur peringatan wafat.',
+      PW002: 'Peringatan hanya bisa diatur untuk yang sudah wafat dengan tanggal wafat lengkap (hari, bulan, dan tahun).',
+      PW003: 'Orang ini tidak ditemukan.',
       RP001: 'Anda tidak bisa mengirim laporan (hanya melihat, atau sedang ditahan).',
       RP002: 'Data yang dilaporkan tidak ditemukan.',
       RP003: 'Anda sudah mengirim banyak laporan dalam satu jam terakhir. Silakan coba lagi nanti.',
@@ -447,6 +450,12 @@ export const teks = {
       berakhir: 'Akses sementara Anda sudah berakhir. Data di perangkat ini sudah dihapus.',
       sesi: 'Sesi Anda berakhir. Data di perangkat ini sudah dihapus. Silakan masuk lagi.',
     },
+  },
+
+  // Label izin tambahan (kolom members.permissions), untuk layar pengaturan
+  // izin nanti. Nama izin di database tidak pernah ditampilkan.
+  izin: {
+    kelola_peringatan: 'Mengatur peringatan wafat (mulai hari berikutnya)',
   },
 
   // Akses sementara: spanduk hitung mundur di perangkat yang dipinjam, dan
