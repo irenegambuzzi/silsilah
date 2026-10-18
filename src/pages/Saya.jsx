@@ -7,7 +7,10 @@ import { bolehBeriAkses } from '../lib/api.js'
 import { useSesi } from '../lib/konteksSesi.js'
 import { teks } from '../teks/id.js'
 
-// Layar Saya / Pengaturan (layar 20).
+// Layar Saya / Pengaturan (layar 20). Urutan (putaran 8a; PLAN.md bagian
+// 14): Tampilan · Perangkat · Privasi · ADMIN / ADMIN MASTER · Keluar. Data
+// saya, Keluarga dekat saya, dan Panduan disisipkan di tempatnya menurut PLAN
+// saat fiturnya dibuat.
 export default function Saya() {
   const T = teks.saya
   const { anggota, berakhir, duaLangkah } = useSesi()
@@ -25,6 +28,10 @@ export default function Saya() {
         {!berakhir && <TautanTombol to="/saya/tambah-perangkat" ikon={KeyRound}>{T.tambahPerangkat}</TautanTombol>}
         <TautanTombol to="/saya/perangkat" ikon={Smartphone}>{T.perangkatSaya}</TautanTombol>
       </Kartu>
+      <Kartu className="flex flex-col gap-3">
+        <Subjudul>{T.informasi}</Subjudul>
+        <TautanTombol to="/privasi" ikon={ShieldCheck}>{T.privasi}</TautanTombol>
+      </Kartu>
       {(bolehBeriAkses(anggota) || anggota?.pemilik) && (
         <Kartu className="flex flex-col gap-3">
           <Subjudul>{anggota?.pemilik ? T.adminMaster : T.admin}</Subjudul>
@@ -37,10 +44,6 @@ export default function Saya() {
           {bolehBeriAkses(anggota) && <TautanTombol to="/admin/akses-sementara" ikon={Timer}>{T.aksesSementara}</TautanTombol>}
         </Kartu>
       )}
-      <Kartu className="flex flex-col gap-3">
-        <Subjudul>{T.informasi}</Subjudul>
-        <TautanTombol to="/privasi" ikon={ShieldCheck}>{T.privasi}</TautanTombol>
-      </Kartu>
       <Kartu className="flex flex-col gap-3">
         <Subjudul>{T.akun}</Subjudul>
         <TautanTombol to="/saya/keluar" ikon={LogOut}>{T.keluar}</TautanTombol>

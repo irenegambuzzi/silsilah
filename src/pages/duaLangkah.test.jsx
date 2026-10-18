@@ -224,6 +224,23 @@ describe('menu Saya dan kotak masuk', () => {
     expect(document.body.textContent).not.toMatch(/pengurus|asisten|admin utama/i)
   })
 
+  // Putaran 8a, bagian 3: Tampilan · Perangkat · Privasi · ADMIN / ADMIN MASTER · Keluar.
+  it.each([
+    ['ADMIN MASTER', pemilik, ['Tampilan', 'Perangkat', 'Informasi', 'ADMIN MASTER', 'Akun']],
+    ['ADMIN', asisten, ['Tampilan', 'Perangkat', 'Informasi', 'ADMIN', 'Akun']],
+    ['anggota biasa', anggotaContoh, ['Tampilan', 'Perangkat', 'Informasi', 'Akun']],
+  ])('urutan menu Saya (%s): Privasi di atas bagian admin, Keluar paling bawah', async (_n, anggota, judul) => {
+    pasang('/saya', klienAdmin({ anggota }))
+    await screen.findByRole('heading', { name: 'Saya', level: 1 })
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(judul)
+    const main = within(screen.getByRole('main'))
+    const tautan = main.getAllByRole('link').map((a) => a.textContent)
+    const ke = (t) => tautan.indexOf(t)
+    expect(ke('Privasi')).toBeGreaterThan(ke('Perangkat saya'))
+    for (const admin of ['Verifikasi dua langkah', 'Beri akses sementara']) if (ke(admin) >= 0) expect(ke(admin)).toBeGreaterThan(ke('Privasi'))
+    expect(tautan.at(-1)).toBe('Keluar')
+  })
+
   it('anggota lain: tidak ada tautan verifikasi dua langkah', async () => {
     pasang('/saya', klienAdmin({ anggota: asisten }))
     await screen.findByRole('heading', { name: 'Saya' })
