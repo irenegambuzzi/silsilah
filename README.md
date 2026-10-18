@@ -41,6 +41,20 @@ putaran ketujuh 3b). Alamat yang bisa dicoba:
 | menu Bagan (atau `http://localhost:5176/#/bagan`) | bagan kartu keluarga fiktif. Di laptop mula-mula tampil utuh, tidak tertutup legenda; di HP mulai dari ukuran terbaca dengan pasangan pangkal di tengah (tombol "Lihat seluruh bagan" untuk melihat semuanya). Geser dengan satu jari (di laptop: seret dengan mouse atau tombol panah), perbesar/perkecil dengan dua jari (di laptop: Ctrl + roda mouse) atau tombol + / − ; "Pusatkan" kembali ke tampilan awal. Ketuk satu kartu → panel keterangan di kanan (di HP: dari bawah) dengan "Fokus pada cabang ini" (pilih "Hitung dari leluhur utama" atau "Hitung dari [nama]"). Di Saya, coba ukuran huruf Sangat besar dan Kontras tinggi: bagan ikut berubah |
 | offline | setelah data termuat, matikan internet (atau DevTools → Network → Offline) lalu muat ulang halaman: aplikasi terbuka dari salinan di perangkat, dengan spanduk "Anda sedang offline". Nyalakan lagi internet: spanduk hilang. Dengan kode `AKSES234` tidak ada salinan (perangkat pinjaman) |
 
+### Uji ukuran nama dengan nama asli (sementara, HANYA LOKAL)
+
+`npm run uji:nama-asli` lalu buka `http://127.0.0.1:5177/`. Server ini hanya
+mendengar di 127.0.0.1 (tidak bentrok dengan 5176) dan membaca nama dari CSV
+di `data-pribadi/` **setiap kali halaman dibuka**; nama tidak disalin ke file,
+cache, atau terminal, dan halaman ini tidak ikut build produksi maupun
+`dev:contoh` (tes build menjaganya). Isinya: ringkasan angka untuk tiga
+skenario gelar (tanpa gelar, gelar perkiraan ±30% dengan benih tetap, gelar
+terpanjang) × pilihan ukuran A–E, lalu kartu dalam bingkai selebar HP (390 px,
+dasar penilaian) dan bingkai lebar komputer (pemeriksaan tambahan).
+
+> ⚠️ **Spanduk merah "DATA ASLI" selalu tampil. Tangkapan layar halaman ini
+> TIDAK BOLEH dibagikan**, ke siapa pun dan di mana pun (termasuk chat).
+
 ### Kasus khusus di data contoh
 
 Data contoh harus selalu memuat semua kasus yang sudah didukung (tes

@@ -10,9 +10,9 @@ const root = path.join(import.meta.dirname, '..')
 const vite = path.join(root, 'node_modules', '.bin', 'vite')
 let tmp
 
-function bangun(nama, env) {
+function bangun(nama, env, config = []) {
   const out = path.join(tmp, nama)
-  execFileSync(vite, ['build', '--outDir', out, '--emptyOutDir'], {
+  execFileSync(vite, ['build', ...config, '--outDir', out, '--emptyOutDir'], {
     cwd: root,
     env: { ...process.env, NODE_ENV: 'production', ...env },
     stdio: 'pipe',
@@ -44,6 +44,28 @@ describe('build produksi', () => {
     expect(isi).not.toContain('MODE CONTOH')
     // Keluarga fiktif mode contoh (keluargaFiktif.js) juga tidak ikut.
     for (const nama of ['Raksa', 'Selara', 'Lorvan', 'Tamran']) expect(isi).not.toContain(nama)
+  }, 60000)
+
+  // Halaman uji nama asli (putaran 7c, bagian B): hanya untuk server
+  // pengembangan `npm run uji:nama-asli`; tidak ikut build, juga kalau
+  // variabelnya terpasang atau konfigurasinya dipakai.
+  const tanpaUjiNamaAsli = (isi) => {
+    expect(isi).not.toContain('data-pribadi')
+    expect(isi).not.toContain('.csv')
+    expect(isi).not.toContain('__uji-nama-asli')
+    expect(isi).not.toContain('DATA ASLI')
+    expect(isi).not.toContain('Uji ukuran nama')
+    expect(isi).not.toContain('Gelar terpanjang')
+  }
+
+  it('tidak memuat halaman uji nama asli walaupun VITE_UJI_NAMA_ASLI=1', () => {
+    tanpaUjiNamaAsli(semuaIsi(bangun('uji', { VITE_UJI_NAMA_ASLI: '1', VITE_MODE_CONTOH: '1' })))
+  }, 60000)
+
+  it('juga tidak dengan konfigurasi uji nama asli', () => {
+    tanpaUjiNamaAsli(
+      semuaIsi(bangun('uji-config', { VITE_UJI_NAMA_ASLI: '1', VITE_MODE_CONTOH: '1' }, ['--config', 'vite.uji-nama-asli.config.js']))
+    )
   }, 60000)
 
   it('memakai VITE_BASE_PATH sebagai alamat dasar di satu tempat', () => {

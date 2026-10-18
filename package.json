@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "dev:contoh": "VITE_MODE_CONTOH=1 vite",
+    "uji:nama-asli": "VITE_MODE_CONTOH=1 VITE_UJI_NAMA_ASLI=1 vite --config vite.uji-nama-asli.config.js",
     "build": "vite build",
     "lint": "oxlint",
     "test": "vitest run",
