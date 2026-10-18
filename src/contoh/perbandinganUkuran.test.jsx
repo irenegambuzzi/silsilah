@@ -48,7 +48,7 @@ const TERPILIH = {
 const LANGKAH_TERPANJANG = { A: 'biasa', B: 'biasa', C: 'gelar-kecil', D: 'dihitung', E: 'dihitung' }
 
 describe('halaman perbandingan ukuran nama', () => {
-  it('pilihan A = ukuran Bagan sekarang; B–E: tingkat besar +1 … +4 px, sedang dan kecil dengan perbandingan sama', () => {
+  it('pilihan A = ukuran dasar; B–E: tingkat besar +1 … +4 px, sedang dan kecil dengan perbandingan sama', () => {
     expect(PILIHAN_UKURAN.map((p) => p.huruf)).toEqual(['A', 'B', 'C', 'D', 'E'])
     expect(PILIHAN_UKURAN[0].ukuran).toEqual(UKURAN_NAMA)
     PILIHAN_UKURAN.forEach((p, i) => {
@@ -57,7 +57,7 @@ describe('halaman perbandingan ukuran nama', () => {
       for (const t of ['sedang', 'kecil', 'terkecil']) expect(p.ukuran[t]).toBeCloseTo(UKURAN_NAMA[t] * kali, 9)
     })
     expect(PILIHAN_UKURAN.map(teksPilihan)).toEqual([
-      'A (sekarang): besar 15,3 px, sedang 13,5 px, kecil 11,9 px',
+      'A (dasar): besar 15,3 px, sedang 13,5 px, kecil 11,9 px',
       'B (+1 px): besar 16,3 px, sedang 14,4 px, kecil 12,7 px',
       'C (+2 px): besar 17,3 px, sedang 15,3 px, kecil 13,4 px',
       'D (+3 px): besar 18,3 px, sedang 16,1 px, kecil 14,2 px',

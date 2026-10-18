@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { KartuOrang } from './KartuOrang.jsx'
-import { barisNamaKartu } from '../../lib/bagan/barisNama.js'
+import { barisNamaKartu, UKURAN_NAMA_BAGAN } from '../../lib/bagan/barisNama.js'
 
 afterEach(cleanup)
 
@@ -16,14 +16,14 @@ const gambar = (n) => {
 }
 const baris = (nama) => [...nama.querySelectorAll('.kartu-nama-baris')].map((b) => b.textContent.trim())
 
-// Cari nama buatan yang memakai langkah tertentu pada ukuran bawaan.
+// Cari nama buatan yang memakai langkah tertentu pada ukuran Bagan.
 const KATA = ['Kusumaningtyas', 'Purbanegara', 'Sastrawikencana', 'Wijayakusuma', 'Adiwangsa', 'Larasati']
 function cari(syarat) {
   for (const a of KATA) for (const b of KATA) for (const c of [null, ...KATA]) {
     const kata = [a, b, c].filter(Boolean)
     for (const depan of [null, 'Prof. Dr. Ir. K.H.']) {
       const n = { depan, kata, belakang: 'S.Kom., M.Pd., S.Ag.', jumlahKata: kata.length }
-      if (syarat(barisNamaKartu(n))) return n
+      if (syarat(barisNamaKartu(n, UKURAN_NAMA_BAGAN))) return n
     }
   }
   throw new Error('tidak ada contoh')

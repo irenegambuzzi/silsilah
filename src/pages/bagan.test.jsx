@@ -14,6 +14,8 @@ import { keluargaFiktif, klienKeluarga, tabelKeluarga } from '../test/klienKelua
 import { cariOrang } from '../lib/silsilah/cari.js'
 import { namaTampil } from '../lib/silsilah/nama.js'
 import { BERAT } from '../test/batasWaktu.js'
+import { TINGKAT_NAMA, UKURAN_NAMA, UKURAN_NAMA_BAGAN } from '../lib/bagan/barisNama.js'
+import { KARTU_UKURAN, PILIHAN_UKURAN } from '../contoh/pilihanUkuran.js'
 
 configure({ asyncUtilTimeout: 5000 })
 beforeEach(() => {
@@ -49,9 +51,11 @@ describe('Bagan: isi kartu', () => {
     await tunggu()
     const nama = (id) => k(id).querySelector('.kartu-nama')
     const ukuran = (id) => nama(id).dataset.ukuran
-    for (const id of ['ratrisa-k', 'sadevan-a', 'ayundra', 'mega', 'tirwan', 'dorvi', 'halvin', 'sadevan-b', 'bagaskara', 'selvarani']) expect(ukuran(id), id).toBe('besar')
-    // Tanpa gelar: dua baris pun tidak muat pada ukuran besar, jadi sedang.
-    expect(ukuran('ratrisa-a')).toBe('sedang')
+    // Bagan memakai pilihan D untuk sementara (putaran 8a).
+    for (const id of ['ratrisa-k', 'sadevan-a', 'ayundra', 'mega', 'tirwan', 'dorvi', 'halvin', 'sadevan-b']) expect(ukuran(id), id).toBe('besar')
+    for (const id of ['bagaskara', 'selvarani']) expect(ukuran(id), id).toBe('sedang')
+    // Tanpa gelar: dua baris pun tidak muat pada ukuran besar dan sedang, jadi kecil.
+    expect(ukuran('ratrisa-a')).toBe('kecil')
     // Gelar terpisah; teksnya tetap utuh.
     const bagas = nama('bagaskara')
     expect(bagas.textContent).toBe('Alm. H. Bagaskara Wiryawan Adinata Mahardika, S.H.')
@@ -61,16 +65,36 @@ describe('Bagan: isi kartu', () => {
     expect(baris('selvarani')).toEqual(['Hj. Selvarani', 'Kusumaningtyas', 'Prameswari, S.Pd.'])
     expect(baris('sadevan-b')).toEqual(['Sadevan Bramasta', 'Wiratmaja, S.T.'])
     expect(baris('ratrisa-a')).toEqual(['Ratrisa Anindya', 'Maharsi Wijayakusuma'])
-    expect(baris('ratrisa-k')).toEqual(['Ratrisa Kemuntari'])
+    expect(baris('ratrisa-k')).toEqual(['Ratrisa', 'Kemuntari'])
     expect(baris('mega')).toEqual(['Mega'])
     for (const kartu of semuaKartu()) {
       const unsur = kartu.querySelector('.kartu-nama')
       const bergelar = unsur.querySelector('.kartu-gelar') !== null
       expect(unsur.querySelectorAll('.kartu-nama-baris').length, kartu.dataset.orang).toBeLessThanOrEqual(bergelar ? 3 : 2)
     }
-    // Ukuran huruf dari tingkat yang dipakai (pilihan A).
-    const rem = (id) => nama(id).style.getPropertyValue('--ukuran-nama')
-    expect([rem('mega'), rem('bagaskara'), rem('ratrisa-a')]).toEqual(['0.85rem', '0.85rem', '0.75rem'])
+    // Ukuran huruf dari tingkat yang dipakai (pilihan D).
+    const rem = (id) => parseFloat(nama(id).style.getPropertyValue('--ukuran-nama'))
+    expect(rem('mega')).toBeCloseTo(UKURAN_NAMA_BAGAN.besar, 9)
+    expect(rem('bagaskara')).toBeCloseTo(UKURAN_NAMA_BAGAN.sedang, 9)
+    expect(rem('ratrisa-a')).toBeCloseTo(UKURAN_NAMA_BAGAN.kecil, 9)
+  })
+
+  // Putaran 8a, bagian 1: Bagan memakai pilihan D untuk sementara (keputusan
+  // akhir D atau E di HP sungguhan, putaran 8d); /contoh/ukuran tetap A–E.
+  it('ukuran nama Bagan = pilihan D: konstanta sama persis, ukuran pada tulisan Normal, dan tujuh kartu sama dengan baris D di /contoh/ukuran', BERAT, async () => {
+    expect(UKURAN_NAMA_BAGAN).toEqual(PILIHAN_UKURAN.find((p) => p.huruf === 'D').ukuran)
+    expect(PILIHAN_UKURAN[0].ukuran).toEqual(UKURAN_NAMA)
+    const px = (rem) => (Math.round(rem * 18 * 10) / 10).toLocaleString('id-ID')
+    expect(TINGKAT_NAMA.map((t) => px(UKURAN_NAMA_BAGAN[t]))).toEqual(['18,3', '16,1', '14,2', '12,5'])
+    pasang('/bagan', klienKeluarga())
+    await tunggu()
+    const hasil = KARTU_UKURAN.map((id) => {
+      const n = k(id).querySelector('.kartu-nama').dataset
+      return `${n.ukuran} ${n.baris}`
+    })
+    expect(hasil).toEqual(['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2', 'terkecil 3'])
+    // Wirabhumi (gelar terpanjang): ukuran hitungan.
+    expect(k('wirabhumi').querySelector('.kartu-nama').dataset.dihitung).toBe('true')
   })
 
   it('nama tidak pernah dipotong: tanpa line-clamp, tanpa overflow tersembunyi, tanpa ellipsis pada nama; huruf Lora tebal sedang, huruf besar-kecil', () => {

@@ -1,4 +1,6 @@
 // Pilihan ukuran nama untuk halaman /contoh/ukuran (SEMENTARA, mode contoh).
+// A = UKURAN_NAMA (dasar); Bagan memakai D untuk sementara (UKURAN_NAMA_BAGAN
+// di barisNama.js, dihitung dengan rumus yang sama).
 import { UKURAN_NAMA } from '../lib/bagan/barisNama.js'
 
 export const KARTU_UKURAN = ['mega', 'ratrisa-k', 'sadevan-b', 'selvarani', 'bagaskara', 'ratrisa-a', 'wirabhumi']
@@ -12,4 +14,4 @@ export const PILIHAN_UKURAN = [0, 1, 2, 3, 4].map((tambah, i) => {
 })
 const px = (rem) => (Math.round(rem * PX_PER_REM * 10) / 10).toLocaleString('id-ID')
 export const teksPilihan = (p) =>
-  `${p.huruf}${p.tambah ? ` (+${p.tambah} px)` : ' (sekarang)'}: besar ${px(p.ukuran.besar)} px, sedang ${px(p.ukuran.sedang)} px, kecil ${px(p.ukuran.kecil)} px`
+  `${p.huruf}${p.tambah ? ` (+${p.tambah} px)` : ' (dasar)'}: besar ${px(p.ukuran.besar)} px, sedang ${px(p.ukuran.sedang)} px, kecil ${px(p.ukuran.kecil)} px`

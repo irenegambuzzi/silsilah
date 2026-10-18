@@ -27,8 +27,15 @@
 // tidak bergantung pada apakah huruf sudah selesai dimuat.
 import { GELAR, NAMA } from './lebarHuruf.js'
 
-// Ukuran huruf nama dalam rem (pilihan A di /contoh/ukuran).
+// Ukuran huruf nama dalam rem (pilihan A di /contoh/ukuran): dasar pilihan
+// A–E (src/contoh/pilihanUkuran.js) dan bawaan fungsi di file ini.
 export const UKURAN_NAMA = { besar: 0.85, sedang: 0.75, kecil: 0.66, terkecil: 0.58 }
+// Ukuran nama di Bagan: SEMENTARA pilihan D (putaran 8a), yaitu A dikali
+// (0,85×18+3)/(0,85×18), sama persis dengan D di /contoh/ukuran. Pada tulisan
+// Normal: besar 18,3 px, sedang 16,1 px, kecil 14,2 px, terkecil 12,5 px.
+// Keputusan akhir D atau E di HP sungguhan (putaran 8d).
+const KALI_BAGAN = (UKURAN_NAMA.besar * 18 + 3) / (UKURAN_NAMA.besar * 18)
+export const UKURAN_NAMA_BAGAN = Object.fromEntries(Object.entries(UKURAN_NAMA).map(([t, rem]) => [t, rem * KALI_BAGAN]))
 export const TINGKAT_NAMA = ['besar', 'sedang', 'kecil', 'terkecil']
 // Jarak antarbaris per tingkat (index.css, .kartu-nama[data-ukuran]).
 export const JARAK_BARIS = { besar: 1.2, sedang: 1.15, kecil: 1.12, terkecil: 1.12 }

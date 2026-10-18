@@ -1,10 +1,12 @@
 // Halaman perbandingan ukuran nama kartu (SEMENTARA, hanya mode contoh;
 // putaran ketujuh, bagian 5). Kartu yang sama dengan lima pilihan ukuran:
-// A = ukuran sekarang (Bagan), B/C/D/E = tingkat besar +1/+2/+3/+4 px (pada
+// A = ukuran dasar (Bagan sampai putaran 7c-2), B/C/D/E = tingkat besar +1/+2/+3/+4 px (pada
 // ukuran tulisan Normal, 1rem = 18px); tingkat sedang, kecil, dan terkecil
 // naik dengan perbandingan yang sama. Setiap kartu memilih ukurannya dengan
 // aturan Bagan (barisNama.js, putaran 7b bagian B) dari ukuran pilihan itu. Setiap pilihan tampil dalam bingkai
-// selebar HP (390 px) dan selebar biasa. Bagan tetap memakai pilihan A.
+// selebar HP (390 px) dan selebar biasa. Bagan memakai pilihan D untuk
+// sementara (putaran 8a, UKURAN_NAMA_BAGAN); keputusan akhir D atau E di HP
+// sungguhan (putaran 8d).
 // Dimuat hanya lewat App.jsx di mode contoh (dibuang dari build produksi).
 import { Link } from 'react-router-dom'
 import { KartuOrang } from '../components/bagan/KartuOrang.jsx'
@@ -19,7 +21,7 @@ import { KARTU_UKURAN, PILIHAN_UKURAN, teksPilihan } from './pilihanUkuran.js'
 // di mode contoh, jadi teksnya juga tidak boleh ikut ke build produksi.
 const T = {
   judul: 'Perbandingan ukuran nama kartu',
-  isi: 'Halaman sementara, hanya di mode contoh. Kartu yang sama dengan lima pilihan ukuran nama. A adalah ukuran yang dipakai Bagan sekarang; B sampai E menaikkan ukuran besar sebesar 1 sampai 4 px, dan ukuran sedang, kecil, dan terkecil naik dengan perbandingan yang sama. Setiap nama memakai ukuran terbesar yang muat (dua baris, tiga untuk nama bergelar). Bagan tetap memakai A sampai ada keputusan.',
+  isi: 'Halaman sementara, hanya di mode contoh. Kartu yang sama dengan lima pilihan ukuran nama. A adalah ukuran dasar; B sampai E menaikkan ukuran besar sebesar 1 sampai 4 px, dan ukuran sedang, kecil, dan terkecil naik dengan perbandingan yang sama. Setiap nama memakai ukuran terbesar yang muat (dua baris, tiga untuk nama bergelar). Bagan memakai D untuk sementara; pilihan akhir D atau E setelah dicoba di HP sungguhan.',
   bingkaiHp: 'Selebar HP (390 px)',
   bingkaiBiasa: 'Selebar biasa',
   kembali: 'Kembali ke Bagan',
