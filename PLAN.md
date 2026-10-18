@@ -35,6 +35,8 @@ Istilah:
 10. **Identitas visual aplikasi lama dipertahankan** (acuan desain di bagian 15.5). Tampilan diperbaiki, bukan diganti total. Perubahan besar pada tampilan harus Anda setujui dulu.
 11. **Setiap kelompok yang mengubah tampilan diakhiri dengan tinjauan Anda lewat mode contoh** (`npm run dev:contoh`) sebelum kelompok berikutnya dimulai. Laporan kelompok memuat alamat mode contoh dan daftar hal yang perlu diperiksa.
 12. **Mode contoh selalu lengkap.** Setiap fitur baru **wajib** ditambahkan ke data contoh fiktif, termasuk data kontak, Kabar Keluarga, Kumpul Keluarga, dan foto saat fiturnya dibuat. Tes `src/contoh/kelengkapan.test.js` menjaga semua kasus yang sudah didukung; daftar "di mana menemukan setiap kasus" ada di README.
+13. **Semua data dan fitur khusus ADMIN MASTER/ADMIN dikunci di database** (RLS, izin, RPC), tidak pernah hanya disembunyikan di tampilan (putaran 7c).
+14. **98% pengguna memakai HP**: setiap pilihan tampilan dinilai di lebar HP; tampilan komputer hanya pemeriksaan tambahan (putaran 7c).
 
 ---
 
@@ -162,6 +164,8 @@ Library utama (semua dipatok): `react`, `react-dom`, `react-router-dom`, `@supab
 | **Anggota** | Keturunan/menantu dewasa yang boleh mengedit (bawaan) |
 | **Asisten admin** | Anggota + izin tambahan yang dicentang per orang |
 | **Admin utama** | Hanya satu orang (pemilik proyek). Tidak bisa diturunkan, dicabut, atau dikurangi wewenangnya oleh siapa pun lewat aplikasi; trigger database menolaknya. Penggantian admin utama hanya lewat SQL Editor oleh pemilik akun Supabase (prosedur darurat tertulis di README). |
+
+**Nama peran di tampilan** (putaran 7c): admin utama tampil sebagai **ADMIN MASTER** (akses penuh), asisten sebagai **ADMIN** (hanya fitur yang diizinkan; fitur khusus ADMIN MASTER tidak ditampilkan sama sekali), anggota biasa tanpa label. Kata "asisten" dan "pengurus" tidak pernah terlihat pengguna; nilai di database (`'asisten'`, `is_owner`) tidak berubah.
 
 **Tuan rumah** Kumpul Keluarga bukan peran tetap. Seseorang menjadi tuan rumah hanya untuk pertemuan di rumahnya.
 
@@ -1036,7 +1040,14 @@ Tempat semua anggota keluarga cepat mengetahui kabar penting.
 | 28 | **Error / Sedang dipulihkan / Belum ada data / Database belum diperbarui** | Pesan jelas berbahasa Indonesia, tanpa penulisan data |
 | 29 | **Privasi** (bisa dibuka sebelum dan sesudah login; bagian kontak, lokasi kabar, dan alamat pertemuan ditambahkan bersama fiturnya di Fase 2) | Bahasa sederhana: data apa yang disimpan dan berapa lama. Lokasi login hanya perkiraan kota/negara dari IP, tanpa GPS; IP mentah dihapus setelah 30 hari; database lokasi IP offline (atribusi DB-IP); kontak terenkripsi dan setiap pembukaan dicatat; lokasi kabar dihapus setelah 12 jam; alamat pertemuan dihapus 12 jam setelah acara; data offline dihapus saat keluar. Tanpa nama atau data keluarga. |
 
-Navigasi bawah di HP: **Silsilah · Kabar · Kumpul · Cari · Saya**.
+Navigasi bawah di HP (putaran 7c, menggantikan rencana lama "Silsilah · Kabar · Kumpul · Cari · Saya"): **bertahap, tidak pernah ada menu kosong**.
+
+- **Saat peluncuran**: Bagan (dengan pilihan Bagan/Daftar) · Pemberitahuan · Saya. **Beranda dihapus.**
+- **Setelah 2D** (Kumpul Keluarga): + Pertemuan.
+- **Setelah 2E** (Kabar Keluarga): Pemberitahuan menjadi **Kabar**, dengan bagian "Untuk Anda".
+- **Akhir**: Bagan · Kabar · Pertemuan · Saya.
+
+**Urutan menu Saya** (putaran 7c): Data saya · Keluarga dekat saya · Tampilan · Perangkat · Panduan · Privasi · **ADMIN** / **ADMIN MASTER** (judul menurut peran) · Keluar. Isi bagian admin: undangan, izin ADMIN, peringatan mendatang, data belum lengkap, laporan & aktivitas, cadangan, silsilah asal (khusus ADMIN MASTER).
 
 ---
 
@@ -1248,6 +1259,7 @@ Sisa Fase 1 dikerjakan per kelompok. Setiap chat mengerjakan **satu kelompok saj
 | ✅ 6g | perbaikan putaran keenam menurut tinjauan Anda (A generasi anak tanpa garis darah, B panel detail, C kata "Leluhur", D pencarian, E nama di kartu; lihat "Putaran keenam tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), lalu bilang "lanjut" |
 | ✅ 6g-2 | perbaikan putaran ketujuh menurut tinjauan Anda (1 fokus dengan semua keturunan, 2 "Hitung dari X" seperti leluhur, 3 fokus terisolasi, 3b catatan anak dan aplikasi dibuka baru, 4 keterangan pencarian, 5 nama di kartu, tes lambat; lihat "Putaran ketujuh tinjauan tampilan" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh** (prinsip 11), pilih ukuran A–E di `#/contoh/ukuran`, lalu bilang "lanjut" |
 | ✅ 6g-3 | putaran 7b (A tautan "Anak mereka ada di cabang …", B ukuran nama terbesar yang muat, C catatan kelompok 7 dan audit HP, D pemeriksaan SQL; lihat "Putaran 7b" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh**, pilih ukuran A–E di `#/contoh/ukuran`, lalu bilang "lanjut" |
+| ✅ 6g-4 | putaran 7c (A pengecualian frasa pemindai, B halaman uji nama asli (dihentikan), C SQL 015 peringatan wafat, D "sekitar tahun", E label ADMIN MASTER/ADMIN, F README, G keputusan di PLAN, H pemeriksaan; lihat "Putaran 7c" di bawah tabel ini) | Opus 5.5 | **tinjau lewat mode contoh**, lalu bilang "lanjut" |
 | 6h | **AUDIT TAMPILAN HP** (berikutnya; belum dimulai; daftar di "Putaran ketujuh tinjauan tampilan") | – | – |
 | 7 | 1.23 | Opus 5.5 · high | – |
 | 8 | 1.24 + 1.25 | Sonnet 5.5 · high | – |
@@ -1384,7 +1396,38 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 - **Anggota biasa** melihat jadwal peringatan di panel almarhum, tanpa notifikasi.
 - **Usul**: pengingat pribadi yang dinyalakan anggota hanya untuk dirinya sendiri; jadwal peringatan bisa disertakan saat berita duka diumumkan.
 
-- **Berikutnya**: **AUDIT TAMPILAN HP** (6h), lalu **kelompok 7** (langkah 1.23). Keduanya belum dimulai; menunggu "lanjut".
+**Putaran 7c (kelompok 6g-4, Oktober 2026)**, ringkasan keputusan (keputusan putaran sebelumnya tetap, kecuali yang disebut di sini; tanpa data asli):
+
+1. **Kunci di database**: semua data dan fitur khusus ADMIN MASTER/ADMIN dikunci lewat RLS, izin, dan RPC, tidak boleh hanya disembunyikan di tampilan (prinsip 13).
+2. **HP lebih dulu**: 98% pengguna memakai HP; setiap pilihan tampilan dinilai di lebar HP, tampilan komputer hanya pemeriksaan tambahan (prinsip 14).
+3. **Peran**: ADMIN MASTER (akses penuh), ADMIN (hanya fitur yang diizinkan; fitur khusus ADMIN MASTER tidak ditampilkan sama sekali), anggota biasa tanpa label. Kata asisten/pengurus tidak boleh terlihat pengguna (bagian 4.1; dikerjakan di bagian E).
+4. **Peringatan wafat**: label "Hitung peringatan mulai hari berikutnya (wafat setelah maghrib)"; pilihan, bukan paksaan; ADMIN MASTER dan ADMIN berizin `kelola_peringatan` mengisinya menurut permintaan keluarga; setiap tanggal jadwal bisa dikoreksi; anggota hanya melihat tempat/tanggal wafat dan jadwal hasil hitungan; istilah krama (nelung dinten, mitung dinten, matang puluh dinten, nyatus dinten, mendhak sepisan, mendhak kaping kalih, nyewu dinten). Database: SQL 015 (rincian di "PERINGATAN WAFAT DAN HAUL").
+5. **Menu bertahap**, tidak pernah ada menu kosong: saat peluncuran Bagan (Bagan/Daftar) · Pemberitahuan · Saya, Beranda dihapus; setelah 2D + Pertemuan; setelah 2E Pemberitahuan → Kabar (dengan bagian "Untuk Anda"); akhir Bagan · Kabar · Pertemuan · Saya (bagian 14).
+6. **Urutan Saya**: Data saya · Keluarga dekat saya · Tampilan · Perangkat · Panduan · Privasi · ADMIN / ADMIN MASTER · Keluar. Isi admin: undangan, izin ADMIN, peringatan mendatang, data belum lengkap, laporan & aktivitas, cadangan, silsilah asal (khusus ADMIN MASTER).
+7. **Undangan**: admin melihat nama + keterangan pembeda + konfirmasi kartu; layar sambutan menampilkan pembeda; mode contoh punya link uji, termasuk nama kembar; "Lengkapi data saya" menggeser bagan ke kartu sendiri, menyorotnya, lalu membuka form.
+8. **Foto profil** (Fase 3): dari menu Saya dan panel kartu sendiri, kamera/galeri, diatur dalam lingkaran, hanya tampil di panel (bukan di kartu bagan); pengaman yang sudah ditetapkan tetap berlaku.
+9. **Pengingat ulang tahun** (Fase 3, ⚠️ data + RLS): rinciannya di Fase 3.
+10. **Berita duka**: tidak bisa disenyapkan anggota; **hanya ADMIN MASTER** yang bisa mematikannya (ADMIN tidak). Catatan: pengaturan HP tetap bisa mematikan semua notifikasi.
+11. **Panduan bergambar**: "Pasang di layar utama" dan "Pakai di HP atau laptop lain", untuk iPhone Safari, Android Chrome, dan Samsung Internet; foto hanya dari mode contoh dan diperiksa dulu.
+12. **Tur interaktif + video panduan (Playwright) + mode latihan**: dibuat saat aplikasi siap dan benar, **sebelum** disebarkan ke semua anggota. Layar terakhir tur PERSIS:
+
+    > Selamat menggunakan Silsilah Keluarga! 😊
+    > Mari bersama melengkapi catatan keluarga kita. Setiap data yang Anda isi membantu menjaga silaturahmi dan sejarah keluarga, sekaligus menjadi warisan berharga agar anak cucu kelak mengenal asal-usulnya. Semangat! 🌳
+
+    Tombol: [ Mulai ] [ Lengkapi data saya ].
+13. **Ukuran tulisan 5 tingkat** (audit HP, 6h (a)). Fitur usulan yang disetujui: Hubungan saya dengan dia, Keluarga dekat saya, ulang tahun minggu ini di Kabar, "Ada yang kurang tepat?", cetak bagan khusus admin. Bisa dibuka tanpa internet **hanya di perangkat utama**.
+14. **Putaran 7d** (berikutnya, terpisah): pemeriksa pre-commit untuk telepon/alamat/tanggal lahir lengkap asli (dibaca dari CSV di `data-pribadi/`), pemeriksaan hasil build sebelum publikasi, audit seluruh riwayat git, pemeriksa kunci rahasia.
+15. **Ringkasan pekerjaan putaran 7c**:
+    - **A** `db1c81c`: pemindai membaca `data-pribadi/pengecualian-frasa.txt` (opsional; diisi Irene sendiri); istilah krama di PLAN.
+    - **B** dihentikan, tanpa commit: CSV di `data-pribadi/` hanya punya kolom `id` dan `data`, jadi kolom nama lengkap, gelar, jenis kelamin, dan status wafat tidak jelas. `npm run uji:nama-asli` belum dibuat.
+    - **C** `95d006c`: `supabase/015_peringatan_wafat.sql` (belum dijalankan), izin `kelola_peringatan` di 004, galat PW001–PW003, `api.js`, klien contoh (kode `PENGURUS` berizin), Sekar mulai hari berikutnya; versi database 015.
+    - **D** `d8ad05c`: "sekitar tahun 1990" untuk perkiraan yang hanya berisi tahun; wafat Raksa perkiraan.
+    - **E** `e7a2c22`: label ADMIN MASTER/ADMIN di teks aplikasi, pesan galat SQL, dan pemberitahuan authenticator; judul bagian di menu Saya menurut peran.
+    - **F** `4d663dc`: README (tabel kasus, alamat lengkap dengan port 5176).
+    - **G**: commit ini (PLAN). **H**: pemeriksaan saja, tanpa commit.
+- **Tes baru putaran 7c**: `scripts/cek-data-pribadi.test.js`, `supabase/test/015_peringatan_wafat.test.js`, `src/contoh/klienContoh.test.jsx`, `src/lib/api.test.js`, `src/lib/silsilah/{tanggal,kartu}.test.js`, `src/pages/{daftarDetail,duaLangkah}.test.jsx`.
+
+- **Berikutnya**: **AUDIT TAMPILAN HP** (6h), lalu **kelompok 7** (langkah 1.23), dan **putaran 7d** (terpisah). Semuanya belum dimulai; menunggu "lanjut".
 
 ### Langkah Darurat
 
@@ -1491,7 +1534,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 ### Fase 3: Arsip Keluarga
 
 - **Foto keluarga**: bucket privat, dikompres, URL bertanda tangan.
-- **Foto anggota** (avatar di kartu dan panel keterangan). Persyaratan keamanan, **ditetapkan sekarang** (Oktober 2026):
+- **Foto anggota**. **Putaran 7c**: diunggah dari menu Saya dan dari panel kartu sendiri, dari kamera atau galeri, diatur di dalam lingkaran; **hanya tampil di panel keterangan, tidak di kartu bagan**. Persyaratan keamanan, **ditetapkan sekarang** (Oktober 2026), tetap berlaku:
   - Disimpan di bucket Storage **privat**; hanya bisa dilihat anggota yang login dari perangkat yang sah.
   - Ditampilkan lewat **signed URL yang kedaluwarsa dalam hitungan menit**. Ini mekanisme di belakang layar: foto **tetap tampil tanpa batas waktu dan tanpa hitung mundur** selama dibuka di perangkat anggota sendiri, dan aplikasi membuat link baru secara otomatis. Batas waktu tampil hanya berlaku di perangkat akses sementara (yang otomatis keluar saat waktunya habis).
   - Saat unggah, **semua metadata yang bisa dipakai melacak seseorang dihapus**, bukan hanya GPS: EXIF, XMP, IPTC, waktu pemotretan, merek/model/nomor seri perangkat, nama pemilik, dan thumbnail tersembunyi. Caranya: foto **digambar ulang menjadi file baru yang bersih**, dan nama file aslinya diganti.
@@ -1500,7 +1543,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
   - Setiap unggah/hapus tercatat; perlindungannya setara data kontak (bagian 7).
   - Mode contoh mendapat foto fiktif saat fitur ini dibuat (prinsip 12).
 - **Cerita/kenangan**.
-- **Pengingat ulang tahun**.
+- **Pengingat ulang tahun** (putaran 7c; ⚠️ data + RLS): anggota mengingatkan dan memilih penerima hanya di dalam cabang/kerabat dekatnya; ADMIN/ADMIN MASTER ke orang, cabang, atau semua anggota. Tidak ganda, tidak untuk yang sudah wafat. Usia disembunyikan secara bawaan, tetapi pengirim bisa memilih menampilkannya. Anggota **boleh** menyenyapkan pengingat ulang tahun untuk dirinya sendiri; **hanya ADMIN MASTER** yang bisa mematikan pengingat tentang orang atau cabang tertentu.
 - **Tanggal Hijriah dan pengingat haul** (rincian: "PERINGATAN WAFAT DAN HAUL" di bagian 17, putaran 7b).
 - **Notulen dan foto Kumpul Keluarga**.
 
