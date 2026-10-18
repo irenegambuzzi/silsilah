@@ -24,6 +24,7 @@
 --             PW003 orang tidak ditemukan
 --
 -- Izin baru "kelola_peringatan" ada di daftar members_permissions_known (004).
+-- death_rules ikut salinan otomatis (008, snapshot_private_tables).
 --
 -- Aman dijalankan ulang. Membutuhkan 001–014.
 -- Cara pakai: SQL Editor → tempel SELURUH isi file ini → Run.
@@ -176,6 +177,10 @@ union all
 select 'Izin kelola_peringatan dikenal (file 004)',
        (select (pg_get_constraintdef(oid) like '%kelola_peringatan%')::text
         from pg_constraint where conname = 'members_permissions_known'),
+       'true'
+union all
+select 'death_rules ikut salinan otomatis (008)',
+       ('death_rules' = any (private.snapshot_private_tables()))::text,
        'true'
 union all
 select 'Versi database',

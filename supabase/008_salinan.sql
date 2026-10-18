@@ -21,7 +21,9 @@
 --   Salinan harian lain dihapus.
 --
 --   Isi salinan: semua tabel di snapshot_tables() (silsilah, pohon asal dan
---   izinnya, pengaturan, anggota, laporan). TIDAK termasuk: riwayat
+--   izinnya, pengaturan, anggota, laporan), ditambah tabel schema private
+--   di snapshot_private_tables() (pilihan peringatan wafat, death_rules
+--   dari 015; dilewati selama tabelnya belum ada). TIDAK termasuk: riwayat
 --   (change_log, sudah merupakan riwayat), perangkat, undangan, kode,
 --   log login dan IP, kotak masuk. Fitur berikutnya menambah tabelnya
 --   lewat snapshot_tables().
@@ -74,6 +76,20 @@ as $$
 $$;
 revoke all on function private.snapshot_tables() from public, anon, authenticated;
 
+-- Tabel schema private yang ikut disalin (isinya tetap hanya bisa dibaca
+-- lewat salinan, yang tidak terbuka untuk pengguna). Kuncinya di salinan
+-- sama dengan nama tabelnya. Pemulihan salinan (langkah 2.7) wajib
+-- mengembalikan tabel ini juga.
+create or replace function private.snapshot_private_tables()
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  select array['death_rules']
+$$;
+revoke all on function private.snapshot_private_tables() from public, anon, authenticated;
+
 -- Isi salinan saat ini: {"people": [...], "unions": [...], ...}
 -- Urutan baris tetap (menurut isi JSON-nya), supaya checksum stabil.
 create or replace function private.snapshot_data()
@@ -90,6 +106,12 @@ declare
 begin
   foreach t in array private.snapshot_tables() loop
     execute format('select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text), ''[]'') from public.%I x', t)
+      into baris_tabel;
+    isi := isi || jsonb_build_object(t, baris_tabel);
+  end loop;
+  foreach t in array private.snapshot_private_tables() loop
+    continue when to_regclass(format('private.%I', t)) is null;
+    execute format('select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text), ''[]'') from private.%I x', t)
       into baris_tabel;
     isi := isi || jsonb_build_object(t, baris_tabel);
   end loop;
@@ -245,6 +267,10 @@ union all
 select 'Tabel yang disalin (dari 9)',
        array_length(private.snapshot_tables(), 1)::text,
        '9'
+union all
+select 'Tabel schema private yang disalin (dari 1)',
+       array_length(private.snapshot_private_tables(), 1)::text,
+       '1'
 union all
 select 'Fungsi di public/private yang bisa dijalankan anon',
        coalesce((select string_agg(n.nspname || '.' || p.proname, ', ' order by p.proname)

@@ -151,3 +151,47 @@ describe('death_count_start', () => {
     expect(r.hasil).toBe('date')
   })
 })
+
+describe('cadangan (008) menyertakan death_rules', () => {
+  let sekar, salinanId
+  const isiSalinan = async (id) => (await h.satu('select data, counts from private.snapshots where id = $1', [id]))
+
+  beforeAll(async () => {
+    sekar = await orangBaru({ is_deceased: true, death_y: 1998, death_m: 5, death_d: 20 })
+    await atur(asisten, sekar, true)
+    salinanId = (await h.satu(`select private.take_snapshot('harian') as id`)).id
+  })
+
+  it('salinan berisi pilihan itu, beserta jumlahnya', async () => {
+    const { data, counts } = await isiSalinan(salinanId)
+    expect(data.death_rules).toContainEqual(expect.objectContaining({ person_id: sekar, start_next_day: true, updated_by: asisten.memberId }))
+    const [n] = await baris(db, 'select count(*)::int as n from private.death_rules')
+    expect(counts.death_rules).toBe(n.n)
+  })
+
+  it('isi salinan cukup untuk mengembalikan pilihan Sekar (YA) setelah hilang', async () => {
+    await db.query('delete from private.death_rules where person_id = $1', [sekar])
+    expect(await baca(asisten, sekar)).toBe(false)
+    expect(await mulai(biasa, sekar)).toBe('1998-05-20')
+    // Pemulihan sungguhan dibuat di langkah 2.7; di sini isi salinan dikembalikan
+    // dengan cara yang sama: baris JSON → baris tabel.
+    await db.query(`
+      insert into private.death_rules
+      select * from jsonb_populate_recordset(null::private.death_rules,
+        (select data -> 'death_rules' from private.snapshots where id = $1))
+      on conflict (person_id) do update
+        set start_next_day = excluded.start_next_day, updated_by = excluded.updated_by, updated_at = excluded.updated_at`, [salinanId])
+    expect(await baca(asisten, sekar)).toBe(true)
+    expect(await mulai(biasa, sekar)).toBe('1998-05-21')
+  })
+
+  it('anggota biasa tetap tidak bisa membaca pilihan itu, juga tidak lewat salinan', async () => {
+    await ditolak(baca(biasa, sekar), 'PW001')
+    await expect(a.lewatApi(biasa, (tx) => baris(tx, 'select data from private.snapshots'))).rejects.toThrow(/permission denied/)
+    await expect(a.lewatApi(biasa, (tx) => baris(tx, 'select private.snapshot_data()'))).rejects.toThrow(/permission denied/)
+    await ditolak(a.lewatApi(biasa, (tx) => baris(tx, 'select * from public.list_snapshots()')), 'AK002')
+    // Daftar salinan untuk ADMIN MASTER hanya berisi jumlah, bukan isinya.
+    const daftar = await a.lewatApi(owner, (tx) => baris(tx, 'select * from public.list_snapshots()'), 'aal2')
+    expect(JSON.stringify(daftar)).not.toContain(sekar)
+  })
+})
