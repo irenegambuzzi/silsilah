@@ -186,6 +186,20 @@ describe('Keterangan orang (halaman sendiri)', () => {
     expect(screen.getByText('Pasangan dari Cahya')).toBeTruthy()
   })
 
+  // Perkiraan yang hanya berisi tahun: "sekitar tahun …" (putaran 7c).
+  const barisLahirWafat = () =>
+    [...bagian('Riwayat Hidup').querySelectorAll('dl > div')].map((b) => b.textContent).filter((t) => /^(Lahir|Wafat):/.test(t))
+  it('Raksa: "Wafat: sekitar tahun 1990"', async () => {
+    pasang('/orang/raksa', klienKeluarga())
+    await screen.findByRole('heading', { name: /Raksa/, level: 1 })
+    expect(barisLahirWafat()).toEqual(['Lahir: 1920', 'Wafat: sekitar tahun 1990'])
+  })
+  it('Halvin: "Lahir: sekitar tahun 1968"', async () => {
+    pasang('/orang/halvin', klienKeluarga())
+    await screen.findByRole('heading', { name: /Halvin/, level: 1 })
+    expect(barisLahirWafat()).toEqual(['Lahir: sekitar tahun 1968', 'Wafat: Kota Contoh, Agustus 2008'])
+  })
+
   it('dewasa tanpa data pernikahan: "Status pernikahan: -", tanpa baris Pasangan; isian kosong ditulis "-"', async () => {
     pasang('/orang/oka', klienKeluarga())
     await screen.findByRole('heading', { name: 'Oka', level: 1 })

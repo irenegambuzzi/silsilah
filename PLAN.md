@@ -238,7 +238,7 @@ Dipakai di tabel data utama (`people`, `unions`, `children`, `gatherings`, `cash
 
 ### 5.3 Tanggal kabur
 
-Setiap tanggal disimpan sebagai `*_y`, `*_m`, `*_d`, dan `*_approx`. Contoh: "12 Maret 1950", "Maret 1950", "1950", "sekitar 1950".
+Setiap tanggal disimpan sebagai `*_y`, `*_m`, `*_d`, dan `*_approx`. Contoh: "12 Maret 1950", "Maret 1950", "1950", "sekitar tahun 1950" (perkiraan yang hanya berisi tahun; putaran 7c), "sekitar Maret 1950".
 
 *Constraint*: bulan wajib ada tahun, hari wajib ada bulan, dan tanggal harus valid. Tanggal Hijriah ditambahkan di Fase 3.
 

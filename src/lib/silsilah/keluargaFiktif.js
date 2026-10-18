@@ -148,7 +148,7 @@ export function bangunKeluargaFiktif() {
   const anakAsal2 = (union, child) => anak(union, child, 'kandung', { tree_id: 'T2' })
 
   // ── Silsilah utama ──────────────────────────────────────────────
-  orang('raksa', 'Raksa', 'L', 1920, { is_deceased: true, death_y: 1990 })
+  orang('raksa', 'Raksa', 'L', 1920, { is_deceased: true, death_y: 1990, death_approx: true })
   orang('selara', 'Selara', 'P', 1925, { is_deceased: true, death_y: 2001 })
   nikah('u-root', 'raksa', 'selara', { marriage_y: 1943 })
   data.root_union_id = 'u-root'

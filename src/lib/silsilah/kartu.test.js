@@ -31,7 +31,7 @@ describe('kartu keturunan', () => {
   it('pasangan pangkal: GEN.0 Pangkal, tahun lahir–wafat, tanpa keterangan', () => {
     expect(info('raksa')).toMatchObject({
       nama: 'Alm. Raksa',
-      tahun: '1920–1990',
+      tahun: '1920–±1990',
       jenis: 'pangkal',
       gen: 0,
       labelGen: 'GEN.0',
@@ -351,7 +351,8 @@ describe('keterangan orang (panel, format aplikasi lama)', () => {
     const d = bangunKeluargaFiktif()
     Object.assign(d.people.find((p) => p.id === 'bima'), { birth_place: 'Kota Contoh', birth_m: 3, birth_d: 12 })
     expect(labelDetail(susunSilsilah(d), 'bima').lahir).toBe('Kota Contoh, 12 Maret 1945')
-    expect(labelDetail(s, 'raksa')).toMatchObject({ lahir: '1920', wafat: '1990' })
+    expect(labelDetail(s, 'raksa')).toMatchObject({ lahir: '1920', wafat: 'sekitar tahun 1990' })
+    expect(labelDetail(s, 'halvin')).toMatchObject({ lahir: 'sekitar tahun 1968', wafat: 'Kota Contoh, Agustus 2008' })
   })
 
   it('tanggal menikah lengkap atau perkiraan', () => {
@@ -500,7 +501,7 @@ describe('anak di panel pasangan (bukan keturunan): aturan yang sama dengan ketu
 describe('baris yang selalu tampil dan yang hanya tampil kalau berlaku', () => {
   it('Wafat hanya untuk yang sudah wafat; yang masih hidup tanpa baris Wafat', () => {
     expect(labelDetail(s, 'bima')).toMatchObject({ sudahWafat: false, wafat: null })
-    expect(labelDetail(s, 'raksa')).toMatchObject({ sudahWafat: true, wafat: '1990' })
+    expect(labelDetail(s, 'raksa')).toMatchObject({ sudahWafat: true, wafat: 'sekitar tahun 1990' })
   })
 
   it('isian kosong bernilai null (layar menulis "-")', () => {

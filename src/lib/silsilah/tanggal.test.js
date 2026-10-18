@@ -9,7 +9,7 @@ describe('formatTanggal', () => {
   })
 
   it('menandai perkiraan', () => {
-    expect(formatTanggal({ y: 1950, m: null, d: null, approx: true })).toBe('sekitar 1950')
+    expect(formatTanggal({ y: 1950, m: null, d: null, approx: true })).toBe('sekitar tahun 1950')
     expect(formatTanggal({ y: 1950, m: 3, d: null, approx: true })).toBe('sekitar Maret 1950')
   })
 
@@ -64,7 +64,8 @@ describe('teksPeristiwa', () => {
     const orang = { birth_y: 1950, birth_m: 3, birth_d: 12, birth_place: 'Kota Contoh' }
     expect(teksPeristiwa(orang, 'birth')).toBe('Kota Contoh, 12 Maret 1950')
     expect(teksPeristiwa({ birth_place: 'Kota Contoh' }, 'birth')).toBe('Kota Contoh')
-    expect(teksPeristiwa({ birth_y: 1950, birth_approx: true }, 'birth')).toBe('sekitar 1950')
+    expect(teksPeristiwa({ birth_y: 1950, birth_approx: true }, 'birth')).toBe('sekitar tahun 1950')
+    expect(teksPeristiwa({ death_y: 1990, death_approx: true, death_place: 'Kota Contoh' }, 'death')).toBe('Kota Contoh, sekitar tahun 1990')
     expect(teksPeristiwa({}, 'death')).toBe('')
   })
 

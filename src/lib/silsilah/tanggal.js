@@ -1,6 +1,6 @@
 // Tanggal kabur: tahun, bulan, dan hari boleh kosong dari belakang, dengan
 // tanda perkiraan (lihat PLAN.md bagian 5.3). Contoh: "12 Maret 1950",
-// "Maret 1950", "1950", "sekitar 1950".
+// "Maret 1950", "1950", "sekitar tahun 1950", "sekitar Maret 1950".
 import { teks } from '../../teks/id.js'
 
 const KATA = teks.silsilah
@@ -20,7 +20,9 @@ export function formatTanggal(t) {
   if (!t || t.y == null) return ''
   const bagian = [t.d, t.m == null ? null : KATA.bulan[t.m - 1], t.y].filter((x) => x != null)
   const teks = bagian.join(' ')
-  return t.approx ? `${KATA.sekitar} ${teks}` : teks
+  if (!t.approx) return teks
+  // Perkiraan yang hanya berisi tahun: "sekitar tahun 1990" (putaran 7c).
+  return t.m == null ? `${KATA.sekitar} ${KATA.tahun} ${teks}` : `${KATA.sekitar} ${teks}`
 }
 
 // Untuk mengurutkan: bagian yang kosong dianggap paling akhir. Mengembalikan
