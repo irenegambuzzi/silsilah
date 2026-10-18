@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { bacaDaftarNama, fileTerlarang, jalankan, periksaTeks } from './cek-data-pribadi.mjs'
+import { bacaDaftarNama, bacaPengecualian, fileTerlarang, jalankan, periksaTeks } from './cek-data-pribadi.mjs'
 
 const daftar = bacaDaftarNama(['Wiraguna Santosa', 'Kartolo', '# Hartono', '', 'Wulan Lestari'].join('\n'))
 
@@ -136,5 +136,71 @@ describe('jalankan pada repo git sementara', () => {
     const kode = jalankan({ mode: 'staged', cwd: dir, daftarPath: 'tidak-ada.txt', log: (s) => log.push(s) })
     expect(kode).toBe(0)
     expect(log.join('\n')).toContain('tidak ditemukan')
+  })
+})
+
+describe('pengecualian frasa', () => {
+  // Kata buatan: "Zorvak" sebagai nama di daftar sementara, "tiga zorvak"
+  // sebagai frasa umum yang dikecualikan.
+  const daftarZ = bacaDaftarNama('Zorvak\n')
+  const kecuali = bacaPengecualian(['# komentar', '', 'tiga zorvak'].join('\n'))
+
+  it('frasa yang dikecualikan lolos, tidak peka huruf besar/kecil', () => {
+    expect(periksaTeks('acara tiga zorvak', daftarZ, kecuali)).toEqual([])
+    expect(periksaTeks('Tiga   ZORVAK.', daftarZ, kecuali)).toEqual([])
+  })
+
+  it('kata yang sama di luar frasa tetap ditolak', () => {
+    expect(periksaTeks('Zorvak', daftarZ, kecuali)).toHaveLength(1)
+    expect(periksaTeks('tiga zorvak dan Zorvak', daftarZ, kecuali)).toHaveLength(1)
+  })
+
+  it('frasa hanya cocok sebagai kata utuh', () => {
+    expect(periksaTeks('setiga zorvak', daftarZ, kecuali)).toHaveLength(1)
+  })
+
+  it('tanpa pengecualian, frasa itu ditolak', () => {
+    expect(periksaTeks('tiga zorvak', daftarZ)).toHaveLength(1)
+  })
+
+  it('melewati baris komentar dan baris kosong', () => {
+    expect(kecuali).toHaveLength(1)
+  })
+})
+
+describe('jalankan dengan file pengecualian', () => {
+  let dir
+  const sh = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'pipe' })
+  const tulis = (f, isi) => {
+    fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true })
+    fs.writeFileSync(path.join(dir, f), isi)
+  }
+  const cek = (pengecualianPath) =>
+    jalankan({ mode: 'staged', cwd: dir, daftarPath: 'pribadi/daftar.txt', pengecualianPath, log: () => {} })
+
+  beforeAll(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cek-pengecualian-'))
+    sh('init', '-q')
+    tulis('pribadi/daftar.txt', 'Zorvak\n')
+    tulis('pribadi/pengecualian.txt', '# frasa umum\ntiga zorvak\n')
+  })
+  afterAll(() => fs.rmSync(dir, { recursive: true, force: true }))
+
+  it('"tiga zorvak" lolos dengan file pengecualian', () => {
+    tulis('a.js', 'const acara = "tiga zorvak"\n')
+    sh('add', 'a.js')
+    expect(cek('pribadi/pengecualian.txt')).toBe(0)
+  })
+
+  it('tanpa file pengecualian, "tiga zorvak" ditolak', () => {
+    expect(cek('pribadi/tidak-ada.txt')).toBe(1)
+    sh('rm', '-q', '-f', '--cached', 'a.js')
+  })
+
+  it('"Zorvak" sendirian tetap ditolak meski ada file pengecualian', () => {
+    tulis('b.js', 'const ketua = "Zorvak"\n')
+    sh('add', 'b.js')
+    expect(cek('pribadi/pengecualian.txt')).toBe(1)
+    sh('rm', '-q', '-f', '--cached', 'b.js')
   })
 })

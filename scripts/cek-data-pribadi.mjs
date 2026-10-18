@@ -14,6 +14,13 @@
 //      berpassword, kunci privat.
 //   3. File yang tidak boleh ada di repo: isi data-pribadi/, .env, .csv.
 //
+// Pengecualian frasa (opsional): data-pribadi/pengecualian-frasa.txt, satu
+// frasa per baris (baris kosong dan baris berawalan "#" dilewati). Setiap
+// kemunculan frasa itu (kata utuh, tidak peka huruf besar/kecil) diabaikan
+// sebelum pencocokan nama, untuk istilah umum yang memuat kata yang juga
+// dipakai sebagai nama. Kata yang sama di luar frasa tetap ditolak. Kalau
+// file itu tidak ada, tidak ada yang dikecualikan.
+//
 // Nama yang ditemukan TIDAK ditulis utuh di layar (hanya huruf pertama dan
 // nomor barisnya di daftar), supaya tidak bocor lewat log atau tangkapan
 // layar.
@@ -24,6 +31,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const DAFTAR_BAWAAN = 'data-pribadi/daftar-nama.txt'
+const PENGECUALIAN_BAWAAN = 'data-pribadi/pengecualian-frasa.txt'
 
 export const POLA_RAHASIA = [
   { nama: 'secret key Supabase', re: /sb_secret_[A-Za-z0-9_-]{10,}/ },
@@ -46,36 +54,54 @@ export function fileTerlarang(p) {
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-// Satu baris daftar → pola yang cocok sebagai kata utuh, tidak peka huruf
-// besar/kecil, dengan spasi apa pun di antara kata.
-export function bacaDaftarNama(teks) {
-  return teks
+// Teks → pola kata utuh, tidak peka huruf besar/kecil, dengan spasi apa pun
+// di antara kata.
+const polaKataUtuh = (teks, flag = '') =>
+  new RegExp(
+    `(?<![\\p{L}\\p{N}])${teks.split(/\s+/).map(escapeRe).join('\\s+')}(?![\\p{L}\\p{N}])`,
+    'iu' + flag
+  )
+
+const barisAktif = (teks) =>
+  teks
     .split(/\r?\n/)
     .map((baris, i) => ({ baris: i + 1, nama: baris.trim() }))
     .filter(({ nama }) => nama && !nama.startsWith('#'))
+
+// Satu baris daftar → pola yang cocok sebagai kata utuh.
+export function bacaDaftarNama(teks) {
+  return barisAktif(teks)
     // Entri tanpa minimal 2 huruf (misalnya "?" atau "-" sebagai penanda
     // "tidak diketahui" di data lama) bukan nama dan akan cocok dengan kode biasa.
     .filter(({ nama }) => (nama.match(/\p{L}/gu) || []).length >= 2)
     .map(({ baris, nama }) => ({
       baris,
       samaran: `${nama[0]}${'*'.repeat(Math.max(nama.length - 1, 1))}`,
-      re: new RegExp(
-        `(?<![\\p{L}\\p{N}])${nama.split(/\s+/).map(escapeRe).join('\\s+')}(?![\\p{L}\\p{N}])`,
-        'iu'
-      ),
+      re: polaKataUtuh(nama),
     }))
 }
 
+// Satu baris file pengecualian → pola global untuk menghapus frasa itu dari
+// baris sebelum pencocokan nama.
+export function bacaPengecualian(teks) {
+  return barisAktif(teks)
+    .filter(({ nama }) => (nama.match(/\p{L}/gu) || []).length >= 2)
+    .map(({ nama }) => polaKataUtuh(nama, 'g'))
+}
+
+const hapusFrasa = (isi, pengecualian) => pengecualian.reduce((t, re) => t.replace(re, ' '), isi)
+
 // Memeriksa isi satu file. Hasil: daftar temuan { jenis, baris, keterangan }.
-export function periksaTeks(teks, daftarNama = []) {
+export function periksaTeks(teks, daftarNama = [], pengecualian = []) {
   const temuan = []
   const barisTeks = teks.split(/\r?\n/)
   barisTeks.forEach((isi, i) => {
     for (const p of POLA_RAHASIA) {
       if (p.re.test(isi)) temuan.push({ jenis: 'rahasia', baris: i + 1, keterangan: p.nama })
     }
+    const isiNama = pengecualian.length ? hapusFrasa(isi, pengecualian) : isi
     for (const n of daftarNama) {
-      if (n.re.test(isi)) {
+      if (n.re.test(isiNama)) {
         temuan.push({
           jenis: 'nama',
           baris: i + 1,
@@ -102,7 +128,13 @@ function isiFile(mode, p, cwd) {
   return mode === 'staged' ? git(['show', `:${p}`], cwd) : fs.readFileSync(path.join(cwd, p))
 }
 
-export function jalankan({ mode, cwd = process.cwd(), daftarPath = process.env.DAFTAR_NAMA || DAFTAR_BAWAAN, log = console.log }) {
+export function jalankan({
+  mode,
+  cwd = process.cwd(),
+  daftarPath = process.env.DAFTAR_NAMA || DAFTAR_BAWAAN,
+  pengecualianPath = process.env.PENGECUALIAN_FRASA || PENGECUALIAN_BAWAAN,
+  log = console.log,
+}) {
   const lokasiDaftar = path.resolve(cwd, daftarPath)
   let daftarNama = []
   if (fs.existsSync(lokasiDaftar)) {
@@ -110,6 +142,10 @@ export function jalankan({ mode, cwd = process.cwd(), daftarPath = process.env.D
   } else {
     log(`ℹ️  ${daftarPath} tidak ditemukan: hanya pola rahasia dan file terlarang yang diperiksa.`)
   }
+  const lokasiPengecualian = path.resolve(cwd, pengecualianPath)
+  const pengecualian = fs.existsSync(lokasiPengecualian)
+    ? bacaPengecualian(fs.readFileSync(lokasiPengecualian, 'utf8'))
+    : []
 
   const masalah = []
   for (const p of daftarFile(mode, cwd)) {
@@ -120,7 +156,7 @@ export function jalankan({ mode, cwd = process.cwd(), daftarPath = process.env.D
     }
     const isi = isiFile(mode, p, cwd)
     if (isi.includes(0)) continue // file biner (gambar, ikon)
-    for (const t of periksaTeks(isi.toString('utf8'), daftarNama)) {
+    for (const t of periksaTeks(isi.toString('utf8'), daftarNama, pengecualian)) {
       masalah.push(`${p}:${t.baris}: ${t.keterangan}`)
     }
   }

@@ -1376,7 +1376,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 **PERINGATAN WAFAT DAN HAUL** (dicatat di putaran 7b; memperinci "Tanggal Hijriah dan pengingat haul" di Fase 3):
 
 - **Tidak ada** pengingat otomatis ke anggota.
-- Dari **tanggal wafat lengkap**, aplikasi menghitung jadwal adat Jawa: 3 hari (nelung dinten), 7 hari (mitung dinten), 40 hari (matang puluh), 100 hari (nyatus), 1 tahun (mendhak pisan, kalender Hijriah), 2 tahun (mendhak pindho, kalender Hijriah), 1000 hari (nyewu), lalu haul setiap tahun (kalender Hijriah).
+- Dari **tanggal wafat lengkap**, aplikasi menghitung jadwal adat Jawa: 3 hari (nelung dinten), 7 hari (mitung dinten), 40 hari (matang puluh dinten), 100 hari (nyatus dinten), 1 tahun (mendhak sepisan, kalender Hijriah), 2 tahun (mendhak kaping kalih, kalender Hijriah), 1000 hari (nyewu dinten), lalu haul setiap tahun (kalender Hijriah). Teks aplikasi selalu memakai istilah **krama** ini (putaran 7c).
 - **Hari wafat = hari ke-1**; kalau "Wafat setelah maghrib" dicentang, hitungan mulai **hari berikutnya**.
 - Tanggal ditampilkan dalam **Masehi, Hijriah, serta hari dan pasaran Jawa**.
 - Karena kebiasaan daerah berbeda, tanggal hitungan adalah **usulan** yang bisa dikoreksi admin/asisten sebelum mengirim.
@@ -1395,7 +1395,7 @@ Semua file SQL (001 dan seterusnya, serta `jadwal.sql`) **baru dijalankan di Sup
 
 0.1 Semua pertanyaan sudah dijawab (bagian 21).
 0.2 Tugas manual bagian 19.B.
-0.3 Siapkan `data-pribadi/daftar-nama.txt` untuk pemindai (setelah langkah 1.1).
+0.3 Siapkan `data-pribadi/daftar-nama.txt` untuk pemindai (setelah langkah 1.1). Opsional (putaran 7c): `data-pribadi/pengecualian-frasa.txt`, satu frasa umum per baris; frasa itu diabaikan sebelum pencocokan nama, tetapi kata yang sama di luar frasa tetap ditolak.
 
 ### Fase 1: Fondasi, Keamanan, Silsilah Inti, Migrasi
 
