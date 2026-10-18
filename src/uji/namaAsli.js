@@ -2,7 +2,7 @@
 // 7c, bagian B): susunan kartu untuk tiga skenario gelar, dan ringkasan
 // angka menurut aturan Bagan (barisNama.js). Tanpa nama apa pun di file ini;
 // nama datang dari server pengembangan saat halaman dibuka.
-import { barisNamaKartu, cobaUkuran, JARAK_BARIS, LEBAR_DALAM, lebarBaris, TINGGI_NAMA, TINGKAT_NAMA } from '../lib/bagan/barisNama.js'
+import { barisNamaKartu, JARAK_BARIS, LEBAR_DALAM, lebarBaris, SKALA_GELAR, TINGGI_NAMA, TINGKAT_NAMA } from '../lib/bagan/barisNama.js'
 
 // Gelar perkiraan (skenario 2 dan 3), urut seperti ditulis di depan nama.
 export const GELAR_DEPAN = ['Prof.', 'Dr.', 'Ir.', 'K.H.', 'H.', 'Hj.', 'Ust.']
@@ -139,31 +139,46 @@ export function kartuSkenario(orang, skenario, { benih = 7, bagian = 0.3 } = {})
   })
 }
 
+const PX_PER_REM = 18 // ukuran tulisan Normal (index.css)
+
 // Ringkasan menurut aturan Bagan pada satu pilihan ukuran.
 export function ringkas(kartu, ukuranNama) {
   const h = {
     jumlah: 0,
     baris: { 1: 0, 2: 0, 3: 0, lebih: 0 },
     tingkat: Object.fromEntries(TINGKAT_NAMA.map((t) => [t, 0])),
-    // Tidak muat di tingkat mana pun: aturan Bagan memakai cadangan
-    // (terkecil, sebanyak-banyaknya baris), yang bisa melebihi lebar.
-    cadangan: 0,
+    // Hanya untuk nama yang tidak muat dengan aturan biasa (putaran 7c-2).
+    gelarKecil: 0,
+    gelarPindah: 0,
+    dihitung: 0,
+    pxDihitungTerkecil: null,
     melebihiLebar: 0,
     melebihiTinggi: 0,
     terpotong: 0,
   }
   for (const k of kartu) {
-    if (k.namaKartu.kata.length === 0) continue
-    const s = barisNamaKartu(k.namaKartu, ukuranNama)
+    const n = k.namaKartu
+    if (n.kata.length === 0) continue
+    const s = barisNamaKartu(n, ukuranNama)
     h.jumlah++
     h.baris[s.baris.length <= 3 ? s.baris.length : 'lebih']++
     h.tingkat[s.ukuran]++
-    if (!cobaUkuran(k.namaKartu, 'terkecil', ukuranNama)) h.cadangan++
-    if (s.baris.some((b) => lebarBaris(b, s.rem) > LEBAR_DALAM + 1e-9)) h.melebihiLebar++
+    if (s.skalaGelar < SKALA_GELAR) h.gelarKecil++
+    if (s.gelarPindah) h.gelarPindah++
+    if (s.dihitung) {
+      h.dihitung++
+      const px = Math.round(s.rem * PX_PER_REM * 10) / 10
+      h.pxDihitungTerkecil = h.pxDihitungTerkecil === null ? px : Math.min(h.pxDihitungTerkecil, px)
+    }
+    if (s.baris.some((b) => lebarBaris(b, s.rem, s.skalaGelar) > LEBAR_DALAM + 1e-9)) h.melebihiLebar++
     if (s.baris.length * s.rem * JARAK_BARIS[s.ukuran] > TINGGI_NAMA + 1e-9) h.melebihiTinggi++
     // Aturan Bagan tidak pernah memotong nama; "…" hanya mungkin kalau ada
-    // kata yang hilang dari susunan.
-    if (s.baris.flat().length !== k.namaKartu.kata.length) h.terpotong++
+    // kata atau gelar yang hilang dari susunan.
+    const isi = s.baris.flat()
+    const kata = isi.filter((b) => !b.gelar).map((b) => b.kata)
+    const gelar = isi.flatMap((b) => (b.gelar ? [b.gelar.replace(/,$/, '')] : b.belakang ? b.belakang.split(', ') : []))
+    const gelarAsli = n.belakang ? n.belakang.split(',').map((g) => g.trim()).filter(Boolean) : []
+    if (kata.join(' ') !== n.kata.join(' ') || gelar.join('|') !== gelarAsli.join('|')) h.terpotong++
   }
   return h
 }

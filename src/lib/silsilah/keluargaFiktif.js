@@ -45,6 +45,9 @@
 //   putra Nanda, cabang Bima) dan "Ratrisa" (istri Vino dan putri Yoga,
 //   cabang Lorvan). Nama 2, 3, dan 4 kata, sebagian dengan gelar dan
 //   panggilan; terpanjang: Alm. H. Bagaskara …, S.H. (putra Vino).
+//   Nama SANGAT panjang dengan gelar depan dan belakang terpanjang (putaran
+//   7c-2): Prof. Dr. Ir. K.H. Wirabhumi …, S.Kom., M.Pd., S.Ag. (suami Laras):
+//   gelar dikecilkan atau pindah baris, nama tidak pernah melebihi kartu.
 //
 //   Pohon keluarga asal Eka ("T1"): orang tuanya, saudaranya, Mbah, Mbah
 //   buyut, Pakdhe/Budhe/Paklik/Bulik, sepupu, keponakan, dan satu paman
@@ -314,6 +317,12 @@ export function bangunKeluargaFiktif() {
   nikah('u20', 'yoga', 'selvarani', { marriage_y: 2007 })
   orang('ratrisa-a', 'Ratrisa Anindya Maharsi Wijayakusuma', 'P', 2009, { nickname: 'Anin' })
   anak('u20', 'ratrisa-a')
+
+  // Nama sangat panjang dengan gelar terpanjang (putaran 7c-2).
+  orang('wirabhumi', 'Wirabhumi Sastrawikencana Adiwangsa Purbanegara', 'L', 1998, {
+    religious_title: 'Prof. Dr. Ir. K.H.', academic_title: 'S.Kom., M.Pd., S.Ag.', occupation: 'Dosen',
+  })
+  nikah('u24', 'laras', 'wirabhumi', { marriage_y: 2024 })
 
   // "Belum menikah" yang dipilih orangnya sendiri.
   data.people.find((p) => p.id === 'putri').marital_choice = 'belum_menikah'

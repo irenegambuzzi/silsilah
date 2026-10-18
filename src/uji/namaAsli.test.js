@@ -58,7 +58,7 @@ describe('kartuSkenario', () => {
 })
 
 describe('ringkas', () => {
-  it('menurut aturan Bagan: tidak pernah terpotong; melebihi lebar hanya kalau tidak muat di tingkat mana pun (cadangan)', () => {
+  it('menurut aturan Bagan: tidak pernah terpotong dan tidak pernah melebihi lebar (aturan tetap putaran 7c-2)', () => {
     for (const s of ['tanpa', 'perkiraan', 'terpanjang']) {
       const kartu = kartuSkenario(orang, s)
       for (const p of PILIHAN_UKURAN) {
@@ -67,15 +67,16 @@ describe('ringkas', () => {
         expect(h.baris[1] + h.baris[2] + h.baris[3]).toBe(200)
         expect(Object.values(h.tingkat).reduce((a, b) => a + b, 0)).toBe(200)
         expect(h.terpotong).toBe(0)
-        expect(h.melebihiLebar).toBeLessThanOrEqual(h.cadangan)
-        if (p.huruf !== 'E') expect(h.melebihiLebar).toBe(0)
+        expect(h.melebihiLebar).toBe(0)
+        expect(h.melebihiTinggi).toBe(0)
       }
     }
   })
 
-  it('nama fiktif tiga kata dengan gelar terpanjang di pilihan E memakai cadangan dan melebihi lebar', () => {
+  it('nama fiktif tiga kata dengan gelar terpanjang di pilihan E: gelar dikecilkan atau pindah baris, tetap muat', () => {
     const h = ringkas(kartuSkenario(orang, 'terpanjang'), PILIHAN_UKURAN[4].ukuran)
-    expect(h.cadangan).toBeGreaterThan(0)
-    expect(h.melebihiLebar).toBeGreaterThan(0)
+    expect(h.gelarKecil + h.gelarPindah).toBeGreaterThan(0)
+    expect(h.melebihiLebar).toBe(0)
+    expect(h.terpotong).toBe(0)
   })
 })

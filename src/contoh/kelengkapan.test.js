@@ -11,6 +11,9 @@ import { statusPernikahan } from '../lib/silsilah/status.js'
 import { belumDewasa } from '../lib/silsilah/umur.js'
 import { susunBagan } from '../lib/bagan/susun.js'
 import { kontakContoh } from './kontakContoh.js'
+import { barisNamaKartu } from '../lib/bagan/barisNama.js'
+import { namaKartu } from '../lib/silsilah/nama.js'
+import { PILIHAN_UKURAN } from './pilihanUkuran.js'
 
 const data = bangunKeluargaFiktif()
 const s = susunSilsilah(data)
@@ -201,6 +204,12 @@ describe('data contoh memuat semua kasus yang didukung', () => {
         expect(ini.some((p) => p.nickname), `${n} kata, panggilan`).toBe(true)
       }
     }
+  })
+
+  it('nama sangat panjang dengan gelar depan dan belakang terpanjang: gelar dikecilkan dan ukuran hitungan terlihat di /contoh/ukuran (putaran 7c-2)', () => {
+    const hasil = utama.flatMap((p) => PILIHAN_UKURAN.map((u) => barisNamaKartu(namaKartu(p), u.ukuran)))
+    expect(hasil.some((h) => h.skalaGelar < 0.8 && !h.dihitung)).toBe(true)
+    expect(hasil.some((h) => h.dihitung)).toBe(true)
   })
 
   it('kedua pohon keluarga asal (pasangan khusus A dan B)', () => {

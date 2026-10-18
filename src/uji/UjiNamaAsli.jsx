@@ -72,7 +72,7 @@ function TabelRingkasan({ orang }) {
           <table className="border-collapse text-base">
             <thead>
               <tr>
-                {['Pilihan', '1 baris', '2 baris', '3 baris', ...TINGKAT_NAMA, 'cadangan (tidak muat)', 'melebihi lebar', 'melebihi tinggi', 'terpotong "…"'].map((k) => (
+                {['Pilihan', '1 baris', '2 baris', '3 baris', ...TINGKAT_NAMA, 'gelar dikecilkan', 'gelar pindah baris', 'ukuran hitungan', 'terkecil (px)', 'melebihi lebar', 'melebihi tinggi', 'terpotong "…"'].map((k) => (
                   <th key={k} className="border border-tepi px-2 py-1 text-left">{k}</th>
                 ))}
               </tr>
@@ -85,7 +85,10 @@ function TabelRingkasan({ orang }) {
                   <td className={sel}>{h.baris[2]}</td>
                   <td className={sel}>{h.baris[3]}</td>
                   {TINGKAT_NAMA.map((t) => <td key={t} className={sel}>{h.tingkat[t]}</td>)}
-                  <td className={sel}>{h.cadangan}</td>
+                  <td className={sel}>{h.gelarKecil}</td>
+                  <td className={sel}>{h.gelarPindah}</td>
+                  <td className={sel}>{h.dihitung}</td>
+                  <td className={sel}>{h.pxDihitungTerkecil === null ? '-' : h.pxDihitungTerkecil.toLocaleString('id-ID')}</td>
                   <td className={sel}>{h.melebihiLebar}</td>
                   <td className={sel}>{h.melebihiTinggi}</td>
                   <td className={sel}>{h.terpotong}</td>

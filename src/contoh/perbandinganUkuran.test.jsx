@@ -35,13 +35,17 @@ async function pasangApp(url, { contoh }) {
 // Ukuran dan jumlah baris yang terpilih per kartu: Mega, Ratrisa Kemuntari,
 // Sadevan Bramasta Wiratmaja, S.T., Hj. Selvarani …, S.Pd., Alm. H.
 // Bagaskara …, S.H., Ratrisa Anindya Maharsi Wijayakusuma.
+// Enam kartu pertama tidak berubah sejak putaran 7b; kartu ketujuh (nama
+// sangat panjang + gelar terpanjang, putaran 7c-2) selalu terkecil, 3 baris.
 const TERPILIH = {
-  A: ['besar 1', 'besar 1', 'besar 2', 'besar 3', 'besar 3', 'sedang 2'],
-  B: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'sedang 2'],
-  C: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2'],
-  D: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2'],
-  E: ['besar 1', 'besar 2', 'sedang 2', 'kecil 3', 'kecil 3', 'terkecil 2'],
+  A: ['besar 1', 'besar 1', 'besar 2', 'besar 3', 'besar 3', 'sedang 2', 'terkecil 3'],
+  B: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'sedang 2', 'terkecil 3'],
+  C: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2', 'terkecil 3'],
+  D: ['besar 1', 'besar 2', 'besar 2', 'sedang 3', 'sedang 3', 'kecil 2', 'terkecil 3'],
+  E: ['besar 1', 'besar 2', 'sedang 2', 'kecil 3', 'kecil 3', 'terkecil 2', 'terkecil 3'],
 }
+// Langkah untuk kartu ketujuh: A dan B aturan biasa, C gelar dikecilkan, D dan E ukuran hitungan.
+const LANGKAH_TERPANJANG = { A: 'biasa', B: 'biasa', C: 'gelar-kecil', D: 'dihitung', E: 'dihitung' }
 
 describe('halaman perbandingan ukuran nama', () => {
   it('pilihan A = ukuran Bagan sekarang; B–E: tingkat besar +1 … +4 px, sedang dan kecil dengan perbandingan sama', () => {
@@ -69,7 +73,7 @@ describe('halaman perbandingan ukuran nama', () => {
     expect(await screen.findByText('Halaman tidak ditemukan', { exact: false })).toBeTruthy()
   })
 
-  it('di mode contoh: lima pilihan, masing-masing enam kartu dalam bingkai HP (390 px) dan biasa', BERAT, async () => {
+  it('di mode contoh: lima pilihan, masing-masing tujuh kartu dalam bingkai HP (390 px) dan biasa', BERAT, async () => {
     await pasangApp('/contoh/ukuran', { contoh: true })
     expect(await screen.findByRole('heading', { name: 'Perbandingan ukuran nama kartu' })).toBeTruthy()
     const bagian = await screen.findAllByRole('region', { name: /^[A-E] / })
@@ -79,7 +83,7 @@ describe('halaman perbandingan ukuran nama', () => {
       expect(hp.className).toContain('w-[390px]')
       for (const bingkai of [hp, b.querySelector('[data-bingkai="biasa"]')]) {
         const kartu = [...bingkai.querySelectorAll('[data-orang]')]
-        expect(kartu.map((k) => k.dataset.orang)).toEqual(['mega', 'ratrisa-k', 'sadevan-b', 'selvarani', 'bagaskara', 'ratrisa-a'])
+        expect(kartu.map((k) => k.dataset.orang)).toEqual(['mega', 'ratrisa-k', 'sadevan-b', 'selvarani', 'bagaskara', 'ratrisa-a', 'wirabhumi'])
         const mega = kartu[0].querySelector('.kartu-nama')
         expect(parseFloat(mega.style.getPropertyValue('--ukuran-nama'))).toBeCloseTo(PILIHAN_UKURAN[i].ukuran.besar, 6)
         // Aturan Bagan (putaran 7b, bagian B): ukuran terbesar yang muat, dan jumlah barisnya.
@@ -88,6 +92,11 @@ describe('halaman perbandingan ukuran nama', () => {
           return `${n.ukuran} ${n.baris}`
         })
         expect(hasil, b.dataset.pilihan).toEqual(TERPILIH[b.dataset.pilihan])
+        const t = kartu[6].querySelector('.kartu-nama').dataset
+        const langkah = t.dihitung ? 'dihitung' : t.gelarPindah ? 'gelar-pindah' : t.gelarKecil ? 'gelar-kecil' : 'biasa'
+        expect(langkah, b.dataset.pilihan).toBe(LANGKAH_TERPANJANG[b.dataset.pilihan])
+        // Enam kartu lain tidak pernah memakai langkah baru.
+        for (const k of kartu.slice(0, 6)) expect(k.querySelector('[data-gelar-kecil], [data-gelar-pindah], [data-dihitung]')).toBeNull()
       }
     }
   })

@@ -373,11 +373,12 @@ html[data-kontras='tinggi'] .kartu-orang {
   display: inline-block;
 }
 /* Gelar: Plus Jakarta Sans, huruf besar-kecil biasa, lebih kecil dan lebih
-   tipis dari nama; tidak ikut menentukan ukuran nama. */
+   tipis dari nama; tidak ikut menentukan ukuran nama. --skala-gelar (0,7 atau
+   0,6) hanya untuk nama yang tidak muat (barisNama.js, SKALA_GELAR_KECIL). */
 .kartu-gelar {
   font-family: var(--font-sans);
   font-weight: 400;
-  font-size: 0.8em;
+  font-size: calc(var(--skala-gelar, 0.8) * 1em);
   text-transform: none;
   letter-spacing: 0;
 }

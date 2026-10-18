@@ -13,7 +13,9 @@ const SIMBOL = { L: '♂', P: '♀' }
 // terbesar yang muat, satu sampai dua baris (tiga untuk nama bergelar)
 // menurut lebar yang diukur, gelar di span tersendiri (Plus Jakarta Sans,
 // lebih kecil dan tipis) yang menempel pada kata di sebelahnya. Nama tidak
-// pernah dipotong (index.css).
+// pernah dipotong dan tidak pernah melebihi lebar kartu: kalau tidak muat,
+// gelar dikecilkan (--skala-gelar) atau gelar belakang pindah baris
+// (putaran 7c-2; index.css).
 function NamaKartu({ kartu }) {
   const ukuranNama = useUkuranNama()
   const n = kartu.namaKartu
@@ -22,13 +24,22 @@ function NamaKartu({ kartu }) {
   const isiBaris = (bagian) =>
     bagian.map((b, j) => {
       const spasi = j < bagian.length - 1 ? ' ' : ''
-      if (!b.depan && !b.belakang) return `${b.kata}${spasi}`
+      if (b.gelar) {
+        return (
+          <span key={j}>
+            <span className="kartu-gelar">{b.gelar}</span>
+            {spasi}
+          </span>
+        )
+      }
+      if (!b.depan && !b.belakang && !b.koma) return `${b.kata}${spasi}`
       return (
         <span key={j}>
           <span className="kartu-nama-utuh">
             {b.depan && <span className="kartu-gelar">{`${b.depan} `}</span>}
             {b.kata}
             {b.belakang && <span className="kartu-gelar">{`, ${b.belakang}`}</span>}
+            {b.koma && <span className="kartu-gelar">,</span>}
           </span>
           {spasi}
         </span>
@@ -41,7 +52,10 @@ function NamaKartu({ kartu }) {
       data-ukuran={susunan.ukuran}
       data-kata={n.jumlahKata}
       data-baris={susunan.baris.length}
-      style={{ '--ukuran-nama': `${susunan.rem}rem` }}
+      data-gelar-kecil={susunan.skalaGelar < 0.8 || undefined}
+      data-gelar-pindah={susunan.gelarPindah || undefined}
+      data-dihitung={susunan.dihitung || undefined}
+      style={{ '--ukuran-nama': `${susunan.rem}rem`, ...(susunan.skalaGelar < 0.8 ? { '--skala-gelar': susunan.skalaGelar } : {}) }}
     >
       {susunan.baris.map((bagian, i) => (
         <span key={i} className="kartu-nama-baris">

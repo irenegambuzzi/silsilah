@@ -82,7 +82,7 @@ describe('Bagan: isi kartu', () => {
     expect(css).toMatch(/--font-nama: 'Lora'/)
     expect(css).toMatch(/\.kartu-nama \{[^}]*font-family: var\(--font-nama\);[^}]*font-weight: 600;[^}]*font-size: var\(--ukuran-nama, 0\.85rem\);/)
     // Gelar: Plus Jakarta Sans, lebih kecil dan tipis.
-    expect(css).toMatch(/\.kartu-gelar \{[^}]*font-family: var\(--font-sans\);[^}]*font-weight: 400;[^}]*font-size: 0\.8em;/)
+    expect(css).toMatch(/\.kartu-gelar \{[^}]*font-family: var\(--font-sans\);[^}]*font-weight: 400;[^}]*font-size: calc\(var\(--skala-gelar, 0\.8\) \* 1em\);/)
     expect(css).not.toMatch(/https?:\/\/fonts|googleapis/)
   })
 

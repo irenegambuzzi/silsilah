@@ -1,7 +1,7 @@
 // Pilihan ukuran nama untuk halaman /contoh/ukuran (SEMENTARA, mode contoh).
 import { UKURAN_NAMA } from '../lib/bagan/barisNama.js'
 
-export const KARTU_UKURAN = ['mega', 'ratrisa-k', 'sadevan-b', 'selvarani', 'bagaskara', 'ratrisa-a']
+export const KARTU_UKURAN = ['mega', 'ratrisa-k', 'sadevan-b', 'selvarani', 'bagaskara', 'ratrisa-a', 'wirabhumi']
 const PX_PER_REM = 18 // ukuran tulisan Normal (index.css)
 
 // Pilihan A–E: { huruf, tambah (px untuk tingkat besar), ukuran (rem per tingkat) }.
